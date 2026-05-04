@@ -1,0 +1,270 @@
+{
+  "version": 1,
+  "site": {
+    "title": "Furor — Dance Hyderabad",
+    "tagline": "India's largest Latin dance school. Salsa, Bachata, West Coast Swing.",
+    "whatsappNumber": "918886072572",
+    "instagramHandle": "furorhyd",
+    "email": "furorhyd@dancehyderabad.com",
+    "socials": {
+      "instagram": "https://instagram.com/furorhyd",
+      "facebook": "https://facebook.com/furorhyd",
+      "youtube": "https://youtube.com/@furor"
+    },
+    "footerCopy": "Furor Dance Hyderabad — Dance for life. Two studios across the city.",
+    "notice": "",
+    "stats": { "studentsThisWeek": 124 }
+  },
+  "tonight": {
+    "enabled": true,
+    "headline": "La Rumba · Latin Social",
+    "body": "Hyderabad's weekly Latin social. All levels welcome. Free for current students; ₹300 for guests.",
+    "when": "Tonight · 8 PM at Jubilee Hills",
+    "ctaLabel": "WhatsApp to RSVP",
+    "ctaContext": "the La Rumba Latin social tonight at Jubilee Hills"
+  },
+  "hero": {
+    "headline": "The night was made for dancing.",
+    "subHeadline": "Learn Salsa, Bachata and West Coast Swing with India's most loved Latin dance school. Two studios in Hyderabad. Beginner-friendly. Whisper a yes — we'll take it from there on WhatsApp.",
+    "videoMp4Url": "",
+    "videoWebmUrl": "",
+    "posterImage": ""
+  },
+  "whyFuror": {
+    "headline": "Why dancers stay with us",
+    "points": [
+      { "title": "16 years, 5 cities", "body": "Founded 2009. Today we're across Hyderabad, Bangalore, Pune, Ahmedabad and Gurgaon — but Hyderabad is home." },
+      { "title": "Built around the social", "body": "Class is one half. Our weekly social, La Rumba, is where the dance becomes yours." },
+      { "title": "True beginners welcome", "body": "Most of our students walked in having never danced. Our Foundation track is built for exactly that." }
+    ]
+  },
+  "danceStyles": [
+    {
+      "id": "style-salsa",
+      "slug": "salsa",
+      "name": "Salsa",
+      "tagline": "The original Latin classic — fast, playful, infinitely connecting.",
+      "description": "Salsa is the heartbeat of Latin dance — a partner dance born of Cuban son, mambo and Puerto Rican rhythms. We teach the New York and Cuban styles, building from the ground up so leading and following feel natural rather than memorised.",
+      "whoItsFor": "If you've never partner-danced before and want one dance that opens every social floor in the world — this is it.",
+      "heroImage": "",
+      "heroVideo": "",
+      "levelOutcomes": {
+        "foundation": "After 8 weeks you can lead or follow basic salsa for a full song with any partner.",
+        "intermediate": "Cross-body lead variations, shines, and musicality. You start choosing what to dance, not just remembering steps.",
+        "advanced": "Body movement, layering and full social fluency. You're the partner everyone wants to dance with."
+      },
+      "faqs": [
+        { "q": "Do I need a partner?", "a": "No. We rotate partners in class, which is also the fastest way to learn." },
+        { "q": "What should I wear?", "a": "Anything you can move in. Smooth-soled shoes if you have them — we don't sell anything." },
+        { "q": "How fit do I need to be?", "a": "Not at all. Our oldest student started at 64." }
+      ],
+      "displayOrder": 1
+    },
+    {
+      "id": "style-bachata",
+      "slug": "bachata",
+      "name": "Bachata",
+      "tagline": "Slower, closer, deeply musical. The dance that teaches you to listen.",
+      "description": "Bachata comes from the Dominican Republic and is the most popular Latin partner dance in the world right now. We teach Sensual and Modern, with a foundation in the Dominican original. Slower than Salsa — and harder to forget.",
+      "whoItsFor": "If you want a dance that feels like a conversation, not a performance — start here.",
+      "heroImage": "",
+      "heroVideo": "",
+      "levelOutcomes": {
+        "foundation": "Basic step, side basic, simple turns and the iconic Bachata body roll. Enough to dance every song at the social.",
+        "intermediate": "Modern combinations, Sensual lead/follow techniques, partner connection drills.",
+        "advanced": "Musicality, dips, body waves, and the freedom to interpret a song as you hear it."
+      },
+      "faqs": [
+        { "q": "Is Bachata romantic?", "a": "It can be — it can also be playful, joyful, even silly. The dance is what you bring to it." },
+        { "q": "I have two left feet.", "a": "Most of our Bachata students said the same in week one. Bachata is forgiving by design." }
+      ],
+      "displayOrder": 2
+    },
+    {
+      "id": "style-wcs",
+      "slug": "west-coast-swing",
+      "name": "West Coast Swing",
+      "tagline": "Smooth, modern, danced to anything. The improviser's partner dance.",
+      "description": "West Coast Swing (WCS) is a modern partner dance born in California, known for its smooth, elastic feel and the ability to dance it to almost any song — pop, R&B, blues. It is the partner dance of musicality and improvisation.",
+      "whoItsFor": "If you want a partner dance you can take to a wedding, a party or a jazz club and still feel right — WCS is it.",
+      "heroImage": "",
+      "heroVideo": "",
+      "levelOutcomes": {
+        "foundation": "Anchor step, push break, sugar push, left-side pass, right-side pass — the whole alphabet of WCS.",
+        "intermediate": "Variations, syncopations, leader/follower hijacks, and your own style begins to emerge.",
+        "advanced": "Full musicality, body language conversation, competition-level connection."
+      },
+      "faqs": [
+        { "q": "Is WCS only at one of your branches?", "a": "Currently yes — Jubilee Hills. Chat with us on WhatsApp and we'll tell you the next batch." }
+      ],
+      "displayOrder": 3
+    }
+  ],
+  "studios": [
+    {
+      "id": "studio-jubilee-hills",
+      "slug": "jubilee-hills",
+      "name": "Jubilee Hills",
+      "neighborhood": "Jubilee Hills",
+      "address": "Alcazar Mall, Road No. 36, Jubilee Hills, Hyderabad, Telangana 500033",
+      "geo": { "lat": 17.4326, "lng": 78.4071 },
+      "hours": "Mon–Fri 9 AM–6 PM · Sat–Sun 9:30 AM–4:30 PM",
+      "telephone": "+91 88860 72572",
+      "photos": [],
+      "parkingNotes": "Mall basement parking, validated by us at the front desk.",
+      "styleSlugs": ["salsa", "bachata", "west-coast-swing"],
+      "displayOrder": 1
+    },
+    {
+      "id": "studio-kondapur",
+      "slug": "kondapur",
+      "name": "Kondapur",
+      "neighborhood": "Kondapur",
+      "address": "Plot 12, Kondapur Main Road, Hyderabad, Telangana 500084",
+      "geo": { "lat": 17.4673, "lng": 78.3677 },
+      "hours": "Mon–Fri 9 AM–6 PM · Sat–Sun 9:30 AM–4:30 PM",
+      "telephone": "+91 88860 72572",
+      "photos": [],
+      "parkingNotes": "Street parking in front of the studio; auto-rickshaws drop right at the door.",
+      "styleSlugs": ["salsa", "bachata"],
+      "displayOrder": 2
+    }
+  ],
+  "batches": [
+    {
+      "id": "batch-001",
+      "styleSlug": "salsa",
+      "level": "Foundation",
+      "branchSlug": "jubilee-hills",
+      "daysOfWeek": ["Sat", "Sun"],
+      "time": "9:30–10:30 AM",
+      "startDate": "2026-05-18",
+      "priceInr": 6500,
+      "seatsLeft": 4,
+      "status": "Filling Fast",
+      "razorpayLink": null
+    },
+    {
+      "id": "batch-002",
+      "styleSlug": "salsa",
+      "level": "Foundation",
+      "branchSlug": "kondapur",
+      "daysOfWeek": ["Tue", "Thu"],
+      "time": "7:30–8:30 PM",
+      "startDate": "2026-05-26",
+      "priceInr": 6500,
+      "seatsLeft": 8,
+      "status": "Open",
+      "razorpayLink": null
+    },
+    {
+      "id": "batch-003",
+      "styleSlug": "bachata",
+      "level": "Foundation",
+      "branchSlug": "jubilee-hills",
+      "daysOfWeek": ["Sat", "Sun"],
+      "time": "10:45–11:45 AM",
+      "startDate": "2026-05-18",
+      "priceInr": 6500,
+      "seatsLeft": null,
+      "status": "Open",
+      "razorpayLink": null
+    },
+    {
+      "id": "batch-004",
+      "styleSlug": "bachata",
+      "level": "Intermediate",
+      "branchSlug": "jubilee-hills",
+      "daysOfWeek": ["Sat", "Sun"],
+      "time": "12:00–1:00 PM",
+      "startDate": "2026-05-25",
+      "priceInr": 7500,
+      "seatsLeft": 6,
+      "status": "Open",
+      "razorpayLink": null
+    },
+    {
+      "id": "batch-005",
+      "styleSlug": "west-coast-swing",
+      "level": "Foundation",
+      "branchSlug": "jubilee-hills",
+      "daysOfWeek": ["Wed"],
+      "time": "8:00–9:00 PM",
+      "startDate": "2026-06-03",
+      "priceInr": 6500,
+      "seatsLeft": 10,
+      "status": "Open",
+      "razorpayLink": null
+    },
+    {
+      "id": "batch-006",
+      "styleSlug": "salsa",
+      "level": "Intermediate",
+      "branchSlug": "kondapur",
+      "daysOfWeek": ["Sat", "Sun"],
+      "time": "5:00–6:00 PM",
+      "startDate": "2026-06-08",
+      "priceInr": 7500,
+      "seatsLeft": null,
+      "status": "Open",
+      "razorpayLink": null
+    }
+  ],
+  "instructors": [
+    {
+      "id": "inst-rishikesh",
+      "name": "Rishikesh Chhabra",
+      "photo": "",
+      "role": "Lead Instructor — Hyderabad",
+      "shortBio": "Rish has been teaching Salsa and Bachata for over a decade. Trained in Cuba, Spain and India. Known for breaking the dance down into pieces anyone can learn.",
+      "branchSlugs": ["jubilee-hills", "kondapur"],
+      "styleSlugs": ["salsa", "bachata"],
+      "social": { "instagram": "https://instagram.com/rishchhabra" }
+    },
+    {
+      "id": "inst-priya",
+      "name": "Priya Reddy",
+      "photo": "",
+      "role": "Bachata & WCS Instructor",
+      "shortBio": "Priya found Bachata at 24 and never looked back. Specialises in body movement, musicality and the kind of follow that makes leaders look good.",
+      "branchSlugs": ["jubilee-hills"],
+      "styleSlugs": ["bachata", "west-coast-swing"],
+      "social": { "instagram": "" }
+    }
+  ],
+  "testimonials": [
+    {
+      "id": "test-001",
+      "studentName": "Kaustavi Barman",
+      "photo": "",
+      "text": "Rish is a great teacher — patient, structured and able to explain things three different ways until one clicks. Six months in I'm dancing at every social.",
+      "styleSlug": "salsa",
+      "publishedAt": "2026-03-12"
+    },
+    {
+      "id": "test-002",
+      "studentName": "Ranjan R A",
+      "photo": "",
+      "text": "What I love is the systematic approach. Each class builds on the last. And the instructors actually answer messages on WhatsApp at 11pm.",
+      "styleSlug": "bachata",
+      "publishedAt": "2026-02-28"
+    },
+    {
+      "id": "test-003",
+      "studentName": "Suhavi Jaswal",
+      "photo": "",
+      "text": "I came in to learn one routine for my sister's wedding. I left in love with dancing. Three years later I'm still here.",
+      "styleSlug": "salsa",
+      "publishedAt": "2026-04-02"
+    },
+    {
+      "id": "test-004",
+      "studentName": "Aman Verma",
+      "photo": "",
+      "text": "Tried two other studios in Hyderabad before Furor. The difference is the social culture — La Rumba is where you stop being a student and start being a dancer.",
+      "styleSlug": "salsa",
+      "publishedAt": "2026-04-18"
+    }
+  ],
+  "stories": []
+}

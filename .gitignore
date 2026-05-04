@@ -1,0 +1,16 @@
+node_modules
+.next
+out
+.env
+.env.local
+.env*.local
+data/site-content.json
+data/versions/
+data/users.json
+data/audit.log
+public/uploads/
+*.log
+.DS_Store
+.vercel
+next-env.d.ts
+*.tsbuildinfo
