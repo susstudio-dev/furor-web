@@ -69,13 +69,13 @@ export function FloatingTalkToUs({
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
-          className="group relative flex h-14 min-w-[3.5rem] items-center justify-center gap-2 rounded-full bg-ember-500 px-5 text-ink-950 font-semibold shadow-2xl shadow-ember-500/30 transition hover:bg-ember-400 active:scale-95"
+          className="group relative flex h-10 min-w-[2.5rem] items-center justify-center gap-1.5 rounded-full bg-ember-500 px-3.5 text-ink-950 text-sm font-semibold shadow-lg shadow-ember-500/20 transition hover:bg-ember-400 active:scale-95"
           aria-expanded={open}
           aria-label={open ? 'Close talk to us' : 'Open talk to us'}
         >
-          <span className="relative flex h-2.5 w-2.5">
+          <span className="relative flex h-2 w-2">
             <span className="absolute inset-0 animate-ping rounded-full bg-ink-950/40" />
-            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-ink-950" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-ink-950" />
           </span>
           <span className="hidden sm:inline">Talk to us</span>
         </button>

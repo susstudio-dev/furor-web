@@ -11,7 +11,7 @@
       "facebook": "https://facebook.com/furorhyd",
       "youtube": "https://youtube.com/@furor"
     },
-    "footerCopy": "Furor Dance Hyderabad — Dance for life. Two studios across the city.",
+    "footerCopy": "Furor Dance Hyderabad — Dance for life. Our home is in Jubilee Hills.",
     "notice": "",
     "stats": { "studentsThisWeek": 124 }
   },
@@ -25,10 +25,10 @@
   },
   "hero": {
     "headline": "The night was made for dancing.",
-    "subHeadline": "Learn Salsa, Bachata and West Coast Swing with India's most loved Latin dance school. Two studios in Hyderabad. Beginner-friendly. Whisper a yes — we'll take it from there on WhatsApp.",
+    "subHeadline": "Learn Salsa, Bachata and West Coast Swing with India's most loved Latin dance school. Our home is in Jubilee Hills, Hyderabad. Beginner-friendly. Whisper a yes — we'll take it from there on WhatsApp.",
     "videoMp4Url": "",
     "videoWebmUrl": "",
-    "posterImage": ""
+    "posterImage": "/photos/DSC09730.jpg"
   },
   "whyFuror": {
     "headline": "Why dancers stay with us",
@@ -46,7 +46,7 @@
       "tagline": "The original Latin classic — fast, playful, infinitely connecting.",
       "description": "Salsa is the heartbeat of Latin dance — a partner dance born of Cuban son, mambo and Puerto Rican rhythms. We teach the New York and Cuban styles, building from the ground up so leading and following feel natural rather than memorised.",
       "whoItsFor": "If you've never partner-danced before and want one dance that opens every social floor in the world — this is it.",
-      "heroImage": "",
+      "heroImage": "/photos/DSC_0052.jpg",
       "heroVideo": "",
       "levelOutcomes": {
         "foundation": "After 8 weeks you can lead or follow basic salsa for a full song with any partner.",
@@ -67,7 +67,7 @@
       "tagline": "Slower, closer, deeply musical. The dance that teaches you to listen.",
       "description": "Bachata comes from the Dominican Republic and is the most popular Latin partner dance in the world right now. We teach Sensual and Modern, with a foundation in the Dominican original. Slower than Salsa — and harder to forget.",
       "whoItsFor": "If you want a dance that feels like a conversation, not a performance — start here.",
-      "heroImage": "",
+      "heroImage": "/photos/DSC_0095.jpg",
       "heroVideo": "",
       "levelOutcomes": {
         "foundation": "Basic step, side basic, simple turns and the iconic Bachata body roll. Enough to dance every song at the social.",
@@ -87,7 +87,7 @@
       "tagline": "Smooth, modern, danced to anything. The improviser's partner dance.",
       "description": "West Coast Swing (WCS) is a modern partner dance born in California, known for its smooth, elastic feel and the ability to dance it to almost any song — pop, R&B, blues. It is the partner dance of musicality and improvisation.",
       "whoItsFor": "If you want a partner dance you can take to a wedding, a party or a jazz club and still feel right — WCS is it.",
-      "heroImage": "",
+      "heroImage": "/photos/DSC09736.jpg",
       "heroVideo": "",
       "levelOutcomes": {
         "foundation": "Anchor step, push break, sugar push, left-side pass, right-side pass — the whole alphabet of WCS.",
@@ -106,7 +106,7 @@
       "slug": "jubilee-hills",
       "name": "Jubilee Hills",
       "neighborhood": "Jubilee Hills",
-      "address": "Alcazar Mall, Road No. 36, Jubilee Hills, Hyderabad, Telangana 500033",
+      "address": "2nd Floor, Alcazar Mall, Road No. 36, Jubilee Hills, Hyderabad, Telangana 500033",
       "geo": { "lat": 17.4326, "lng": 78.4071 },
       "hours": "Mon–Fri 9 AM–6 PM · Sat–Sun 9:30 AM–4:30 PM",
       "telephone": "+91 88860 72572",
@@ -114,20 +114,6 @@
       "parkingNotes": "Mall basement parking, validated by us at the front desk.",
       "styleSlugs": ["salsa", "bachata", "west-coast-swing"],
       "displayOrder": 1
-    },
-    {
-      "id": "studio-kondapur",
-      "slug": "kondapur",
-      "name": "Kondapur",
-      "neighborhood": "Kondapur",
-      "address": "Plot 12, Kondapur Main Road, Hyderabad, Telangana 500084",
-      "geo": { "lat": 17.4673, "lng": 78.3677 },
-      "hours": "Mon–Fri 9 AM–6 PM · Sat–Sun 9:30 AM–4:30 PM",
-      "telephone": "+91 88860 72572",
-      "photos": [],
-      "parkingNotes": "Street parking in front of the studio; auto-rickshaws drop right at the door.",
-      "styleSlugs": ["salsa", "bachata"],
-      "displayOrder": 2
     }
   ],
   "batches": [
@@ -148,7 +134,7 @@
       "id": "batch-002",
       "styleSlug": "salsa",
       "level": "Foundation",
-      "branchSlug": "kondapur",
+      "branchSlug": "jubilee-hills",
       "daysOfWeek": ["Tue", "Thu"],
       "time": "7:30–8:30 PM",
       "startDate": "2026-05-26",
@@ -200,7 +186,7 @@
       "id": "batch-006",
       "styleSlug": "salsa",
       "level": "Intermediate",
-      "branchSlug": "kondapur",
+      "branchSlug": "jubilee-hills",
       "daysOfWeek": ["Sat", "Sun"],
       "time": "5:00–6:00 PM",
       "startDate": "2026-06-08",
@@ -214,21 +200,21 @@
     {
       "id": "inst-rishikesh",
       "name": "Rishikesh Chhabra",
-      "photo": "",
-      "role": "Lead Instructor — Hyderabad",
-      "shortBio": "Rish has been teaching Salsa and Bachata for over a decade. Trained in Cuba, Spain and India. Known for breaking the dance down into pieces anyone can learn.",
-      "branchSlugs": ["jubilee-hills", "kondapur"],
+      "photo": "/photos/rishikesh.png",
+      "role": "Regional Head & Promoter — Hyderabad",
+      "shortBio": "Rish is first and foremost a Salsa promoter. He took up Ballroom dancing in college while reading Engineering at Assumption University, Thailand — studying under Ajarn Boonbunjong Uratanamanee and Ajarn Thanawat — and was introduced to the languages of the Rumba, Waltz, Tango, Foxtrot and other International Ballroom and Latin styles.\n\nAfter relocating to Bangalore, a chance encounter with Salsa at a winter workshop at Alliance Francaise sparked a love affair that continues today. There he studied Rueda and Cuban Style under Cyrille Ngalle. Looking to learn LA Style, he found Alex Diaz teaching at a Bangalore club — and from there, there has been no looking back. He joined Furor as a dancer in 2008 and trained as an instructor.\n\nHe has taken workshops with Edie ‘Salsa Freak’, Eddie Torres, Dave Paris, Zoe Klein, Junior & Emily, Ricardo Murillo, Viviana Vargas, Juan Matos, Candy Mena, Alex Lee, Kimberly Nodora, and Terry & Cécile — each adding something unique to his journey.\n\nAfter relocating to Hyderabad, Rish took on the responsibility of promoting Furor's unique blend of Salsa — laying the groundwork for its formal entry by jump-starting weekly Salsa Socials in the city. A technologist in a consulting firm by day, he brings experience in business, event management and IT to Furor, and manages its online presence alongside his role as Promoter. A poet, writer, musician and dancer, he balances his interests across the arts and sciences.",
+      "branchSlugs": ["jubilee-hills"],
       "styleSlugs": ["salsa", "bachata"],
       "social": { "instagram": "https://instagram.com/rishchhabra" }
     },
     {
-      "id": "inst-priya",
-      "name": "Priya Reddy",
-      "photo": "",
-      "role": "Bachata & WCS Instructor",
-      "shortBio": "Priya found Bachata at 24 and never looked back. Specialises in body movement, musicality and the kind of follow that makes leaders look good.",
+      "id": "inst-aditya",
+      "name": "DJ Aditya",
+      "photo": "/photos/aditya.jpg",
+      "role": "Resident Salsa DJ — Hyderabad",
+      "shortBio": "\"If dancing salsa is my meditation, DJing salsa is my nirvana.\" This is the philosophy that drives DJ Aditya to be the best in the business. He discovered his love for Salsa quite by accident while studying in the USA — being there brought him into direct contact with the Latin population and he came to see their music as a reflection of their culture.\n\nWhile having the privilege to dance in Indianapolis, Chicago and New York, he realised how varied Salsa music can be — and just how much of a challenge that poses while DJing. \"Spinning at socials is a matter of feel. The challenge is getting the crowd to connect to the music. The dancers can be of varied levels and the song has to have something for all of them.\"\n\nWhile DJing he impresses on the importance of smoothness in transition and moods in the music. \"If asked what the greatest compliment can be to my DJing — I hope dancers feel that my style has flow. I like to think of it as taking the dancers on a journey, with each song beating a new path.\"",
       "branchSlugs": ["jubilee-hills"],
-      "styleSlugs": ["bachata", "west-coast-swing"],
+      "styleSlugs": ["salsa"],
       "social": { "instagram": "" }
     }
   ],
@@ -266,5 +252,78 @@
       "publishedAt": "2026-04-18"
     }
   ],
-  "stories": []
+  "stories": [
+    {
+      "id": "story-chennai-2025",
+      "slug": "2nd-runner-up-chennai-salsa-festival",
+      "title": "2nd Runner-up at Chennai Salsa Festival — Kalpana & Karthik",
+      "publishedAt": "2025-07-11",
+      "heroImage": "",
+      "excerpt": "Kalpana and Karthik take home second runner-up at the Chennai Salsa Festival open challenge — Hyderabad represents.",
+      "body": "Our team rolled into Chennai for the Salsa Festival open challenge. Kalpana and Karthik took home second runner-up — a result of months of practice, late-night socials and a partnership that just works. Congratulations to both of them, and to everyone who showed up to cheer."
+    },
+    {
+      "id": "story-taste-of-salsa",
+      "slug": "taste-of-salsa",
+      "title": "Taste of Salsa — Free Demo & Workshop",
+      "publishedAt": "2025-07-11",
+      "heroImage": "",
+      "excerpt": "A free demo for anyone curious about Salsa. No partner needed. No prior dance experience required.",
+      "body": "Wondering if Salsa is for you? Come to a free Taste of Salsa demo. We'll teach you the basic step, the partner change, and let you dance to one real Salsa song before you decide anything. No partner needed — we rotate. No experience required. Message us on WhatsApp to grab a spot."
+    },
+    {
+      "id": "story-la-rumba-xmas-2022",
+      "slug": "la-rumba-christmas-ball-2022",
+      "title": "La Rumba Christmas Ball — 24th December 2022",
+      "publishedAt": "2022-12-24",
+      "heroImage": "",
+      "excerpt": "An elegant Christmas Ball. Daytime workshops, evening red-carpet social. The biggest La Rumba of the year.",
+      "body": "Once a year La Rumba dresses up. The Christmas Ball is daytime workshops followed by an evening red-carpet social. Dress code is elegant. The room is full of dancers from every level. If you've ever wanted to see what your year of training looks like on a real night out — this is it."
+    },
+    {
+      "id": "story-social-etiquette",
+      "slug": "social-dancing-etiquette",
+      "title": "Social Dancing Etiquette",
+      "publishedAt": "2025-07-11",
+      "heroImage": "",
+      "excerpt": "A short guide to surviving — and shining at — your first social. Bright clothes, confidence, and a few things nobody tells you.",
+      "body": "Your first social is intimidating. Here's what helps: dress brightly so leaders find you, accept dances even when you're nervous, thank your partner at the end, and don't apologise mid-dance — finish the song. The room is much friendlier than it looks. Promise."
+    },
+    {
+      "id": "story-pool-party-2019",
+      "slug": "la-rumba-latin-pool-party-2019",
+      "title": "La Rumba Latin Pool Party — 23rd November 2019",
+      "publishedAt": "2019-11-23",
+      "heroImage": "",
+      "excerpt": "Workshops, poolside dancing and a sunset social at Marriott Executive Apartments Gachibowli.",
+      "body": "Workshops in the afternoon, poolside Salsa and Bachata as the sun went down, and a full social into the night. Marriott Executive Apartments Gachibowli hosted us, and the room was packed with dancers from across the city."
+    },
+    {
+      "id": "story-valentine-2021",
+      "slug": "valentine-salsa-workshop-2021",
+      "title": "Valentine Salsa Workshop — 14th February 2021",
+      "publishedAt": "2021-02-14",
+      "heroImage": "",
+      "excerpt": "Two hours of partner dancing as a Valentine's gift — to yourself, or to someone else.",
+      "body": "A two-hour introduction to partner Salsa, designed for couples and friends who want a different kind of Valentine's evening. No experience needed. Bring a partner or come alone — we rotate."
+    },
+    {
+      "id": "story-wow-feature",
+      "slug": "wow-magazine-feature",
+      "title": "Wow!",
+      "publishedAt": "2018-01-01",
+      "heroImage": "",
+      "excerpt": "Wow Magazine covers our Saturday Salsa socials — and the people who make them what they are.",
+      "body": "Wow Magazine ran a feature on our Saturday Salsa socials. The photographs are by their team and they capture something we struggle to put into words: the moment a beginner stops counting steps and just starts dancing."
+    },
+    {
+      "id": "story-wcs-bootcamp",
+      "slug": "west-coast-swing-christmas-bootcamp",
+      "title": "West Coast Swing Christmas Bootcamp — 24–25 December",
+      "publishedAt": "2025-05-15",
+      "heroImage": "",
+      "excerpt": "A 12-hour weekend bootcamp covering the full WCS beginner syllabus. Open level.",
+      "body": "Twelve hours over two days. Push break, sugar push, side passes, anchor step — the full WCS beginner alphabet, plus enough musicality work that you'll be able to dance every song at our weekly socials by Sunday night. Open level: complete beginners welcome."
+    }
+  ]
 }

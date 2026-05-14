@@ -7,10 +7,13 @@ import { BrandMark } from './BrandMark';
 
 const NAV: { label: string; href: string; children?: { label: string; href: string }[] }[] = [
   { label: 'Home', href: '/' },
-  { label: 'Dance Styles', href: '/dance-styles' },
-  { label: 'Batches & Pricing', href: '/batches' },
-  { label: 'Studios', href: '/studios' },
   { label: 'About', href: '/about' },
+  { label: 'Dance Styles', href: '/dance-styles' },
+  { label: 'Instructors', href: '/instructors' },
+  { label: 'Batches & Pricing', href: '/batches' },
+  { label: 'Blog', href: '/stories' },
+  { label: 'FAQs', href: '/faqs' },
+  { label: 'Contact', href: '/contact' },
 ];
 
 export function Header({ content }: { content: SiteContent }) {
@@ -34,15 +37,6 @@ export function Header({ content }: { content: SiteContent }) {
           .map((s) => ({ label: s.name, href: `/dance-styles/${s.slug}` })),
       };
     }
-    if (item.label === 'Studios') {
-      return {
-        ...item,
-        children: content.studios
-          .slice()
-          .sort((a, b) => a.displayOrder - b.displayOrder)
-          .map((s) => ({ label: s.name, href: `/studios/${s.slug}` })),
-      };
-    }
     return item;
   });
 
@@ -54,7 +48,7 @@ export function Header({ content }: { content: SiteContent }) {
     >
       <div className="container-x flex h-16 items-center justify-between">
         <Link href="/" aria-label="Furor — Dance Hyderabad home">
-          <BrandMark size={34} />
+          <BrandMark size={52} />
         </Link>
         <nav className="hidden lg:flex items-center gap-1" aria-label="Primary">
           {navWithDropdowns.map((item) => (
