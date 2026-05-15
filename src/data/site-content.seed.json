@@ -28,7 +28,7 @@
     "subHeadline": "Learn Salsa, Bachata and West Coast Swing with India's most loved Latin dance school. Our home is in Jubilee Hills, Hyderabad. Beginner-friendly. Whisper a yes — we'll take it from there on WhatsApp.",
     "videoMp4Url": "",
     "videoWebmUrl": "",
-    "posterImage": "/photos/DSC09730.jpg"
+    "posterImage": "/photos/DSC_0166.jpg"
   },
   "whyFuror": {
     "headline": "Why dancers stay with us",
@@ -46,7 +46,7 @@
       "tagline": "The original Latin classic — fast, playful, infinitely connecting.",
       "description": "Salsa is the heartbeat of Latin dance — a partner dance born of Cuban son, mambo and Puerto Rican rhythms. We teach the New York and Cuban styles, building from the ground up so leading and following feel natural rather than memorised.",
       "whoItsFor": "If you've never partner-danced before and want one dance that opens every social floor in the world — this is it.",
-      "heroImage": "/photos/DSC_0052.jpg",
+      "heroImage": "/photos/DSC09730.jpg",
       "heroVideo": "",
       "levelOutcomes": {
         "foundation": "After 8 weeks you can lead or follow basic salsa for a full song with any partner.",
@@ -67,7 +67,7 @@
       "tagline": "Slower, closer, deeply musical. The dance that teaches you to listen.",
       "description": "Bachata comes from the Dominican Republic and is the most popular Latin partner dance in the world right now. We teach Sensual and Modern, with a foundation in the Dominican original. Slower than Salsa — and harder to forget.",
       "whoItsFor": "If you want a dance that feels like a conversation, not a performance — start here.",
-      "heroImage": "/photos/DSC_0095.jpg",
+      "heroImage": "/photos/DSC09698.jpg",
       "heroVideo": "",
       "levelOutcomes": {
         "foundation": "Basic step, side basic, simple turns and the iconic Bachata body roll. Enough to dance every song at the social.",
@@ -87,7 +87,7 @@
       "tagline": "Smooth, modern, danced to anything. The improviser's partner dance.",
       "description": "West Coast Swing (WCS) is a modern partner dance born in California, known for its smooth, elastic feel and the ability to dance it to almost any song — pop, R&B, blues. It is the partner dance of musicality and improvisation.",
       "whoItsFor": "If you want a partner dance you can take to a wedding, a party or a jazz club and still feel right — WCS is it.",
-      "heroImage": "/photos/DSC09736.jpg",
+      "heroImage": "/photos/DSC_9973.jpg",
       "heroVideo": "",
       "levelOutcomes": {
         "foundation": "Anchor step, push break, sugar push, left-side pass, right-side pass — the whole alphabet of WCS.",
@@ -110,7 +110,7 @@
       "geo": { "lat": 17.4326, "lng": 78.4071 },
       "hours": "Mon–Fri 9 AM–6 PM · Sat–Sun 9:30 AM–4:30 PM",
       "telephone": "+91 88860 72572",
-      "photos": [],
+      "photos": ["/photos/DSC_0095.jpg", "/photos/DSC_0166.jpg", "/photos/DSC09776.jpg"],
       "parkingNotes": "Mall basement parking, validated by us at the front desk.",
       "styleSlugs": ["salsa", "bachata", "west-coast-swing"],
       "displayOrder": 1

@@ -296,6 +296,27 @@ export default async function HomePage() {
                 />
               </div>
             </div>
+            {s.photos.length > 0 ? (
+              <div className="mt-6 grid gap-3 sm:gap-4 grid-cols-2 md:grid-cols-3">
+                {s.photos.slice(0, 3).map((p, i) => (
+                  <div
+                    key={p}
+                    className={`relative aspect-[4/3] overflow-hidden rounded-2xl border border-cream/10 bg-ink-900/40 ${
+                      i === 0 ? 'col-span-2 md:col-span-1' : ''
+                    }`}
+                  >
+                    <Img
+                      src={p}
+                      alt={`Inside ${s.name}`}
+                      seed={`${s.slug}-${i}`}
+                      fill
+                      sizes="(max-width: 768px) 100vw, 33vw"
+                      className="object-cover transition duration-700 hover:scale-[1.04]"
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : null}
           </section>
         );
       })() : null}

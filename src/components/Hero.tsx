@@ -31,7 +31,7 @@ export function Hero({ content }: { content: SiteContent }) {
             fill
             priority
             sizes="100vw"
-            className="object-cover animate-kenburns"
+            className="object-cover object-[center_30%] animate-kenburns"
           />
           {allowVideo ? (
             <video
@@ -47,8 +47,8 @@ export function Hero({ content }: { content: SiteContent }) {
               {content.hero.videoMp4Url ? <source src={content.hero.videoMp4Url} type="video/mp4" /> : null}
             </video>
           ) : null}
-          <div className="absolute inset-0 bg-gradient-to-r from-ink-950/85 via-ink-950/45 to-ink-950/10" />
-          <div className="absolute inset-0 bg-gradient-to-t from-ink-950 via-ink-950/30 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-ink-950/90 via-ink-950/55 to-ink-950/15" />
+          <div className="absolute inset-0 bg-gradient-to-t from-ink-950 via-ink-950/40 to-transparent" />
         </div>
       </div>
       <div className="container-x py-24 sm:py-32 lg:py-40">

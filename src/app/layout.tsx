@@ -42,8 +42,8 @@ export const viewport: Viewport = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const content = await getContent();
   return (
-    <html lang="en" className={`${display.variable} ${sans.variable}`}>
-      <body>
+    <html lang="en" className={`${display.variable} ${sans.variable}`} suppressHydrationWarning>
+      <body suppressHydrationWarning>
         <Header content={content} />
         <main>{children}</main>
         <Footer content={content} />

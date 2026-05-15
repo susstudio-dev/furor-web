@@ -51,14 +51,14 @@ export default async function AboutPage() {
         </div>
         <div className="mt-10 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4 md:grid-rows-2">
           {[
-            { src: '/photos/DSC09730.jpg', alt: 'Furor social night', span: 'md:col-span-2 md:row-span-2 aspect-square md:aspect-auto' },
-            { src: '/photos/DSC_0052.jpg', alt: 'Salsa class in motion', span: 'aspect-square' },
-            { src: '/photos/DSC_0095.jpg', alt: 'Bachata partner work', span: 'aspect-square' },
-            { src: '/photos/DSC09736.jpg', alt: 'West Coast Swing flow', span: 'aspect-square' },
-            { src: '/photos/DSC09698.jpg', alt: 'Studio floor before class', span: 'aspect-square' },
-            { src: '/photos/DSC_0166.jpg', alt: 'Jubilee Hills studio', span: 'aspect-square hidden md:block' },
-            { src: '/photos/DSC_9973.jpg', alt: 'Students at La Rumba', span: 'aspect-square hidden md:block' },
-            { src: '/photos/DSC09776.jpg', alt: 'Dancers on the floor', span: 'aspect-square hidden md:block' },
+            { src: '/photos/DSC_0095.jpg', alt: 'La Rumba social — a packed floor on a Saturday night', span: 'md:col-span-2 md:row-span-2 aspect-square md:aspect-auto' },
+            { src: '/photos/DSC_0052.jpg', alt: 'A formal turn in emerald — Bachata at the social', span: 'aspect-square' },
+            { src: '/photos/DSC09730.jpg', alt: 'A classic Salsa turn with extended arms', span: 'aspect-square' },
+            { src: '/photos/DSC09736.jpg', alt: 'Mid-step rotation — partner dance in motion', span: 'aspect-square' },
+            { src: '/photos/DSC09698.jpg', alt: 'A close embrace in black and white', span: 'aspect-square' },
+            { src: '/photos/DSC_0166.jpg', alt: 'Royal blue, brick column, the heart of the floor', span: 'aspect-square hidden md:block' },
+            { src: '/photos/DSC_9973.jpg', alt: 'Arm raised — a dramatic West Coast Swing turn', span: 'aspect-square hidden md:block' },
+            { src: '/photos/DSC09776.jpg', alt: 'Pure joy — two dancers laughing through a song', span: 'aspect-square hidden md:block' },
           ].map((p) => (
             <div
               key={p.src}
