@@ -42,7 +42,7 @@ export function RhythmSignature({ style, className, loop = false, width = 200 }:
           {style === 'salsa' ? (
             // 8-beat baseline + 5 clave hits at beats 1, 2.5, 4, 6, 7
             <>
-              <line x1="6" y1="20" x2="194" y2="20" stroke="#f6efe7" strokeOpacity="0.18" strokeWidth="1.5" />
+              <line x1="6" y1="20" x2="194" y2="20" stroke="#241a12" strokeOpacity="0.18" strokeWidth="1.5" />
               {[10, 56, 94, 134, 158].map((cx, i) => (
                 <circle key={i} className="rs-dot" cx={cx} cy="20" r="6.5" fill="#ff8a4c" />
               ))}
@@ -51,7 +51,7 @@ export function RhythmSignature({ style, className, loop = false, width = 200 }:
           {style === 'bachata' ? (
             // 4-beat: 3 dots + hip-tap on 4
             <>
-              <line x1="6" y1="20" x2="194" y2="20" stroke="#f6efe7" strokeOpacity="0.18" strokeWidth="1.5" />
+              <line x1="6" y1="20" x2="194" y2="20" stroke="#241a12" strokeOpacity="0.18" strokeWidth="1.5" />
               {[24, 72, 120].map((cx, i) => (
                 <circle key={i} className="rs-dot" cx={cx} cy="20" r="6" fill="#ff8a4c" />
               ))}
@@ -61,9 +61,9 @@ export function RhythmSignature({ style, className, loop = false, width = 200 }:
           {style === 'west-coast-swing' ? (
             // Elastic anchor — single big dot oscillating along the line
             <>
-              <line x1="6" y1="20" x2="194" y2="20" stroke="#f6efe7" strokeOpacity="0.18" strokeWidth="1.5" />
+              <line x1="6" y1="20" x2="194" y2="20" stroke="#241a12" strokeOpacity="0.18" strokeWidth="1.5" />
               {[40, 100, 160].map((cx, i) => (
-                <circle key={i} cx={cx} cy="20" r="3.5" fill="#f6efe7" opacity="0.35" />
+                <circle key={i} cx={cx} cy="20" r="3.5" fill="#241a12" opacity="0.35" />
               ))}
               <g className="rs-anchor">
                 <circle cx="100" cy="20" r="9" fill="#ff8a4c" />

@@ -42,8 +42,8 @@ export default async function StylePage({ params }: { params: Promise<{ slug: st
       <section className="relative isolate overflow-hidden">
         <div className="absolute inset-0 -z-10">
           <Img src={style.heroImage} alt="" seed={`style-${style.slug}`} label={style.name} fill priority sizes="100vw" className="object-cover animate-kenburns" />
-          <div className="absolute inset-0 bg-gradient-to-r from-ink-950/85 via-ink-950/45 to-ink-950/10" />
-          <div className="absolute inset-0 bg-gradient-to-t from-ink-950 via-ink-950/30 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-ink-950 via-ink-950/80 to-ink-950/30" />
+          <div className="absolute inset-0 bg-gradient-to-t from-ink-950 via-ink-950/45 to-transparent" />
         </div>
         <div className="container-x py-24 sm:py-32">
           <p className="pill bg-ember-500/15 text-ember-400">{style.name}</p>

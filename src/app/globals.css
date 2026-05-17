@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    color-scheme: dark;
+    color-scheme: light;
   }
   html {
     -webkit-font-smoothing: antialiased;
@@ -13,18 +13,18 @@
   body {
     @apply bg-ink-950 text-cream font-sans;
     background-image:
-      radial-gradient(1200px 800px at 80% -10%, rgba(255, 138, 76, 0.12), transparent 60%),
-      radial-gradient(1000px 700px at -10% 20%, rgba(229, 167, 58, 0.08), transparent 60%);
+      radial-gradient(1200px 800px at 80% -10%, rgba(255, 138, 76, 0.10), transparent 60%),
+      radial-gradient(1000px 700px at -10% 20%, rgba(199, 138, 22, 0.07), transparent 60%);
   }
   ::selection {
     background: theme('colors.ember.500');
-    color: theme('colors.ink.950');
+    color: theme('colors.cream');
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-full bg-ember-500 px-6 py-3 text-ink-950 font-semibold tracking-wide transition hover:bg-ember-400 active:scale-[0.98];
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-ember-500 px-6 py-3 text-cream font-semibold tracking-wide transition hover:bg-ember-600 hover:text-ink-950 active:scale-[0.98];
   }
   .btn-secondary {
     @apply inline-flex items-center justify-center gap-2 rounded-full border border-cream/30 px-6 py-3 text-cream font-medium tracking-wide transition hover:border-cream/60 active:scale-[0.98];
@@ -49,11 +49,10 @@
     font-style: italic;
     font-weight: 500;
     letter-spacing: -0.01em;
-    color: theme('colors.ember.400');
+    color: theme('colors.ember.600');
   }
-  /* On warm backgrounds (e.g. closing CTA), the italic accent reads in ink. */
-  .text-ink-950 .accent,
-  .accent-ink {
+  /* Inside the deep ember/gold CTA blocks, the accent matches the light heading. */
+  .on-accent .accent {
     color: theme('colors.ink.950');
   }
 }

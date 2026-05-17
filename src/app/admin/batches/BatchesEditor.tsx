@@ -110,7 +110,7 @@ export function BatchesEditor({ initial }: { initial: SiteContent }) {
                         const next = on ? b.daysOfWeek.filter((x) => x !== d) : [...b.daysOfWeek, d];
                         patch(i, { daysOfWeek: next.length ? (next as Batch['daysOfWeek']) : ['Sat'] });
                       }}
-                      className={`pill ${on ? 'bg-ember-500 text-ink-950' : 'bg-cream/5 text-cream/70'}`}
+                      className={`pill ${on ? 'bg-ember-500 text-cream' : 'bg-cream/5 text-cream/70'}`}
                     >
                       {d}
                     </button>
@@ -138,16 +138,17 @@ export function BatchesEditor({ initial }: { initial: SiteContent }) {
       <style jsx global>{`
         .input {
           width: 100%;
-          background: #0b0709;
-          border: 1px solid rgba(246, 239, 231, 0.15);
+          background: #ffffff;
+          border: 1px solid rgba(36, 26, 18, 0.18);
           border-radius: 12px;
           padding: 10px 14px;
-          color: #f6efe7;
+          color: #241a12;
           outline: none;
-          color-scheme: dark;
+          color-scheme: light;
         }
+        .input::placeholder { color: rgba(36, 26, 18, 0.4); }
         .input:focus {
-          border-color: #ff8a4c;
+          border-color: #e1591f;
         }
       `}</style>
     </>

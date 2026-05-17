@@ -161,7 +161,7 @@ function Pill({ label, active, onClick }: { label: string; active: boolean; onCl
     <button
       type="button"
       onClick={onClick}
-      className={`pill ${active ? 'bg-ember-500 text-ink-950' : 'bg-cream/5 text-cream/70 hover:bg-cream/10'}`}
+      className={`pill ${active ? 'bg-ember-500 text-cream' : 'bg-cream/5 text-cream/70 hover:bg-cream/10'}`}
     >
       {label}
     </button>

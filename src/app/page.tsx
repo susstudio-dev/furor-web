@@ -204,7 +204,7 @@ export default async function HomePage() {
 
       {/* Closing CTA */}
       <section className="container-x py-28 sm:py-36">
-        <div className="rounded-3xl bg-gradient-to-br from-ember-700 via-ember-600 to-gold-500 p-10 sm:p-16 text-ink-950">
+        <div className="on-accent rounded-3xl bg-gradient-to-br from-ember-700 via-ember-600 to-gold-500 p-10 sm:p-16 text-ink-950">
           <h2 className="display text-4xl font-extrabold sm:text-6xl tracking-tight max-w-3xl">
             Ready when <Accentuate text={'*you*'} /> are. We&apos;re one tap away.
           </h2>

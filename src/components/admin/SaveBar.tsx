@@ -32,7 +32,7 @@ export function SaveBar({
         onClick={go}
         disabled={!dirty || busy}
         className={`rounded-full px-5 py-2.5 text-sm font-semibold transition ${
-          dirty && !busy ? 'bg-ember-500 text-ink-950 hover:bg-ember-400' : 'bg-cream/10 text-cream/40'
+          dirty && !busy ? 'bg-ember-500 text-cream hover:bg-ember-600' : 'bg-cream/10 text-cream/40'
         }`}
       >
         {busy ? 'Saving…' : dirty ? 'Save changes' : 'Saved'}

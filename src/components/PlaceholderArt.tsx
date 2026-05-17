@@ -1,13 +1,15 @@
 // Deterministic generative SVG cover, brand palette only, zero network.
 // Identical seed → identical render. Different seeds → distinct compositions.
 
+// Light theme: bg tones are warm off-whites, ember/gold stay vivid as the
+// composition shapes, "cream" is the dark label/stroke colour.
 const PALETTE = {
-  ink950: '#0b0709',
-  ink800: '#1d1015',
+  ink950: '#f3ebdf',
+  ink800: '#e7dac6',
   ember500: '#ff8a4c',
-  ember700: '#cc4514',
-  gold500: '#e6a73a',
-  cream: '#f6efe7',
+  ember700: '#b8430f',
+  gold500: '#c98a16',
+  cream: '#241a12',
 };
 
 function hash(seed: string): number {

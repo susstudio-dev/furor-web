@@ -5,24 +5,27 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // Light theme. `ink` = surfaces (950 = page bg, lower = deeper cards/borders).
+        // `cream` = foreground text (warm near-black). Inverted so the existing
+        // bg-ink-* / text-cream / border-cream utilities render light.
         ink: {
-          950: '#0b0709',
-          900: '#150c10',
-          800: '#1d1015',
-          700: '#28161d',
-          500: '#4a2230',
+          950: '#fbf7f1',
+          900: '#f3ebdf',
+          800: '#ece1d0',
+          700: '#e0d1bb',
+          500: '#cab597',
         },
         ember: {
-          400: '#ffb37a',
+          400: '#d4551c',
           500: '#ff8a4c',
-          600: '#f25f2a',
-          700: '#cc4514',
+          600: '#e1591f',
+          700: '#b8430f',
         },
         gold: {
-          400: '#f5c674',
-          500: '#e6a73a',
+          400: '#c98a16',
+          500: '#a7770f',
         },
-        cream: '#f6efe7',
+        cream: '#241a12',
       },
       fontFamily: {
         display: ['var(--font-display)', 'system-ui', 'sans-serif'],
