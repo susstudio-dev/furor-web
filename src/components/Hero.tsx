@@ -48,13 +48,11 @@ export function Hero({ content }: { content: SiteContent }) {
               {content.hero.videoMp4Url ? <source src={content.hero.videoMp4Url} type="video/mp4" /> : null}
             </video>
           ) : null}
-          <div className="absolute inset-0 bg-gradient-to-r from-ink-950 via-ink-950/80 to-ink-950/35" />
-          <div className="absolute inset-0 bg-gradient-to-t from-ink-950 via-ink-950/45 to-transparent" />
-          {/* film vignette */}
-          <div
-            className="pointer-events-none absolute inset-0"
-            style={{ boxShadow: 'inset 0 0 220px 70px rgba(0,0,0,0.5)' }}
-          />
+          <div className="absolute inset-0 hero-scrim-x" />
+          <div className="absolute inset-0 hero-scrim-y" />
+          {/* film vignette — dark theme only (a dark vignette on the light
+              theme just dirties the page edges) */}
+          <div className="pointer-events-none absolute inset-0 hero-vignette" />
         </div>
       </div>
       <div className="container-x py-24 sm:py-32 lg:py-40">
