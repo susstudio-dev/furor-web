@@ -40,6 +40,7 @@ jobs:
       - name: Build static export
         env:
           GH_PAGES: 'true'
+          NEXT_PUBLIC_BASE_PATH: '/furor-web'
         run: npm run build
 
       - name: Add .nojekyll
