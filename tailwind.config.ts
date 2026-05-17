@@ -42,14 +42,14 @@ const config: Config = {
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
         'kenburns': {
-          '0%': { transform: 'scale(1) translate(0,0)' },
-          '100%': { transform: 'scale(1.08) translate(-1%, -1%)' },
+          '0%': { transform: 'scale(1.02) translate(0,0)' },
+          '100%': { transform: 'scale(1.12) translate(-2%, -1.5%)' },
         },
       },
       animation: {
         marquee: 'marquee 28s linear infinite',
         'fade-up': 'fade-up 0.6s ease-out both',
-        kenburns: 'kenburns 18s ease-in-out infinite alternate',
+        kenburns: 'kenburns 30s ease-in-out infinite alternate',
       },
     },
   },

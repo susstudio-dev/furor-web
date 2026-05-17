@@ -108,16 +108,69 @@ img.photo,
   filter: saturate(0.88) contrast(1.08);
 }
 
+/* The Furor logo is dark-coloured (red wordmark + navy tagline), made for a
+   white background. On light theme it shows in full brand colour. On dark
+   theme — instead of an ugly white box — the mark is rendered as a clean
+   monochrome cream lockup that sits directly on the dark header. This is the
+   standard premium treatment for a single-asset logo across themes. */
+.brand-plate {
+  transition: filter 200ms ease, opacity 200ms ease;
+}
+html[data-theme='dark'] .brand-plate img {
+  /* knock the artwork to a single warm-cream tone */
+  filter: brightness(0) invert(1) sepia(0.12) saturate(1.4) hue-rotate(-8deg);
+  opacity: 0.92;
+}
+
 /* Magnetic button — applied via JS */
 .magnetic {
   transition: transform 200ms cubic-bezier(0.2, 0.6, 0.2, 1);
   will-change: transform;
 }
 
+/* Cinematic hero — words rise from behind a mask, then sub/CTA fade up */
+@keyframes cineRise {
+  from {
+    transform: translateY(115%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+@keyframes cineFade {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.cine-w {
+  display: inline-block;
+  overflow: hidden;
+  /* room so italic descenders/overhang aren't clipped by the mask */
+  padding-bottom: 0.16em;
+  margin-bottom: -0.16em;
+}
+.cine-i {
+  display: inline-block;
+  animation: cineRise 0.95s cubic-bezier(0.16, 0.8, 0.2, 1) both;
+  will-change: transform, opacity;
+}
+.hero-fade {
+  animation: cineFade 0.85s ease-out both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-marquee,
   .animate-fade-up,
-  .animate-kenburns {
+  .animate-kenburns,
+  .cine-i,
+  .hero-fade {
     animation: none !important;
   }
 }

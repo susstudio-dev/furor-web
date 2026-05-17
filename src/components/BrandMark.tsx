@@ -20,7 +20,7 @@ export function BrandMark({
   const height = size;
   const width = Math.round(size * LOGO_RATIO);
   return (
-    <span className={`inline-flex items-center ${className ?? ''}`} aria-label={ariaLabel}>
+    <span className={`brand-plate inline-flex items-center ${className ?? ''}`} aria-label={ariaLabel}>
       <Image
         src={withBase('/logo-mark.png')}
         alt={ariaLabel}
