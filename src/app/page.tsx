@@ -8,6 +8,7 @@ import { EnquiryCTA } from '@/components/EnquiryCTA';
 import { TonightTile } from '@/components/TonightTile';
 import { RhythmSignature } from '@/components/RhythmSignature';
 import { Img } from '@/components/Img';
+import { Accentuate } from '@/components/Accentuate';
 
 export default async function HomePage() {
   const content = await getContent();
@@ -24,12 +25,12 @@ export default async function HomePage() {
       <KineticStrip styles={sortedStyles} />
 
       {/* What we teach */}
-      <section className="container-x py-24 sm:py-28">
+      <section className="container-x py-20 sm:py-24">
         <div className="flex items-end justify-between gap-6 flex-wrap">
           <div>
             <p className="display text-sm uppercase tracking-widest text-ember-400">What we teach</p>
             <h2 className="mt-2 display text-3xl font-bold sm:text-5xl max-w-xl">
-              Three dances. A lifetime of nights.
+              <Accentuate text={'Three dances. A *lifetime* of nights.'} />
             </h2>
           </div>
           <Link href="/dance-styles" className="btn-secondary">
@@ -147,7 +148,7 @@ export default async function HomePage() {
 
       {/* Why Furor */}
       {content.whyFuror.points.length > 0 ? (
-        <section className="container-x py-24 sm:py-28">
+        <section className="container-x py-12 sm:py-16">
           <p className="display text-sm uppercase tracking-widest text-ember-400">Why Furor</p>
           <h2 className="mt-2 display text-3xl font-bold sm:text-5xl max-w-2xl">
             {content.whyFuror.headline}
@@ -165,7 +166,7 @@ export default async function HomePage() {
       ) : null}
 
       {/* How to join */}
-      <section className="container-x py-24 sm:py-28">
+      <section className="container-x py-20 sm:py-24">
         <p className="display text-sm uppercase tracking-widest text-ember-400">How it works</p>
         <h2 className="mt-2 display text-3xl font-bold sm:text-5xl max-w-2xl">
           Three steps from curious to dancing.
@@ -202,10 +203,10 @@ export default async function HomePage() {
       <TonightTile content={content} />
 
       {/* Closing CTA */}
-      <section className="container-x py-24 sm:py-32">
+      <section className="container-x py-28 sm:py-36">
         <div className="rounded-3xl bg-gradient-to-br from-ember-700 via-ember-600 to-gold-500 p-10 sm:p-16 text-ink-950">
           <h2 className="display text-4xl font-extrabold sm:text-6xl tracking-tight max-w-3xl">
-            Ready when you are. We&apos;re one tap away.
+            Ready when <Accentuate text={'*you*'} /> are. We&apos;re one tap away.
           </h2>
           <p className="mt-3 text-ink-950/80 max-w-xl text-lg">
             Tell us which style sounds like you. We&apos;ll handle the rest in WhatsApp — class times, prices, what to bring.

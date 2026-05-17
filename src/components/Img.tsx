@@ -43,7 +43,7 @@ export function Img({
         priority={priority}
         width={fill ? undefined : width}
         height={fill ? undefined : height}
-        className={className}
+        className={`photo ${className ?? ''}`.trim()}
       />
     );
   }

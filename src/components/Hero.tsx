@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { SiteContent } from '@/lib/content-schema';
 import { EnquiryCTA } from './EnquiryCTA';
 import { Img } from './Img';
+import { Accentuate } from './Accentuate';
 
 export function Hero({ content }: { content: SiteContent }) {
   const [allowVideo, setAllowVideo] = useState(false);
@@ -54,7 +55,7 @@ export function Hero({ content }: { content: SiteContent }) {
       <div className="container-x py-24 sm:py-32 lg:py-40">
         <p className="pill bg-ember-500/15 text-ember-400">India's largest Latin dance school</p>
         <h1 className="mt-6 display text-4xl font-extrabold leading-[1.04] tracking-tight sm:text-6xl lg:text-7xl max-w-4xl">
-          {content.hero.headline}
+          <Accentuate text={content.hero.headline} />
         </h1>
         <p className="mt-6 max-w-2xl text-lg text-cream/80 sm:text-xl">{content.hero.subHeadline}</p>
         <div className="mt-10 flex flex-wrap items-center gap-3">

@@ -44,6 +44,24 @@
   .display {
     @apply font-display tracking-tight;
   }
+  .accent {
+    font-family: var(--font-serif), Georgia, 'Times New Roman', serif;
+    font-style: italic;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: theme('colors.ember.400');
+  }
+  /* On warm backgrounds (e.g. closing CTA), the italic accent reads in ink. */
+  .text-ink-950 .accent,
+  .accent-ink {
+    color: theme('colors.ink.950');
+  }
+}
+
+/* Photo treatment — applies to every <img> rendered inside Next/Image */
+img.photo,
+.photo > img {
+  filter: saturate(0.88) contrast(1.08);
 }
 
 /* Magnetic button — applied via JS */
