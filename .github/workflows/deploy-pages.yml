@@ -1,0 +1,60 @@
+name: Deploy public site to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      # GitHub Pages is static-only. Strip everything that needs a server
+      # runtime so `next build` can do a clean static export of the public site.
+      - name: Strip server-only routes
+        run: |
+          rm -rf src/app/admin
+          rm -rf src/app/api
+          rm -f src/middleware.ts
+          rm -f src/app/icon.tsx
+          rm -f src/app/opengraph-image.tsx
+
+      - name: Build static export
+        env:
+          GH_PAGES: 'true'
+        run: npm run build
+
+      - name: Add .nojekyll
+        run: touch out/.nojekyll
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: out
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

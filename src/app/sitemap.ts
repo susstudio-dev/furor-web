@@ -3,6 +3,9 @@ import { getContent } from '@/lib/content';
 
 const BASE = 'https://www.dancehyderabad.com';
 
+// Built from the seed JSON at build time — safe to fully prerender.
+export const dynamic = 'force-static';
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const c = await getContent();
   const now = new Date();
