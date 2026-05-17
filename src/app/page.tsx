@@ -20,6 +20,7 @@ export default async function HomePage() {
   const nextPerStyle = nextBatchPerStyle(content);
   const studentsThisWeek = content.site.stats?.studentsThisWeek;
   const showCounter = typeof studentsThisWeek === 'number' && studentsThisWeek > 0;
+  const h = content.pages.home;
 
   return (
     <>
@@ -46,11 +47,11 @@ export default async function HomePage() {
           <div className="flex items-end justify-between gap-6 flex-wrap">
             <div>
               <div className="flex items-center gap-3">
-                <p className="display text-sm uppercase tracking-widest text-ember-400">What we teach</p>
+                <p className="display text-sm uppercase tracking-widest text-ember-400">{h.whatWeTeach.eyebrow}</p>
                 <RhythmSignature style="salsa" loop width={84} className="text-ember-500/70" />
               </div>
               <h2 className="mt-2 display text-3xl font-bold sm:text-5xl max-w-xl">
-                <Accentuate text={'Three dances. A *lifetime* of nights.'} />
+                <Accentuate text={h.whatWeTeach.headline} />
               </h2>
             </div>
             <Link href="/dance-styles" className="btn-secondary magnetic">
@@ -100,11 +101,11 @@ export default async function HomePage() {
           <div className="flex items-end justify-between gap-6 flex-wrap">
             <div>
               <div className="flex items-center gap-3">
-                <p className="display text-sm uppercase tracking-widest text-ember-400">Next batches</p>
+                <p className="display text-sm uppercase tracking-widest text-ember-400">{h.nextBatches.eyebrow}</p>
                 <RhythmSignature style="bachata" loop width={84} className="text-ember-500/70" />
               </div>
               <h2 className="mt-2 display text-3xl font-bold sm:text-4xl">
-                Doors open. Pick a date.
+                {h.nextBatches.headline}
               </h2>
             </div>
             <Link href="/batches" className="btn-secondary magnetic">
@@ -198,31 +199,30 @@ export default async function HomePage() {
         </section>
       ) : null}
 
-      {/* How to join */}
-      <section className="container-x py-12 sm:py-16">
-        <Reveal>
-          <p className="display text-sm uppercase tracking-widest text-ember-400">How it works</p>
-          <h2 className="mt-2 display text-3xl font-bold sm:text-5xl max-w-2xl">
-            Three steps from curious to dancing.
-          </h2>
-        </Reveal>
-        <Reveal stagger step={130} className="mt-12 grid gap-6 md:grid-cols-3">
-          {[
-            { n: '01', title: 'Pick a style', body: 'Beginner Latin covers Salsa or Bachata. Tell us what catches your ear — morning or evening batches both run.' },
-            { n: '02', title: 'Register on WhatsApp', body: 'Block your seat with a small token. We send dates, the studio address and what to bring — all on WhatsApp.' },
-            { n: '03', title: 'Show up and dance', body: 'Classes plus the weekly social. Miss one? Use our flexible make-up policy — no extra cost.' },
-          ].map((s, i, arr) => (
-            <div key={s.n} className="relative rounded-2xl border border-cream/10 bg-ink-900/30 p-6">
-              <p className="display text-2xl font-bold text-ember-400">{s.n}</p>
-              <p className="mt-3 display text-xl font-semibold">{s.title}</p>
-              <p className="mt-2 text-cream/70">{s.body}</p>
-              {i < arr.length - 1 ? (
-                <span aria-hidden className="hidden md:block absolute top-1/2 -right-3 text-ember-400/50">→</span>
-              ) : null}
-            </div>
-          ))}
-        </Reveal>
-      </section>
+      {h.howItWorks.steps.length > 0 ? (
+        <section className="container-x py-12 sm:py-16">
+          <Reveal>
+            <p className="display text-sm uppercase tracking-widest text-ember-400">{h.howItWorks.eyebrow}</p>
+            <h2 className="mt-2 display text-3xl font-bold sm:text-5xl max-w-2xl">
+              {h.howItWorks.headline}
+            </h2>
+          </Reveal>
+          <Reveal stagger step={130} className="mt-12 grid gap-6 md:grid-cols-3">
+            {h.howItWorks.steps.map((s, i, arr) => (
+              <div key={i} className="relative rounded-2xl border border-cream/10 bg-ink-900/30 p-6">
+                <p className="display text-2xl font-bold text-ember-400">
+                  {String(i + 1).padStart(2, '0')}
+                </p>
+                <p className="mt-3 display text-xl font-semibold">{s.title}</p>
+                <p className="mt-2 text-cream/70">{s.body}</p>
+                {i < arr.length - 1 ? (
+                  <span aria-hidden className="hidden md:block absolute top-1/2 -right-3 text-ember-400/50">→</span>
+                ) : null}
+              </div>
+            ))}
+          </Reveal>
+        </section>
+      ) : null}
 
       {/* Live counter */}
       {showCounter ? (
@@ -241,11 +241,11 @@ export default async function HomePage() {
       <section className="container-x py-14 sm:py-20">
         <Reveal className="on-accent rounded-3xl bg-gradient-to-br from-ember-700 via-ember-600 to-gold-500 p-10 sm:p-16 text-ink-950">
           <h2 className="display text-4xl font-extrabold sm:text-6xl tracking-tight max-w-3xl">
-            Ready when <Accentuate text={'*you*'} /> are. We&apos;re one tap away.
+            <Accentuate text={h.closingCta.headline} />
           </h2>
-          <p className="mt-3 text-ink-950/80 max-w-xl text-lg">
-            Tell us which style sounds like you. We&apos;ll handle the rest in WhatsApp — class times, prices, what to bring.
-          </p>
+          {h.closingCta.body ? (
+            <p className="mt-3 text-ink-950/80 max-w-xl text-lg">{h.closingCta.body}</p>
+          ) : null}
           <div className="mt-8 flex flex-wrap gap-3">
             <EnquiryCTA
               whatsappNumber={content.site.whatsappNumber}
@@ -267,97 +267,109 @@ export default async function HomePage() {
         </Reveal>
       </section>
 
-      {/* Visit the studio — last on the page */}
-      {sortedStudios.length > 0 ? (() => {
-        const s = sortedStudios[0];
-        const styleNames = s.styleSlugs
-          .map((slug) => sortedStyles.find((x) => x.slug === slug)?.name)
-          .filter(Boolean) as string[];
-        const directions = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.address)}`;
-        const mapEmbed = `https://www.google.com/maps?q=${encodeURIComponent(s.address)}&output=embed`;
-        const tel = s.telephone.replace(/\s/g, '');
-        return (
-          <section id="visit" className="container-x py-12 sm:py-16">
-            <Reveal>
-              <p className="display text-sm uppercase tracking-widest text-ember-400">Visit us</p>
-              <h2 className="mt-2 display text-3xl font-bold sm:text-5xl max-w-2xl tracking-tight">
-                Find us in {s.neighborhood}, Hyderabad.
-              </h2>
-            </Reveal>
-            <Reveal from="up" delay={80} className="mt-10 grid gap-6 md:grid-cols-2 items-stretch">
-              <div className="rounded-3xl border border-cream/10 bg-ink-900/40 p-8 sm:p-10 flex flex-col">
-                <p className="display text-2xl sm:text-3xl font-bold">{s.name}</p>
-                <p className="mt-1 text-xs uppercase tracking-widest text-ember-400/80">
-                  Furor Dance Studio · Hyderabad
-                </p>
-                <div className="mt-6 space-y-4 text-cream/85">
-                  <div>
-                    <p className="text-xs uppercase tracking-widest text-cream/50">Address</p>
-                    <p className="mt-1 leading-relaxed">{s.address}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs uppercase tracking-widest text-cream/50">Hours</p>
-                    <p className="mt-1">{s.hours}</p>
-                  </div>
-                  {s.parkingNotes ? (
-                    <div>
-                      <p className="text-xs uppercase tracking-widest text-cream/50">Parking</p>
-                      <p className="mt-1 text-cream/80">{s.parkingNotes}</p>
-                    </div>
-                  ) : null}
-                  {styleNames.length > 0 ? (
-                    <div>
-                      <p className="text-xs uppercase tracking-widest text-cream/50">What we teach here</p>
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        {styleNames.map((n) => (
-                          <span key={n} className="pill bg-cream/5 text-cream/80">{n}</span>
-                        ))}
+      {sortedStudios.length > 0 ? (
+        <section id="visit" className="container-x py-12 sm:py-16">
+          <Reveal>
+            <p className="display text-sm uppercase tracking-widest text-ember-400">{h.visitUs.eyebrow}</p>
+            <h2 className="mt-2 display text-3xl font-bold sm:text-5xl max-w-2xl tracking-tight">
+              {sortedStudios.length === 1
+                ? h.visitUs.headlineTemplate.replace('{neighborhood}', sortedStudios[0].neighborhood)
+                : h.visitUs.headlineTemplate.replace(
+                    '{neighborhood}',
+                    sortedStudios
+                      .map((s) => s.neighborhood)
+                      .filter((n, i, a) => a.indexOf(n) === i)
+                      .join(' & '),
+                  )}
+            </h2>
+          </Reveal>
+          <div className="mt-10 grid gap-12">
+            {sortedStudios.map((s) => {
+              const styleNames = s.styleSlugs
+                .map((slug) => sortedStyles.find((x) => x.slug === slug)?.name)
+                .filter(Boolean) as string[];
+              const directions = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.address)}`;
+              const mapEmbed = `https://www.google.com/maps?q=${encodeURIComponent(s.address)}&output=embed`;
+              const tel = s.telephone.replace(/\s/g, '');
+              return (
+                <div key={s.id}>
+                  <Reveal from="up" delay={80} className="grid gap-6 md:grid-cols-2 items-stretch">
+                    <div className="rounded-3xl border border-cream/10 bg-ink-900/40 p-8 sm:p-10 flex flex-col">
+                      <p className="display text-2xl sm:text-3xl font-bold">{s.name}</p>
+                      <p className="mt-1 text-xs uppercase tracking-widest text-ember-400/80">
+                        Furor Dance Studio · Hyderabad
+                      </p>
+                      <div className="mt-6 space-y-4 text-cream/85">
+                        <div>
+                          <p className="text-xs uppercase tracking-widest text-cream/50">Address</p>
+                          <p className="mt-1 leading-relaxed">{s.address}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs uppercase tracking-widest text-cream/50">Hours</p>
+                          <p className="mt-1">{s.hours}</p>
+                        </div>
+                        {s.parkingNotes ? (
+                          <div>
+                            <p className="text-xs uppercase tracking-widest text-cream/50">Parking</p>
+                            <p className="mt-1 text-cream/80">{s.parkingNotes}</p>
+                          </div>
+                        ) : null}
+                        {styleNames.length > 0 ? (
+                          <div>
+                            <p className="text-xs uppercase tracking-widest text-cream/50">What we teach here</p>
+                            <div className="mt-2 flex flex-wrap gap-2">
+                              {styleNames.map((n) => (
+                                <span key={n} className="pill bg-cream/5 text-cream/80">{n}</span>
+                              ))}
+                            </div>
+                          </div>
+                        ) : null}
+                      </div>
+                      <div className="mt-auto pt-6 flex flex-wrap gap-3">
+                        <a href={directions} target="_blank" rel="noopener noreferrer" className="btn-primary">
+                          Get directions
+                        </a>
+                        <a href={`tel:${tel}`} className="btn-secondary">Call {s.telephone}</a>
                       </div>
                     </div>
+                    <div className="relative overflow-hidden rounded-3xl border border-cream/10 bg-ink-900/40 min-h-[360px]">
+                      <iframe
+                        src={mapEmbed}
+                        title={`Map to ${s.name}`}
+                        loading="lazy"
+                        referrerPolicy="no-referrer-when-downgrade"
+                        className="absolute inset-0 h-full w-full"
+                        style={{ border: 0, filter: 'grayscale(0.4) contrast(1.05)' }}
+                      />
+                    </div>
+                  </Reveal>
+                  {s.photos.length > 0 ? (
+                    <Reveal stagger step={90} className="mt-6 grid gap-3 sm:gap-4 grid-cols-2 md:grid-cols-3">
+                      {s.photos.slice(0, 3).map((p, i) => (
+                        <div
+                          key={`${p}-${i}`}
+                          className={`relative aspect-[4/3] overflow-hidden rounded-2xl border border-cream/10 bg-ink-900/40 ${
+                            i === 0 ? 'col-span-2 md:col-span-1' : ''
+                          }`}
+                        >
+                          <Img
+                            src={p}
+                            alt={`Inside ${s.name}`}
+                            seed={`${s.slug}-${i}`}
+                            fill
+                            sizes="(max-width: 768px) 100vw, 33vw"
+                            className="object-cover transition duration-700 hover:scale-[1.04]"
+                          />
+                        </div>
+                      ))}
+                    </Reveal>
                   ) : null}
                 </div>
-                <div className="mt-auto pt-6 flex flex-wrap gap-3">
-                  <a href={directions} target="_blank" rel="noopener noreferrer" className="btn-primary">
-                    Get directions
-                  </a>
-                  <a href={`tel:${tel}`} className="btn-secondary">Call {s.telephone}</a>
-                </div>
-              </div>
-              <div className="relative overflow-hidden rounded-3xl border border-cream/10 bg-ink-900/40 min-h-[360px]">
-                <iframe
-                  src={mapEmbed}
-                  title={`Map to ${s.name}`}
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                  className="absolute inset-0 h-full w-full"
-                  style={{ border: 0, filter: 'grayscale(0.4) contrast(1.05)' }}
-                />
-              </div>
-            </Reveal>
-            {s.photos.length > 0 ? (
-              <Reveal stagger step={90} className="mt-6 grid gap-3 sm:gap-4 grid-cols-2 md:grid-cols-3">
-                {s.photos.slice(0, 3).map((p, i) => (
-                  <div
-                    key={p}
-                    className={`relative aspect-[4/3] overflow-hidden rounded-2xl border border-cream/10 bg-ink-900/40 ${
-                      i === 0 ? 'col-span-2 md:col-span-1' : ''
-                    }`}
-                  >
-                    <Img
-                      src={p}
-                      alt={`Inside ${s.name}`}
-                      seed={`${s.slug}-${i}`}
-                      fill
-                      sizes="(max-width: 768px) 100vw, 33vw"
-                      className="object-cover transition duration-700 hover:scale-[1.04]"
-                    />
-                  </div>
-                ))}
-              </Reveal>
-            ) : null}
-          </section>
-        );
-      })() : null}
+              );
+            })}
+          </div>
+        </section>
+      ) : null}
     </>
   );
 }

@@ -30,9 +30,10 @@ export default async function AdminDashboard() {
         ))}
       </div>
 
-      <div className="mt-10 grid gap-3 sm:grid-cols-3">
+      <div className="mt-10 grid gap-3 sm:grid-cols-4">
         <Link href="/admin/site" className="btn-secondary">Site & socials</Link>
         <Link href="/admin/hero" className="btn-secondary">Hero</Link>
+        <Link href="/admin/pages" className="btn-secondary">Page copy</Link>
         <Link href="/admin/json" className="btn-secondary">Raw JSON editor</Link>
       </div>
 

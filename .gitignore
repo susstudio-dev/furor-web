@@ -5,6 +5,7 @@ out
 .env.local
 .env*.local
 data/site-content.json
+data/site-content.json.*
 data/versions/
 data/users.json
 data/audit.log

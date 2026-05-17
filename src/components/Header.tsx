@@ -47,12 +47,14 @@ export function Header({ content }: { content: SiteContent }) {
         scrolled ? 'bg-ink-950/85 backdrop-blur border-b border-cream/10' : 'bg-transparent'
       }`}
     >
-      <div className="container-x flex h-16 items-center justify-between">
-        <Link href="/" aria-label="Furor — Dance Hyderabad home">
+      <div className="container-x flex h-16 items-center gap-3">
+        <Link href="/" aria-label="Furor — Dance Hyderabad home" className="shrink-0">
           <BrandMark size={52} />
         </Link>
-        <div className="flex items-center gap-2 sm:gap-3">
-        <nav className="hidden lg:flex items-center gap-1" aria-label="Primary">
+        <nav
+          className="hidden lg:flex flex-1 items-center justify-center gap-1"
+          aria-label="Primary"
+        >
           {navWithDropdowns.map((item) => (
             <div key={item.label} className="group relative">
               <Link href={item.href} className="btn-ghost">
@@ -77,17 +79,18 @@ export function Header({ content }: { content: SiteContent }) {
             </div>
           ))}
         </nav>
-        <ThemeToggle />
-        <button
-          type="button"
-          className="lg:hidden btn-ghost p-2"
-          aria-label="Toggle menu"
-          aria-expanded={open}
-          onClick={() => setOpen((v) => !v)}
-        >
-          <span className="sr-only">Menu</span>
-          <Burger open={open} />
-        </button>
+        <div className="ml-auto lg:ml-0 flex shrink-0 items-center gap-2 sm:gap-3">
+          <ThemeToggle />
+          <button
+            type="button"
+            className="lg:hidden btn-ghost p-2"
+            aria-label="Toggle menu"
+            aria-expanded={open}
+            onClick={() => setOpen((v) => !v)}
+          >
+            <span className="sr-only">Menu</span>
+            <Burger open={open} />
+          </button>
         </div>
       </div>
       {open ? (

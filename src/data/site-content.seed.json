@@ -13,7 +13,16 @@
     },
     "footerCopy": "Furor Dance Hyderabad — Dance for life. Our home is in Jubilee Hills.",
     "notice": "",
-    "stats": { "studentsThisWeek": 124 }
+    "stats": {
+      "studentsThisWeek": 124
+    }
+  },
+  "hero": {
+    "headline": "The night was made for *dancing*.",
+    "subHeadline": "Learn Salsa, Bachata and West Coast Swing with India's most loved Latin dance school. Our home is in Jubilee Hills, Hyderabad. Beginner-friendly. Whisper a yes — we'll take it from there on WhatsApp.",
+    "videoMp4Url": "",
+    "videoWebmUrl": "",
+    "posterImage": "/photos/DSC_0166.jpg"
   },
   "tonight": {
     "enabled": true,
@@ -23,19 +32,21 @@
     "ctaLabel": "WhatsApp to RSVP",
     "ctaContext": "the La Rumba Latin social tonight at Jubilee Hills"
   },
-  "hero": {
-    "headline": "The night was made for *dancing*.",
-    "subHeadline": "Learn Salsa, Bachata and West Coast Swing with India's most loved Latin dance school. Our home is in Jubilee Hills, Hyderabad. Beginner-friendly. Whisper a yes — we'll take it from there on WhatsApp.",
-    "videoMp4Url": "",
-    "videoWebmUrl": "",
-    "posterImage": "/photos/DSC_0166.jpg"
-  },
   "whyFuror": {
     "headline": "Why dancers stay with us",
     "points": [
-      { "title": "16 years, 5 cities", "body": "Founded 2009. Today we're across Hyderabad, Bangalore, Pune, Ahmedabad and Gurgaon — but Hyderabad is home." },
-      { "title": "Built around the social", "body": "Class is one half. Our weekly social, La Rumba, is where the dance becomes yours." },
-      { "title": "True beginners welcome", "body": "Most of our students walked in having never danced. Our Foundation track is built for exactly that." }
+      {
+        "title": "16 years, 5 cities",
+        "body": "Founded 2009. Today we're across Hyderabad, Bangalore, Pune, Ahmedabad and Gurgaon — but Hyderabad is home."
+      },
+      {
+        "title": "Built around the social",
+        "body": "Class is one half. Our weekly social, La Rumba, is where the dance becomes yours."
+      },
+      {
+        "title": "True beginners welcome",
+        "body": "Most of our students walked in having never danced. Our Foundation track is built for exactly that."
+      }
     ]
   },
   "danceStyles": [
@@ -54,9 +65,18 @@
         "advanced": "Body movement, layering and full social fluency. You're the partner everyone wants to dance with."
       },
       "faqs": [
-        { "q": "Do I need a partner?", "a": "No. We rotate partners in class, which is also the fastest way to learn." },
-        { "q": "What should I wear?", "a": "Anything you can move in. Smooth-soled shoes if you have them — we don't sell anything." },
-        { "q": "How fit do I need to be?", "a": "Not at all. Our oldest student started at 64." }
+        {
+          "q": "Do I need a partner?",
+          "a": "No. We rotate partners in class, which is also the fastest way to learn."
+        },
+        {
+          "q": "What should I wear?",
+          "a": "Anything you can move in. Smooth-soled shoes if you have them — we don't sell anything."
+        },
+        {
+          "q": "How fit do I need to be?",
+          "a": "Not at all. Our oldest student started at 64."
+        }
       ],
       "displayOrder": 1
     },
@@ -75,8 +95,14 @@
         "advanced": "Musicality, dips, body waves, and the freedom to interpret a song as you hear it."
       },
       "faqs": [
-        { "q": "Is Bachata romantic?", "a": "It can be — it can also be playful, joyful, even silly. The dance is what you bring to it." },
-        { "q": "I have two left feet.", "a": "Most of our Bachata students said the same in week one. Bachata is forgiving by design." }
+        {
+          "q": "Is Bachata romantic?",
+          "a": "It can be — it can also be playful, joyful, even silly. The dance is what you bring to it."
+        },
+        {
+          "q": "I have two left feet.",
+          "a": "Most of our Bachata students said the same in week one. Bachata is forgiving by design."
+        }
       ],
       "displayOrder": 2
     },
@@ -95,7 +121,10 @@
         "advanced": "Full musicality, body language conversation, competition-level connection."
       },
       "faqs": [
-        { "q": "Is WCS only at one of your branches?", "a": "Currently yes — Jubilee Hills. Chat with us on WhatsApp and we'll tell you the next batch." }
+        {
+          "q": "Is WCS only at one of your branches?",
+          "a": "Currently yes — Jubilee Hills. Chat with us on WhatsApp and we'll tell you the next batch."
+        }
       ],
       "displayOrder": 3
     }
@@ -107,13 +136,45 @@
       "name": "Jubilee Hills",
       "neighborhood": "Jubilee Hills",
       "address": "2nd Floor, Alcazar Mall, Road No. 36, Jubilee Hills, Hyderabad, Telangana 500033",
-      "geo": { "lat": 17.4326, "lng": 78.4071 },
+      "geo": {
+        "lat": 17.4326,
+        "lng": 78.4071
+      },
       "hours": "Mon–Fri 9 AM–6 PM · Sat–Sun 9:30 AM–4:30 PM",
       "telephone": "+91 88860 72572",
-      "photos": ["/photos/DSC_0095.jpg", "/photos/DSC_0166.jpg", "/photos/DSC09776.jpg"],
+      "photos": [
+        "/photos/DSC_0095.jpg",
+        "/photos/DSC_0166.jpg",
+        "/photos/DSC09776.jpg"
+      ],
       "parkingNotes": "Mall basement parking, validated by us at the front desk.",
-      "styleSlugs": ["salsa", "bachata", "west-coast-swing"],
+      "styleSlugs": [
+        "salsa",
+        "bachata",
+        "west-coast-swing"
+      ],
       "displayOrder": 1
+    },
+    {
+      "id": "studio-tklx2l",
+      "slug": "jubilee-hills",
+      "name": " Jubilee Hills",
+      "neighborhood": " Jubilee Hills",
+      "address": " Jubilee Hills",
+      "geo": {
+        "lat": 17.385,
+        "lng": 78.4867
+      },
+      "hours": "Mon–Fri 9 AM–6 PM · Sat–Sun 9:30 AM–4:30 PM",
+      "telephone": "9030577900",
+      "photos": [],
+      "parkingNotes": "",
+      "styleSlugs": [
+        "salsa",
+        "bachata",
+        "west-coast-swing"
+      ],
+      "displayOrder": 2
     }
   ],
   "batches": [
@@ -122,7 +183,10 @@
       "styleSlug": "salsa",
       "level": "Foundation",
       "branchSlug": "jubilee-hills",
-      "daysOfWeek": ["Sat", "Sun"],
+      "daysOfWeek": [
+        "Sat",
+        "Sun"
+      ],
       "time": "9:30–10:30 AM",
       "startDate": "2026-05-18",
       "priceInr": 6500,
@@ -135,7 +199,10 @@
       "styleSlug": "salsa",
       "level": "Foundation",
       "branchSlug": "jubilee-hills",
-      "daysOfWeek": ["Tue", "Thu"],
+      "daysOfWeek": [
+        "Tue",
+        "Thu"
+      ],
       "time": "7:30–8:30 PM",
       "startDate": "2026-05-26",
       "priceInr": 6500,
@@ -148,7 +215,10 @@
       "styleSlug": "bachata",
       "level": "Foundation",
       "branchSlug": "jubilee-hills",
-      "daysOfWeek": ["Sat", "Sun"],
+      "daysOfWeek": [
+        "Sat",
+        "Sun"
+      ],
       "time": "10:45–11:45 AM",
       "startDate": "2026-05-18",
       "priceInr": 6500,
@@ -161,7 +231,10 @@
       "styleSlug": "bachata",
       "level": "Intermediate",
       "branchSlug": "jubilee-hills",
-      "daysOfWeek": ["Sat", "Sun"],
+      "daysOfWeek": [
+        "Sat",
+        "Sun"
+      ],
       "time": "12:00–1:00 PM",
       "startDate": "2026-05-25",
       "priceInr": 7500,
@@ -174,7 +247,9 @@
       "styleSlug": "west-coast-swing",
       "level": "Foundation",
       "branchSlug": "jubilee-hills",
-      "daysOfWeek": ["Wed"],
+      "daysOfWeek": [
+        "Wed"
+      ],
       "time": "8:00–9:00 PM",
       "startDate": "2026-06-03",
       "priceInr": 6500,
@@ -187,7 +262,10 @@
       "styleSlug": "salsa",
       "level": "Intermediate",
       "branchSlug": "jubilee-hills",
-      "daysOfWeek": ["Sat", "Sun"],
+      "daysOfWeek": [
+        "Sat",
+        "Sun"
+      ],
       "time": "5:00–6:00 PM",
       "startDate": "2026-06-08",
       "priceInr": 7500,
@@ -203,9 +281,16 @@
       "photo": "/photos/rishikesh.png",
       "role": "Regional Head & Promoter — Hyderabad",
       "shortBio": "Rish is first and foremost a Salsa promoter. He took up Ballroom dancing in college while reading Engineering at Assumption University, Thailand — studying under Ajarn Boonbunjong Uratanamanee and Ajarn Thanawat — and was introduced to the languages of the Rumba, Waltz, Tango, Foxtrot and other International Ballroom and Latin styles.\n\nAfter relocating to Bangalore, a chance encounter with Salsa at a winter workshop at Alliance Francaise sparked a love affair that continues today. There he studied Rueda and Cuban Style under Cyrille Ngalle. Looking to learn LA Style, he found Alex Diaz teaching at a Bangalore club — and from there, there has been no looking back. He joined Furor as a dancer in 2008 and trained as an instructor.\n\nHe has taken workshops with Edie ‘Salsa Freak’, Eddie Torres, Dave Paris, Zoe Klein, Junior & Emily, Ricardo Murillo, Viviana Vargas, Juan Matos, Candy Mena, Alex Lee, Kimberly Nodora, and Terry & Cécile — each adding something unique to his journey.\n\nAfter relocating to Hyderabad, Rish took on the responsibility of promoting Furor's unique blend of Salsa — laying the groundwork for its formal entry by jump-starting weekly Salsa Socials in the city. A technologist in a consulting firm by day, he brings experience in business, event management and IT to Furor, and manages its online presence alongside his role as Promoter. A poet, writer, musician and dancer, he balances his interests across the arts and sciences.",
-      "branchSlugs": ["jubilee-hills"],
-      "styleSlugs": ["salsa", "bachata"],
-      "social": { "instagram": "https://instagram.com/rishchhabra" }
+      "branchSlugs": [
+        "jubilee-hills"
+      ],
+      "styleSlugs": [
+        "salsa",
+        "bachata"
+      ],
+      "social": {
+        "instagram": "https://instagram.com/rishchhabra"
+      }
     },
     {
       "id": "inst-aditya",
@@ -213,9 +298,15 @@
       "photo": "/photos/aditya.jpg",
       "role": "Resident Salsa DJ — Hyderabad",
       "shortBio": "\"If dancing salsa is my meditation, DJing salsa is my nirvana.\" This is the philosophy that drives DJ Aditya to be the best in the business. He discovered his love for Salsa quite by accident while studying in the USA — being there brought him into direct contact with the Latin population and he came to see their music as a reflection of their culture.\n\nWhile having the privilege to dance in Indianapolis, Chicago and New York, he realised how varied Salsa music can be — and just how much of a challenge that poses while DJing. \"Spinning at socials is a matter of feel. The challenge is getting the crowd to connect to the music. The dancers can be of varied levels and the song has to have something for all of them.\"\n\nWhile DJing he impresses on the importance of smoothness in transition and moods in the music. \"If asked what the greatest compliment can be to my DJing — I hope dancers feel that my style has flow. I like to think of it as taking the dancers on a journey, with each song beating a new path.\"",
-      "branchSlugs": ["jubilee-hills"],
-      "styleSlugs": ["salsa"],
-      "social": { "instagram": "" }
+      "branchSlugs": [
+        "jubilee-hills"
+      ],
+      "styleSlugs": [
+        "salsa"
+      ],
+      "social": {
+        "instagram": ""
+      }
     }
   ],
   "testimonials": [
@@ -325,5 +416,305 @@
       "excerpt": "A 12-hour weekend bootcamp covering the full WCS beginner syllabus. Open level.",
       "body": "Twelve hours over two days. Push break, sugar push, side passes, anchor step — the full WCS beginner alphabet, plus enough musicality work that you'll be able to dance every song at our weekly socials by Sunday night. Open level: complete beginners welcome."
     }
-  ]
+  ],
+  "pages": {
+    "home": {
+      "whatWeTeach": {
+        "eyebrow": "What we teach",
+        "headline": "Three dances. A *lifetime* of nights."
+      },
+      "nextBatches": {
+        "eyebrow": "Next batches",
+        "headline": "Doors open. Pick a date."
+      },
+      "howItWorks": {
+        "eyebrow": "How it works",
+        "headline": "Three steps from curious to dancing.",
+        "steps": [
+          {
+            "title": "Pick a style",
+            "body": "Beginner Latin covers Salsa or Bachata. Tell us what catches your ear — morning or evening batches both run."
+          },
+          {
+            "title": "Register on WhatsApp",
+            "body": "Block your seat with a small token. We send dates, the studio address and what to bring — all on WhatsApp."
+          },
+          {
+            "title": "Show up and dance",
+            "body": "Classes plus the weekly social. Miss one? Use our flexible make-up policy — no extra cost."
+          }
+        ]
+      },
+      "closingCta": {
+        "headline": "Ready when *you* are. We're one tap away.",
+        "body": "Tell us which style sounds like you. We'll handle the rest in WhatsApp — class times, prices, what to bring."
+      },
+      "visitUs": {
+        "eyebrow": "Visit us",
+        "headlineTemplate": "Find us in {neighborhood}, Hyderabad."
+      }
+    },
+    "about": {
+      "intro": {
+        "eyebrow": "About",
+        "headline": "Sixteen years. Five cities. One love letter to dance.",
+        "lead": ""
+      },
+      "introParagraphs": [
+        "Furor began in 2009 in Bangalore with a single Salsa class. Today we're India's largest Latin dance school — across Bangalore, Hyderabad, Pune, Ahmedabad and Gurgaon — but we've never lost the thing that started it: a room, a song, two people learning to listen.",
+        "In Hyderabad our home is the Jubilee Hills studio, and our weekly Latin social — La Rumba — is where students stop being students and start being dancers."
+      ],
+      "moments": {
+        "eyebrow": "Moments",
+        "headline": "Inside the studio. Inside the social.",
+        "lead": "A few frames from our nights at La Rumba and afternoons in class.",
+        "photos": [
+          {
+            "src": "/photos/DSC_0095.jpg",
+            "alt": "La Rumba social — a packed floor on a Saturday night"
+          },
+          {
+            "src": "/photos/DSC_0052.jpg",
+            "alt": "A formal turn in emerald — Bachata at the social"
+          },
+          {
+            "src": "/photos/DSC09730.jpg",
+            "alt": "A classic Salsa turn with extended arms"
+          },
+          {
+            "src": "/photos/DSC09736.jpg",
+            "alt": "Mid-step rotation — partner dance in motion"
+          },
+          {
+            "src": "/photos/DSC09698.jpg",
+            "alt": "A close embrace in black and white"
+          },
+          {
+            "src": "/photos/DSC_0166.jpg",
+            "alt": "Royal blue, brick column, the heart of the floor"
+          },
+          {
+            "src": "/photos/DSC_9973.jpg",
+            "alt": "Arm raised — a dramatic West Coast Swing turn"
+          },
+          {
+            "src": "/photos/DSC09776.jpg",
+            "alt": "Pure joy — two dancers laughing through a song"
+          }
+        ]
+      },
+      "stats": [
+        {
+          "k": "16+",
+          "v": "Years of dancing"
+        },
+        {
+          "k": "5",
+          "v": "Cities in India"
+        },
+        {
+          "k": "10,000+",
+          "v": "Students trained"
+        },
+        {
+          "k": "1",
+          "v": "Hyderabad home — Jubilee Hills"
+        }
+      ],
+      "timeline": {
+        "eyebrow": "Our journey",
+        "headline": "From one Salsa class in Bangalore to five cities.",
+        "milestones": [
+          {
+            "year": "2009",
+            "title": "Furor begins in Bangalore",
+            "body": "Founded by Creative Director Alex Diaz with one mission: transform India's Salsa scene."
+          },
+          {
+            "year": "2010",
+            "title": "Hyderabad opens",
+            "body": "Rishikesh Chhabra brings Furor to Hyderabad — regular classes and Saturday socials from day one."
+          },
+          {
+            "year": "2013",
+            "title": "Ahmedabad joins in",
+            "body": "Jayvir Mehta starts Furor Ahmedabad, building the Latin scene from scratch."
+          },
+          {
+            "year": "2016",
+            "title": "Pune officially launches",
+            "body": "After three years as enMotion Pune, the city joins the Furor family under Yatin Ranade and Supreme Kaur Bhamra."
+          },
+          {
+            "year": "2020",
+            "title": "Online classes go live",
+            "body": "The pandemic pushes us online — hybrid teaching becomes part of how we work."
+          },
+          {
+            "year": "2024",
+            "title": "Gurgaon — city number five",
+            "body": "Furor opens its fifth city under Pummy Kumari, cementing its place as India's largest Latin dance academy."
+          }
+        ]
+      },
+      "beyond": {
+        "eyebrow": "Beyond the classroom",
+        "headline": "A studio, a stage and a worldwide community.",
+        "cards": [
+          {
+            "title": "Corporate & events",
+            "body": "We design dance experiences for companies, product launches and private events — from one-hour workshops to season-long programs."
+          },
+          {
+            "title": "Performance team",
+            "body": "Our students and instructors have represented India at Salsa congresses around the world."
+          },
+          {
+            "title": "International artists",
+            "body": "We host visiting choreographers and dancers from around the world for workshops in Hyderabad each year."
+          }
+        ]
+      },
+      "teamTeaser": {
+        "eyebrow": "The team",
+        "headline": "Meet the people you'll dance with.",
+        "linkLabel": "See instructors"
+      },
+      "closingCta": {
+        "headline": "Want to come dance?",
+        "body": "We're one tap away. WhatsApp is fastest."
+      }
+    },
+    "faqs": {
+      "intro": {
+        "eyebrow": "FAQs",
+        "headline": "The questions we hear most.",
+        "lead": "Anything missing? WhatsApp us and we'll answer in minutes."
+      },
+      "sections": [
+        {
+          "section": "Getting started",
+          "items": [
+            {
+              "q": "I have never danced before. Can I still join?",
+              "a": "Yes. Most of our students walk in having never partner-danced before. Our Foundation track is built for absolute beginners — we teach you the basic step, the connection, and the social etiquette from scratch."
+            },
+            {
+              "q": "Do I need a partner to join?",
+              "a": "No. We rotate partners in class — it is the fastest way to learn and also how social dancing works. You will dance with leaders and followers of every level."
+            },
+            {
+              "q": "What should I wear to class?",
+              "a": "Anything comfortable that lets you move. Smooth-soled shoes help (you turn easier) but they are not required for your first class. Avoid sticky rubber soles if you can."
+            },
+            {
+              "q": "How fit do I need to be?",
+              "a": "You do not need to be particularly fit. We teach dancers from age 16 to 70+. Our oldest beginner started at 64."
+            }
+          ]
+        },
+        {
+          "section": "Classes and batches",
+          "items": [
+            {
+              "q": "How long is a batch?",
+              "a": "Foundation batches run for 2 months — typically 20 hours total, with weekend or weekday sessions. Intermediate and Advanced courses follow the same rhythm."
+            },
+            {
+              "q": "What does it cost?",
+              "a": "Foundation Salsa and Bachata are ₹6,500 for the full 2-month batch. Intermediate courses are ₹7,500. Pricing is per person, not per couple."
+            },
+            {
+              "q": "What if I miss a class?",
+              "a": "We have a flexible make-up policy — message us on WhatsApp and we will find you a session in another batch of the same level."
+            },
+            {
+              "q": "Where are batches held?",
+              "a": "All Furor Hyderabad batches are at our Jubilee Hills studio — 2nd Floor, Alcazar Mall, Road No. 36, Jubilee Hills, Hyderabad 500033."
+            }
+          ]
+        },
+        {
+          "section": "About Furor",
+          "items": [
+            {
+              "q": "How long has Furor been around?",
+              "a": "Furor was founded in 2009 in Bangalore by Alex Diaz, and opened in Hyderabad in 2010 under Rishikesh Chhabra. Today we are India's largest Latin dance school across Bangalore, Hyderabad, Pune, Ahmedabad and Gurgaon."
+            },
+            {
+              "q": "What is La Rumba?",
+              "a": "La Rumba is our weekly Latin social — Hyderabad's longest-running Salsa and Bachata night. Free for current students, ₹300 for guests. It is where students stop being students and start being dancers."
+            },
+            {
+              "q": "Do you do corporate workshops or events?",
+              "a": "Yes. We design dance experiences for corporates, product launches and private events — one-hour workshops up to multi-week programs. WhatsApp us for a custom quote."
+            },
+            {
+              "q": "How do I reach you?",
+              "a": "WhatsApp is fastest: +91 88860 72572. You can also email furorhyd@dancehyderabad.com or DM @furorhyd on Instagram."
+            }
+          ]
+        }
+      ],
+      "closingCta": {
+        "headline": "Still have questions?",
+        "body": "WhatsApp is the fastest way to reach us — we answer in minutes."
+      }
+    },
+    "contact": {
+      "intro": {
+        "eyebrow": "Contact",
+        "headline": "One tap away. We're listening.",
+        "lead": "WhatsApp is fastest. Email if you'd rather. Walk in if you're in the neighbourhood."
+      },
+      "tiles": {
+        "whatsappLabel": "WhatsApp · fastest",
+        "whatsappBody": "Reply in minutes during studio hours. Slower late nights, but we get to it.",
+        "emailLabel": "Email",
+        "emailBody": "Best for corporate enquiries, partnerships and longer questions that need attachments.",
+        "instagramLabel": "Instagram",
+        "instagramBody": "DM us on Instagram — see the dance floor before you book a class."
+      },
+      "closingCta": {
+        "headline": "Ready when you are.",
+        "body": "Tell us which style sounds like you. We'll handle the rest in WhatsApp — class times, prices, what to bring."
+      }
+    },
+    "instructorsPage": {
+      "intro": {
+        "eyebrow": "Instructors",
+        "headline": "The people you'll dance with.",
+        "lead": "A small team. Decades of dancing between them. Each one in the room every week."
+      },
+      "testimonialsHeader": {
+        "eyebrow": "Student voices",
+        "headline": "What it feels like, in their words."
+      },
+      "closingCta": {
+        "headline": "Want to come dance?",
+        "body": "We're one tap away. WhatsApp is fastest."
+      }
+    },
+    "stories": {
+      "intro": {
+        "eyebrow": "Blog",
+        "headline": "From the studio.",
+        "lead": "Festivals, socials, bootcamps and the everyday inside Furor Hyderabad."
+      }
+    },
+    "danceStyles": {
+      "intro": {
+        "eyebrow": "Dance Styles",
+        "headline": "The dances we teach. The reasons people stay.",
+        "lead": ""
+      }
+    },
+    "batches": {
+      "intro": {
+        "eyebrow": "Batches & Pricing",
+        "headline": "What's open. What it costs. Real seats, real dates.",
+        "lead": "No forms. Pick a batch, tap WhatsApp, and we'll confirm in minutes."
+      }
+    }
+  }
 }

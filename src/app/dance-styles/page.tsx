@@ -8,14 +8,22 @@ export const metadata = { title: 'Dance Styles' };
 
 export default async function StylesIndex() {
   const content = await getContent();
+  const intro = content.pages.danceStyles.intro;
   const styles = content.danceStyles.slice().sort((a, b) => a.displayOrder - b.displayOrder);
   return (
     <>
       <section className="container-x pt-20 pb-12">
-        <p className="display text-sm uppercase tracking-widest text-ember-400">Dance Styles</p>
-        <h1 className="mt-2 display text-4xl font-extrabold sm:text-6xl tracking-tight max-w-3xl">
-          The dances we teach. The reasons people stay.
-        </h1>
+        {intro.eyebrow ? (
+          <p className="display text-sm uppercase tracking-widest text-ember-400">{intro.eyebrow}</p>
+        ) : null}
+        {intro.headline ? (
+          <h1 className="mt-2 display text-4xl font-extrabold sm:text-6xl tracking-tight max-w-3xl">
+            {intro.headline}
+          </h1>
+        ) : null}
+        {intro.lead ? (
+          <p className="mt-4 max-w-2xl text-cream/75 text-lg">{intro.lead}</p>
+        ) : null}
       </section>
       <section className="container-x pb-12">
         <div className="grid gap-6 md:grid-cols-3">

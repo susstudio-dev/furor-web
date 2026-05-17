@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import type { SiteContent } from '@/lib/content-schema';
 import { SaveBar } from '@/components/admin/SaveBar';
+import { saveSiteContent } from '@/lib/admin-save';
 
 export function SiteEditor({ initial }: { initial: SiteContent }) {
   const [c, setC] = useState<SiteContent>(initial);
@@ -16,15 +17,40 @@ export function SiteEditor({ initial }: { initial: SiteContent }) {
     setC((p) => ({ ...p, tonight: { ...p.tonight, ...patch } }));
     setDirty(true);
   }
+  function patchWhy(patch: Partial<SiteContent['whyFuror']>) {
+    setC((p) => ({ ...p, whyFuror: { ...p.whyFuror, ...patch } }));
+    setDirty(true);
+  }
+  function patchWhyPoint(idx: number, p: { title?: string; body?: string }) {
+    setC((prev) => ({
+      ...prev,
+      whyFuror: {
+        ...prev.whyFuror,
+        points: prev.whyFuror.points.map((pt, i) => (i === idx ? { ...pt, ...p } : pt)),
+      },
+    }));
+    setDirty(true);
+  }
+  function addWhyPoint() {
+    setC((prev) => ({
+      ...prev,
+      whyFuror: { ...prev.whyFuror, points: [...prev.whyFuror.points, { title: '', body: '' }] },
+    }));
+    setDirty(true);
+  }
+  function removeWhyPoint(idx: number) {
+    setC((prev) => ({
+      ...prev,
+      whyFuror: {
+        ...prev.whyFuror,
+        points: prev.whyFuror.points.filter((_, i) => i !== idx),
+      },
+    }));
+    setDirty(true);
+  }
 
   async function save() {
-    const res = await fetch('/api/admin/save', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(c),
-    });
-    const j = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(j.error || 'Save failed');
+    await saveSiteContent(c);
     setDirty(false);
   }
 
@@ -119,6 +145,56 @@ export function SiteEditor({ initial }: { initial: SiteContent }) {
               <Field label="WhatsApp message context" hint="Inserted into 'Hi Furor, I'd like to come to ___.'">
                 <input value={c.tonight.ctaContext} onChange={(e) => patchTonight({ ctaContext: e.target.value })} className="input" />
               </Field>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4 rounded-2xl border border-cream/10 bg-ink-900/40 p-5">
+          <p className="display text-sm uppercase tracking-widest text-ember-400">Why Furor</p>
+          <p className="mt-1 text-xs text-cream/50">
+            The headline + 3-point block on the home page. Leave the points empty to hide the section entirely.
+          </p>
+          <div className="mt-4 grid gap-3">
+            <Field label="Section headline">
+              <input
+                value={c.whyFuror.headline}
+                onChange={(e) => patchWhy({ headline: e.target.value })}
+                className="input"
+              />
+            </Field>
+            {c.whyFuror.points.map((pt, i) => (
+              <div key={i} className="rounded-xl border border-cream/10 bg-ink-950/50 p-3 grid gap-2">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs uppercase tracking-widest text-cream/50">Point {i + 1}</p>
+                  <button
+                    type="button"
+                    onClick={() => removeWhyPoint(i)}
+                    className="text-xs text-cream/40 hover:text-ember-400"
+                  >
+                    Remove
+                  </button>
+                </div>
+                <Field label="Title">
+                  <input
+                    value={pt.title}
+                    onChange={(e) => patchWhyPoint(i, { title: e.target.value })}
+                    className="input"
+                  />
+                </Field>
+                <Field label="Body">
+                  <textarea
+                    rows={2}
+                    value={pt.body}
+                    onChange={(e) => patchWhyPoint(i, { body: e.target.value })}
+                    className="input"
+                  />
+                </Field>
+              </div>
+            ))}
+            <div>
+              <button type="button" onClick={addWhyPoint} className="text-sm text-ember-400 hover:text-ember-300">
+                + Add point
+              </button>
             </div>
           </div>
         </div>

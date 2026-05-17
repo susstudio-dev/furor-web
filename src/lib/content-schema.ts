@@ -136,6 +136,168 @@ export const StorySchema = z.object({
   body: z.string().min(1),
 });
 
+// ─── Page copy schemas ─────────────────────────────────────────────────────
+// Reusable shapes for blocks that recur across many pages.
+
+const PageIntroSchema = z.object({
+  eyebrow: z.string().default(''),
+  headline: z.string().default(''),
+  lead: z.string().default(''),
+});
+
+const CtaBlockSchema = z.object({
+  headline: z.string().default(''),
+  body: z.string().default(''),
+});
+
+const SectionHeaderSchema = z.object({
+  eyebrow: z.string().default(''),
+  headline: z.string().default(''),
+});
+
+const HomePageSchema = z
+  .object({
+    whatWeTeach: SectionHeaderSchema.default({ eyebrow: '', headline: '' }),
+    nextBatches: SectionHeaderSchema.default({ eyebrow: '', headline: '' }),
+    howItWorks: z
+      .object({
+        eyebrow: z.string().default(''),
+        headline: z.string().default(''),
+        steps: z
+          .array(z.object({ title: z.string(), body: z.string() }))
+          .default([]),
+      })
+      .default({ eyebrow: '', headline: '', steps: [] }),
+    closingCta: CtaBlockSchema.default({ headline: '', body: '' }),
+    visitUs: z
+      .object({
+        eyebrow: z.string().default(''),
+        headlineTemplate: z
+          .string()
+          .default('Find us in {neighborhood}, Hyderabad.'),
+      })
+      .default({ eyebrow: '', headlineTemplate: 'Find us in {neighborhood}, Hyderabad.' }),
+  })
+  .default({});
+
+const AboutPageSchema = z
+  .object({
+    intro: PageIntroSchema.default({ eyebrow: '', headline: '', lead: '' }),
+    introParagraphs: z.array(z.string()).default([]),
+    moments: z
+      .object({
+        eyebrow: z.string().default(''),
+        headline: z.string().default(''),
+        lead: z.string().default(''),
+        photos: z
+          .array(z.object({ src: z.string(), alt: z.string() }))
+          .default([]),
+      })
+      .default({ eyebrow: '', headline: '', lead: '', photos: [] }),
+    stats: z
+      .array(z.object({ k: z.string(), v: z.string() }))
+      .default([]),
+    timeline: z
+      .object({
+        eyebrow: z.string().default(''),
+        headline: z.string().default(''),
+        milestones: z
+          .array(
+            z.object({
+              year: z.string(),
+              title: z.string(),
+              body: z.string(),
+            }),
+          )
+          .default([]),
+      })
+      .default({ eyebrow: '', headline: '', milestones: [] }),
+    beyond: z
+      .object({
+        eyebrow: z.string().default(''),
+        headline: z.string().default(''),
+        cards: z
+          .array(z.object({ title: z.string(), body: z.string() }))
+          .default([]),
+      })
+      .default({ eyebrow: '', headline: '', cards: [] }),
+    teamTeaser: z
+      .object({
+        eyebrow: z.string().default(''),
+        headline: z.string().default(''),
+        linkLabel: z.string().default('See instructors'),
+      })
+      .default({ eyebrow: '', headline: '', linkLabel: 'See instructors' }),
+    closingCta: CtaBlockSchema.default({ headline: '', body: '' }),
+  })
+  .default({});
+
+const FaqsPageSchema = z
+  .object({
+    intro: PageIntroSchema.default({ eyebrow: '', headline: '', lead: '' }),
+    sections: z
+      .array(
+        z.object({
+          section: z.string(),
+          items: z
+            .array(z.object({ q: z.string(), a: z.string() }))
+            .default([]),
+        }),
+      )
+      .default([]),
+    closingCta: CtaBlockSchema.default({ headline: '', body: '' }),
+  })
+  .default({});
+
+const ContactPageSchema = z
+  .object({
+    intro: PageIntroSchema.default({ eyebrow: '', headline: '', lead: '' }),
+    tiles: z
+      .object({
+        whatsappLabel: z.string().default('WhatsApp · fastest'),
+        whatsappBody: z.string().default(''),
+        emailLabel: z.string().default('Email'),
+        emailBody: z.string().default(''),
+        instagramLabel: z.string().default('Instagram'),
+        instagramBody: z.string().default(''),
+      })
+      .default({
+        whatsappLabel: 'WhatsApp · fastest',
+        whatsappBody: '',
+        emailLabel: 'Email',
+        emailBody: '',
+        instagramLabel: 'Instagram',
+        instagramBody: '',
+      }),
+    closingCta: CtaBlockSchema.default({ headline: '', body: '' }),
+  })
+  .default({});
+
+const InstructorsPageSchema = z
+  .object({
+    intro: PageIntroSchema.default({ eyebrow: '', headline: '', lead: '' }),
+    testimonialsHeader: SectionHeaderSchema.default({ eyebrow: '', headline: '' }),
+    closingCta: CtaBlockSchema.default({ headline: '', body: '' }),
+  })
+  .default({});
+
+const SimpleIntroPageSchema = z
+  .object({ intro: PageIntroSchema.default({ eyebrow: '', headline: '', lead: '' }) })
+  .default({});
+
+const PagesSchema = z
+  .object({
+    home: HomePageSchema,
+    about: AboutPageSchema,
+    faqs: FaqsPageSchema,
+    contact: ContactPageSchema,
+    instructorsPage: InstructorsPageSchema,
+    stories: SimpleIntroPageSchema,
+    danceStyles: SimpleIntroPageSchema,
+    batches: SimpleIntroPageSchema,
+  })
+  .default({});
+
 export const SiteContentSchema = z.object({
   version: z.literal(1),
   site: SiteSettingsSchema,
@@ -160,6 +322,7 @@ export const SiteContentSchema = z.object({
   instructors: z.array(InstructorSchema).default([]),
   testimonials: z.array(TestimonialSchema).default([]),
   stories: z.array(StorySchema).default([]),
+  pages: PagesSchema,
 });
 
 export type SiteContent = z.infer<typeof SiteContentSchema>;
@@ -169,3 +332,4 @@ export type Batch = z.infer<typeof BatchSchema>;
 export type Instructor = z.infer<typeof InstructorSchema>;
 export type Testimonial = z.infer<typeof TestimonialSchema>;
 export type Story = z.infer<typeof StorySchema>;
+export type Pages = z.infer<typeof PagesSchema>;

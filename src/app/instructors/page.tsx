@@ -7,6 +7,7 @@ export const metadata = { title: 'Instructors' };
 
 export default async function InstructorsPage() {
   const content = await getContent();
+  const p = content.pages.instructorsPage;
   const personLd = content.instructors.map((i) => ({
     '@context': 'https://schema.org',
     '@type': 'Person',
@@ -19,13 +20,17 @@ export default async function InstructorsPage() {
   return (
     <>
       <section className="container-x pt-20 pb-8">
-        <p className="display text-sm uppercase tracking-widest text-ember-400">Instructors</p>
-        <h1 className="mt-2 display text-4xl font-extrabold sm:text-6xl tracking-tight max-w-3xl">
-          The people you&apos;ll dance with.
-        </h1>
-        <p className="mt-4 max-w-2xl text-cream/75 text-lg">
-          A small team. Decades of dancing between them. Each one in the room every week.
-        </p>
+        {p.intro.eyebrow ? (
+          <p className="display text-sm uppercase tracking-widest text-ember-400">{p.intro.eyebrow}</p>
+        ) : null}
+        {p.intro.headline ? (
+          <h1 className="mt-2 display text-4xl font-extrabold sm:text-6xl tracking-tight max-w-3xl">
+            {p.intro.headline}
+          </h1>
+        ) : null}
+        {p.intro.lead ? (
+          <p className="mt-4 max-w-2xl text-cream/75 text-lg">{p.intro.lead}</p>
+        ) : null}
       </section>
 
       <section className="container-x py-10 space-y-10">
@@ -109,10 +114,14 @@ export default async function InstructorsPage() {
           <section className="container-x py-20">
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
-                <p className="display text-sm uppercase tracking-widest text-ember-400">Student voices</p>
-                <h2 className="mt-2 display text-3xl font-bold sm:text-5xl max-w-2xl tracking-tight">
-                  What it feels like, in their words.
-                </h2>
+                {p.testimonialsHeader.eyebrow ? (
+                  <p className="display text-sm uppercase tracking-widest text-ember-400">{p.testimonialsHeader.eyebrow}</p>
+                ) : null}
+                {p.testimonialsHeader.headline ? (
+                  <h2 className="mt-2 display text-3xl font-bold sm:text-5xl max-w-2xl tracking-tight">
+                    {p.testimonialsHeader.headline}
+                  </h2>
+                ) : null}
               </div>
               <p className="text-cream/60 text-sm">
                 {content.testimonials.length} stories · all verified
@@ -186,10 +195,13 @@ export default async function InstructorsPage() {
         );
       })() : null}
 
+      {p.closingCta.headline ? (
       <section className="container-x py-16">
         <div className="rounded-3xl border border-cream/10 bg-ink-900/40 p-10">
-          <h2 className="display text-3xl font-bold">Want to come dance?</h2>
-          <p className="mt-2 text-cream/70 max-w-xl">We&apos;re one tap away. WhatsApp is fastest.</p>
+          <h2 className="display text-3xl font-bold">{p.closingCta.headline}</h2>
+          {p.closingCta.body ? (
+            <p className="mt-2 text-cream/70 max-w-xl">{p.closingCta.body}</p>
+          ) : null}
           <div className="mt-6 flex flex-wrap gap-3">
             <EnquiryCTA
               whatsappNumber={content.site.whatsappNumber}
@@ -208,6 +220,7 @@ export default async function InstructorsPage() {
           </div>
         </div>
       </section>
+      ) : null}
 
       {personLd.map((d, i) => <JsonLd key={i} data={d} />)}
     </>

@@ -4,6 +4,7 @@ import './globals.css';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { FloatingTalkToUs } from '@/components/FloatingTalkToUs';
+import { NoticeBanner } from '@/components/NoticeBanner';
 import { getContent } from '@/lib/content';
 
 const display = Bricolage_Grotesque({
@@ -60,6 +61,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         {/* The room: a warm stage-light wash that breathes with the tempo,
             behind everything, never interactive. */}
         <div className="stage-lights" aria-hidden />
+        <NoticeBanner notice={content.site.notice || ''} />
         <Header content={content} />
         <main>{children}</main>
         <Footer content={content} />

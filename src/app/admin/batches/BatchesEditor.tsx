@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { randomId } from '@/lib/id';
 import type { Batch, SiteContent } from '@/lib/content-schema';
 import { SaveBar } from '@/components/admin/SaveBar';
+import { saveSiteContent } from '@/lib/admin-save';
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
 
@@ -43,13 +44,7 @@ export function BatchesEditor({ initial }: { initial: SiteContent }) {
   }
 
   async function save() {
-    const res = await fetch('/api/admin/save', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(c),
-    });
-    const j = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(j.error || 'Save failed');
+    await saveSiteContent(c);
     setDirty(false);
   }
 
