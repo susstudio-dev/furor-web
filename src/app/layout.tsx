@@ -57,6 +57,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               "(function(){try{var s=localStorage.getItem('theme');var t=(s==='light'||s==='dark')?s:(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();",
           }}
         />
+        {/* The room: a warm stage-light wash that breathes with the tempo,
+            behind everything, never interactive. */}
+        <div className="stage-lights" aria-hidden />
         <Header content={content} />
         <main>{children}</main>
         <Footer content={content} />

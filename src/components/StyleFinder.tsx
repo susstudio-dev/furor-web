@@ -74,7 +74,7 @@ export function StyleFinder({ content }: { content: SiteContent }) {
   };
 
   return (
-    <section className="container-x py-24 sm:py-28">
+    <section id="style-finder" className="container-x py-12 sm:py-16 scroll-mt-24">
       <div className="rounded-3xl border border-cream/10 bg-ink-900/60 p-6 sm:p-10 backdrop-blur">
         <div className="flex items-center justify-between">
           <p className="display text-sm uppercase tracking-widest text-ember-400">Style Finder</p>

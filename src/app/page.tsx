@@ -9,6 +9,9 @@ import { TonightTile } from '@/components/TonightTile';
 import { RhythmSignature } from '@/components/RhythmSignature';
 import { Img } from '@/components/Img';
 import { Accentuate } from '@/components/Accentuate';
+import { Reveal } from '@/components/Reveal';
+import { Parallax } from '@/components/Parallax';
+import { QuickEnroll } from '@/components/QuickEnroll';
 
 export default async function HomePage() {
   const content = await getContent();
@@ -22,22 +25,41 @@ export default async function HomePage() {
     <>
       <Hero content={content} />
 
+      {/* Fast lane: join a real batch before the brochure even starts. */}
+      <QuickEnroll content={content} />
+
       <KineticStrip styles={sortedStyles} />
 
       {/* What we teach */}
-      <section className="container-x py-20 sm:py-24">
-        <div className="flex items-end justify-between gap-6 flex-wrap">
-          <div>
-            <p className="display text-sm uppercase tracking-widest text-ember-400">What we teach</p>
-            <h2 className="mt-2 display text-3xl font-bold sm:text-5xl max-w-xl">
-              <Accentuate text={'Three dances. A *lifetime* of nights.'} />
-            </h2>
+      <section className="container-x py-12 sm:py-16 relative overflow-hidden">
+        {/* Parallax depth: a giant faint count drifts behind the grid as you
+            scroll — the room has layers, not a flat page. */}
+        <Parallax
+          speed={0.32}
+          className="pointer-events-none absolute -right-10 -top-6 -z-10 hidden select-none sm:block"
+        >
+          <span className="display block text-[16rem] font-extrabold leading-none text-cream/[0.035]">
+            8
+          </span>
+        </Parallax>
+        <Reveal>
+          <div className="flex items-end justify-between gap-6 flex-wrap">
+            <div>
+              <div className="flex items-center gap-3">
+                <p className="display text-sm uppercase tracking-widest text-ember-400">What we teach</p>
+                <RhythmSignature style="salsa" loop width={84} className="text-ember-500/70" />
+              </div>
+              <h2 className="mt-2 display text-3xl font-bold sm:text-5xl max-w-xl">
+                <Accentuate text={'Three dances. A *lifetime* of nights.'} />
+              </h2>
+            </div>
+            <Link href="/dance-styles" className="btn-secondary magnetic">
+              All styles
+            </Link>
           </div>
-          <Link href="/dance-styles" className="btn-secondary">
-            All styles
-          </Link>
-        </div>
-        <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        </Reveal>
+        <Parallax speed={0.05} className="mt-10">
+          <Reveal stagger step={110} className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {sortedStyles.map((s) => (
             <Link
               key={s.slug}
@@ -68,23 +90,29 @@ export default async function HomePage() {
               </div>
             </Link>
           ))}
-        </div>
+          </Reveal>
+        </Parallax>
       </section>
 
       {/* Next batches strip */}
       <section className="container-x py-12">
-        <div className="flex items-end justify-between gap-6 flex-wrap">
-          <div>
-            <p className="display text-sm uppercase tracking-widest text-ember-400">Next batches</p>
-            <h2 className="mt-2 display text-3xl font-bold sm:text-4xl">
-              Doors open. Pick a date.
-            </h2>
+        <Reveal>
+          <div className="flex items-end justify-between gap-6 flex-wrap">
+            <div>
+              <div className="flex items-center gap-3">
+                <p className="display text-sm uppercase tracking-widest text-ember-400">Next batches</p>
+                <RhythmSignature style="bachata" loop width={84} className="text-ember-500/70" />
+              </div>
+              <h2 className="mt-2 display text-3xl font-bold sm:text-4xl">
+                Doors open. Pick a date.
+              </h2>
+            </div>
+            <Link href="/batches" className="btn-secondary magnetic">
+              See all batches
+            </Link>
           </div>
-          <Link href="/batches" className="btn-secondary">
-            See all batches
-          </Link>
-        </div>
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        </Reveal>
+        <Reveal stagger step={80} className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {sortedStyles.map((s) => {
             const b = nextPerStyle.get(s.slug);
             const branch = b ? content.studios.find((st) => st.slug === b.branchSlug) : undefined;
@@ -143,17 +171,22 @@ export default async function HomePage() {
               </div>
             );
           })}
-        </div>
+        </Reveal>
       </section>
 
       {/* Why Furor */}
       {content.whyFuror.points.length > 0 ? (
         <section className="container-x py-12 sm:py-16">
-          <p className="display text-sm uppercase tracking-widest text-ember-400">Why Furor</p>
-          <h2 className="mt-2 display text-3xl font-bold sm:text-5xl max-w-2xl">
-            {content.whyFuror.headline}
-          </h2>
-          <div className="mt-12 grid gap-8 md:grid-cols-3">
+          <Reveal>
+            <div className="flex items-center gap-3">
+              <p className="display text-sm uppercase tracking-widest text-ember-400">Why Furor</p>
+              <RhythmSignature style="west-coast-swing" loop width={84} className="text-ember-500/70" />
+            </div>
+            <h2 className="mt-2 display text-3xl font-bold sm:text-5xl max-w-2xl">
+              {content.whyFuror.headline}
+            </h2>
+          </Reveal>
+          <Reveal stagger step={120} className="mt-12 grid gap-8 md:grid-cols-3">
             {content.whyFuror.points.map((p, i) => (
               <div key={i} className="rounded-2xl border border-cream/10 bg-ink-900/30 p-6">
                 <p className="display text-2xl font-bold text-ember-400">0{i + 1}</p>
@@ -161,17 +194,19 @@ export default async function HomePage() {
                 <p className="mt-2 text-cream/70">{p.body}</p>
               </div>
             ))}
-          </div>
+          </Reveal>
         </section>
       ) : null}
 
       {/* How to join */}
-      <section className="container-x py-20 sm:py-24">
-        <p className="display text-sm uppercase tracking-widest text-ember-400">How it works</p>
-        <h2 className="mt-2 display text-3xl font-bold sm:text-5xl max-w-2xl">
-          Three steps from curious to dancing.
-        </h2>
-        <div className="mt-12 grid gap-6 md:grid-cols-3">
+      <section className="container-x py-12 sm:py-16">
+        <Reveal>
+          <p className="display text-sm uppercase tracking-widest text-ember-400">How it works</p>
+          <h2 className="mt-2 display text-3xl font-bold sm:text-5xl max-w-2xl">
+            Three steps from curious to dancing.
+          </h2>
+        </Reveal>
+        <Reveal stagger step={130} className="mt-12 grid gap-6 md:grid-cols-3">
           {[
             { n: '01', title: 'Pick a style', body: 'Beginner Latin covers Salsa or Bachata. Tell us what catches your ear — morning or evening batches both run.' },
             { n: '02', title: 'Register on WhatsApp', body: 'Block your seat with a small token. We send dates, the studio address and what to bring — all on WhatsApp.' },
@@ -186,7 +221,7 @@ export default async function HomePage() {
               ) : null}
             </div>
           ))}
-        </div>
+        </Reveal>
       </section>
 
       {/* Live counter */}
@@ -203,8 +238,8 @@ export default async function HomePage() {
       <TonightTile content={content} />
 
       {/* Closing CTA */}
-      <section className="container-x py-28 sm:py-36">
-        <div className="on-accent rounded-3xl bg-gradient-to-br from-ember-700 via-ember-600 to-gold-500 p-10 sm:p-16 text-ink-950">
+      <section className="container-x py-14 sm:py-20">
+        <Reveal className="on-accent rounded-3xl bg-gradient-to-br from-ember-700 via-ember-600 to-gold-500 p-10 sm:p-16 text-ink-950">
           <h2 className="display text-4xl font-extrabold sm:text-6xl tracking-tight max-w-3xl">
             Ready when <Accentuate text={'*you*'} /> are. We&apos;re one tap away.
           </h2>
@@ -229,7 +264,7 @@ export default async function HomePage() {
               className="!border-ink-950/40 !text-ink-950 hover:!border-ink-950 magnetic"
             />
           </div>
-        </div>
+        </Reveal>
       </section>
 
       {/* Visit the studio — last on the page */}
@@ -242,12 +277,14 @@ export default async function HomePage() {
         const mapEmbed = `https://www.google.com/maps?q=${encodeURIComponent(s.address)}&output=embed`;
         const tel = s.telephone.replace(/\s/g, '');
         return (
-          <section id="visit" className="container-x py-24 sm:py-28">
-            <p className="display text-sm uppercase tracking-widest text-ember-400">Visit us</p>
-            <h2 className="mt-2 display text-3xl font-bold sm:text-5xl max-w-2xl tracking-tight">
-              Find us in {s.neighborhood}, Hyderabad.
-            </h2>
-            <div className="mt-10 grid gap-6 md:grid-cols-2 items-stretch">
+          <section id="visit" className="container-x py-12 sm:py-16">
+            <Reveal>
+              <p className="display text-sm uppercase tracking-widest text-ember-400">Visit us</p>
+              <h2 className="mt-2 display text-3xl font-bold sm:text-5xl max-w-2xl tracking-tight">
+                Find us in {s.neighborhood}, Hyderabad.
+              </h2>
+            </Reveal>
+            <Reveal from="up" delay={80} className="mt-10 grid gap-6 md:grid-cols-2 items-stretch">
               <div className="rounded-3xl border border-cream/10 bg-ink-900/40 p-8 sm:p-10 flex flex-col">
                 <p className="display text-2xl sm:text-3xl font-bold">{s.name}</p>
                 <p className="mt-1 text-xs uppercase tracking-widest text-ember-400/80">
@@ -296,9 +333,9 @@ export default async function HomePage() {
                   style={{ border: 0, filter: 'grayscale(0.4) contrast(1.05)' }}
                 />
               </div>
-            </div>
+            </Reveal>
             {s.photos.length > 0 ? (
-              <div className="mt-6 grid gap-3 sm:gap-4 grid-cols-2 md:grid-cols-3">
+              <Reveal stagger step={90} className="mt-6 grid gap-3 sm:gap-4 grid-cols-2 md:grid-cols-3">
                 {s.photos.slice(0, 3).map((p, i) => (
                   <div
                     key={p}
@@ -316,7 +353,7 @@ export default async function HomePage() {
                     />
                   </div>
                 ))}
-              </div>
+              </Reveal>
             ) : null}
           </section>
         );

@@ -15,9 +15,6 @@ export function FloatingTalkToUs({
   const [open, setOpen] = useState(false);
   const pathname = usePathname() || '/';
 
-  // Hide the floating button inside /admin
-  if (pathname.startsWith('/admin')) return null;
-
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setOpen(false);
@@ -25,6 +22,11 @@ export function FloatingTalkToUs({
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
+
+  // Hide the floating button inside /admin. This must come AFTER every hook
+  // call — an early return before a hook breaks the Rules of Hooks (the
+  // hook order changes between admin and non-admin routes).
+  if (pathname.startsWith('/admin')) return null;
 
   // Derive minimal context from the path; pages can override by placing inline EnquiryCTA buttons.
   const ctx: EnquiryContext = { source: 'floating' };

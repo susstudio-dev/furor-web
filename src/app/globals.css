@@ -53,6 +53,16 @@
     --art-fg: #f6efe7;
   }
 
+  /* TEMPO ENGINE -------------------------------------------------------
+     One song plays under the whole site. Every rhythmic motion — the beat
+     dots, the room lights breathing, the hero glow, the sway — derives its
+     timing from these two tokens, so the page moves the way a class moves:
+     everyone on the same count. ~0.7s/beat ≈ 86 BPM, a warm bachata sway. */
+  :root {
+    --beat: 0.7s;
+    --bar: 2.8s; /* 4 beats */
+  }
+
   html {
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
@@ -217,12 +227,185 @@ html[data-theme='dark'] .hero-vignette {
   animation: cineFade 0.85s ease-out both;
 }
 
+/* Choreographed scroll reveal -------------------------------------------
+   Content enters like a dancer stepping onto a count: it waits offset and
+   slightly dim, then lands with a confident, faintly over-shot settle
+   (the cubic-bezier crests past 1 then resolves — anticipation + follow-
+   through, the spine of every dance move). The .is-in class is toggled by
+   <Reveal> when the block first scrolls into view. */
+[data-reveal] {
+  opacity: 0;
+  transition:
+    transform 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.7s ease-out;
+  transition-delay: var(--reveal-delay, 0ms);
+  will-change: transform, opacity;
+}
+[data-reveal='up'] {
+  transform: translateY(34px);
+}
+[data-reveal='left'] {
+  transform: translateX(-40px);
+}
+[data-reveal='right'] {
+  transform: translateX(40px);
+}
+[data-reveal].is-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* Staggered children — the group reads as a danced phrase, each element
+   landing one beat after the last instead of the whole block snapping in. */
+[data-stagger] > * {
+  opacity: 0;
+  transform: translateY(26px);
+  transition:
+    transform 0.85s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.65s ease-out;
+  will-change: transform, opacity;
+}
+[data-stagger].is-in > * {
+  opacity: 1;
+  transform: none;
+}
+[data-stagger].is-in > *:nth-child(1)  { transition-delay: calc(var(--reveal-step) * 0); }
+[data-stagger].is-in > *:nth-child(2)  { transition-delay: calc(var(--reveal-step) * 1); }
+[data-stagger].is-in > *:nth-child(3)  { transition-delay: calc(var(--reveal-step) * 2); }
+[data-stagger].is-in > *:nth-child(4)  { transition-delay: calc(var(--reveal-step) * 3); }
+[data-stagger].is-in > *:nth-child(5)  { transition-delay: calc(var(--reveal-step) * 4); }
+[data-stagger].is-in > *:nth-child(6)  { transition-delay: calc(var(--reveal-step) * 5); }
+[data-stagger].is-in > *:nth-child(7)  { transition-delay: calc(var(--reveal-step) * 6); }
+[data-stagger].is-in > *:nth-child(8)  { transition-delay: calc(var(--reveal-step) * 7); }
+[data-stagger].is-in > *:nth-child(9)  { transition-delay: calc(var(--reveal-step) * 8); }
+[data-stagger].is-in > *:nth-child(n+10) { transition-delay: calc(var(--reveal-step) * 9); }
+
+/* On-beat pulse for the kinetic strip separators — the marquee stops being
+   a slide and starts reading as a count. Locked to the global tempo. */
+@keyframes beatPulse {
+  0%, 100% { transform: scale(1); opacity: 0.5; }
+  40%      { transform: scale(1.4); opacity: 1; }
+}
+.beat-dot {
+  display: inline-block;
+  animation: beatPulse calc(var(--beat) * 2) ease-in-out infinite;
+}
+
+/* THE ROOM ------------------------------------------------------------
+   A fixed warm wash behind everything — stage lights over a social floor.
+   Two pools of light drift slowly and the whole room "breathes" once per
+   bar, the way a dim venue pulses with the music. Sits at -z so it never
+   touches interaction; pointer-events off. */
+.stage-lights {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(60vw 50vw at var(--lx, 22%) 18%, rgb(var(--c-ember-500) / 0.16), transparent 60%),
+    radial-gradient(55vw 45vw at var(--rx, 82%) 88%, rgb(var(--c-gold-500) / 0.14), transparent 62%),
+    radial-gradient(40vw 40vw at 50% 50%, rgb(var(--c-ember-700) / 0.05), transparent 70%);
+  animation:
+    roomDrift 26s ease-in-out infinite alternate,
+    roomBreathe var(--bar) ease-in-out infinite;
+  will-change: transform, opacity;
+}
+@keyframes roomDrift {
+  0%   { --lx: 18%; --rx: 84%; transform: translate3d(0, 0, 0) scale(1); }
+  100% { --lx: 30%; --rx: 72%; transform: translate3d(0, -1.5%, 0) scale(1.06); }
+}
+@keyframes roomBreathe {
+  0%, 100% { opacity: 0.78; }
+  46%      { opacity: 1; }
+}
+
+/* THE COUNT-IN --------------------------------------------------------
+   Every dancer knows it: "5, 6, 7, 8 —" then you move. Four counts tick
+   in on tempo above the hero headline, then fade as the words rise on 1. */
+.count-in {
+  display: inline-flex;
+  gap: 0.5rem;
+  align-items: center;
+  animation: countOut 0.5s ease-out forwards;
+  animation-delay: calc(var(--beat) * 4 + 0.1s);
+}
+.count-in span {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(6px);
+  animation: countTick var(--beat) steps(1, end) 1 forwards;
+}
+.count-in span:nth-child(1) { animation-delay: 0s; }
+.count-in span:nth-child(2) { animation-delay: var(--beat); }
+.count-in span:nth-child(3) { animation-delay: calc(var(--beat) * 2); }
+.count-in span:nth-child(4) { animation-delay: calc(var(--beat) * 3); }
+@keyframes countTick {
+  0%       { opacity: 0; transform: translateY(6px) scale(0.9); }
+  18%      { opacity: 1; transform: translateY(0) scale(1.12); }
+  100%     { opacity: 0.5; transform: translateY(0) scale(1); }
+}
+@keyframes countOut {
+  to { opacity: 0; transform: translateY(-6px); height: 0; margin: 0; }
+}
+
+/* HERO SPOTLIGHT ------------------------------------------------------
+   A soft follow-light tracks the pointer across the hero (fine pointers
+   only — set from JS). It never hides the system cursor; it's just the
+   warm pool of a moving stage light. */
+.spotlight {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 600ms ease;
+  background: radial-gradient(
+    240px 240px at var(--sx, 50%) var(--sy, 40%),
+    rgb(var(--c-ember-500) / 0.22),
+    transparent 70%
+  );
+  mix-blend-mode: screen;
+}
+html[data-theme='light'] .spotlight { mix-blend-mode: multiply; }
+.spotlight.lit { opacity: 1; }
+
+/* SWAY — a body keeping time. Barely there; you feel it before you see it. */
+@keyframes sway {
+  0%, 100% { transform: translateX(-0.35%); }
+  50%      { transform: translateX(0.35%); }
+}
+.sway { animation: sway calc(var(--bar) * 1.5) ease-in-out infinite; }
+
+/* Scroll cue — a small step downward, on the beat. */
+@keyframes scrollCue {
+  0%, 100% { transform: translateY(0); opacity: 0.6; }
+  50%      { transform: translateY(5px); opacity: 1; }
+}
+.scroll-cue { animation: scrollCue calc(var(--beat) * 2) ease-in-out infinite; }
+
 @media (prefers-reduced-motion: reduce) {
   .animate-marquee,
   .animate-fade-up,
   .animate-kenburns,
   .cine-i,
-  .hero-fade {
+  .hero-fade,
+  .beat-dot,
+  .stage-lights,
+  .sway,
+  .scroll-cue,
+  .count-in,
+  .count-in span {
     animation: none !important;
+  }
+  /* The room is still warm — it just doesn't drift or breathe. */
+  .stage-lights { opacity: 0.85 !important; }
+  /* Count-in collapses to nothing rather than freezing on screen. */
+  .count-in { display: none !important; }
+  /* No choreography under reduced motion — everything is simply present. */
+  [data-reveal],
+  [data-stagger] > * {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
   }
 }
