@@ -1,10 +1,13 @@
+'use client';
+
+import { useState } from 'react';
 import Image from 'next/image';
 import { PlaceholderArt } from './PlaceholderArt';
 
 interface Props {
   src?: string | null;
   alt: string;
-  /** Used to seed placeholder art when src is missing. */
+  /** Used to seed placeholder art when src is missing or fails to load. */
   seed: string;
   /** Optional label drawn on the placeholder (e.g. style/branch name). */
   label?: string;
@@ -32,7 +35,9 @@ export function Img({
   height,
   className,
 }: Props) {
-  const hasReal = typeof src === 'string' && src.length > 0;
+  const [failed, setFailed] = useState(false);
+  const hasReal = typeof src === 'string' && src.length > 0 && !failed;
+
   if (hasReal) {
     return (
       <Image
@@ -44,6 +49,7 @@ export function Img({
         width={fill ? undefined : width}
         height={fill ? undefined : height}
         className={`photo ${className ?? ''}`.trim()}
+        onError={() => setFailed(true)}
       />
     );
   }
