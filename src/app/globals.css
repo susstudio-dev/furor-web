@@ -3,9 +3,54 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
+  /* LIGHT (default) ---------------------------------------------------- */
+  :root,
+  html[data-theme='light'] {
     color-scheme: light;
+    --c-ink-950: 251 247 241;
+    --c-ink-900: 243 235 223;
+    --c-ink-800: 236 225 208;
+    --c-ink-700: 224 209 187;
+    --c-ink-500: 202 181 151;
+    --c-ember-400: 212 85 28;
+    --c-ember-500: 255 138 76;
+    --c-ember-600: 225 89 31;
+    --c-ember-700: 184 67 15;
+    --c-gold-400: 201 138 22;
+    --c-gold-500: 167 119 15;
+    --c-cream: 36 26 18;
+    /* Generative-art convenience colours */
+    --art-bg-a: #f3ebdf;
+    --art-bg-b: #e7dac6;
+    --art-accent: #ff8a4c;
+    --art-accent-2: #b8430f;
+    --art-gold: #c98a16;
+    --art-fg: #241a12;
   }
+
+  /* DARK --------------------------------------------------------------- */
+  html[data-theme='dark'] {
+    color-scheme: dark;
+    --c-ink-950: 11 7 9;
+    --c-ink-900: 21 12 16;
+    --c-ink-800: 29 16 21;
+    --c-ink-700: 40 22 29;
+    --c-ink-500: 74 34 48;
+    --c-ember-400: 255 179 122;
+    --c-ember-500: 255 138 76;
+    --c-ember-600: 242 95 42;
+    --c-ember-700: 204 69 20;
+    --c-gold-400: 245 198 116;
+    --c-gold-500: 230 167 58;
+    --c-cream: 246 239 231;
+    --art-bg-a: #1d1015;
+    --art-bg-b: #0b0709;
+    --art-accent: #ff8a4c;
+    --art-accent-2: #cc4514;
+    --art-gold: #e6a73a;
+    --art-fg: #f6efe7;
+  }
+
   html {
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
@@ -13,12 +58,12 @@
   body {
     @apply bg-ink-950 text-cream font-sans;
     background-image:
-      radial-gradient(1200px 800px at 80% -10%, rgba(255, 138, 76, 0.10), transparent 60%),
-      radial-gradient(1000px 700px at -10% 20%, rgba(199, 138, 22, 0.07), transparent 60%);
+      radial-gradient(1200px 800px at 80% -10%, rgb(var(--c-ember-500) / 0.1), transparent 60%),
+      radial-gradient(1000px 700px at -10% 20%, rgb(var(--c-gold-500) / 0.08), transparent 60%);
   }
   ::selection {
-    background: theme('colors.ember.500');
-    color: theme('colors.cream');
+    background: rgb(var(--c-ember-500));
+    color: rgb(var(--c-cream));
   }
 }
 
@@ -49,11 +94,11 @@
     font-style: italic;
     font-weight: 500;
     letter-spacing: -0.01em;
-    color: theme('colors.ember.600');
+    color: rgb(var(--c-ember-600));
   }
   /* Inside the deep ember/gold CTA blocks, the accent matches the light heading. */
   .on-accent .accent {
-    color: theme('colors.ink.950');
+    color: rgb(var(--c-ink-950));
   }
 }
 

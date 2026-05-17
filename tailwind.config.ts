@@ -5,27 +5,28 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Light theme. `ink` = surfaces (950 = page bg, lower = deeper cards/borders).
-        // `cream` = foreground text (warm near-black). Inverted so the existing
-        // bg-ink-* / text-cream / border-cream utilities render light.
+        // Tokens resolve to CSS variables so a single [data-theme] flip on
+        // <html> switches the whole site. Values are defined in globals.css
+        // for light (:root) and dark (html[data-theme="dark"]).
+        // `ink` = surfaces, `cream` = foreground text.
         ink: {
-          950: '#fbf7f1',
-          900: '#f3ebdf',
-          800: '#ece1d0',
-          700: '#e0d1bb',
-          500: '#cab597',
+          950: 'rgb(var(--c-ink-950) / <alpha-value>)',
+          900: 'rgb(var(--c-ink-900) / <alpha-value>)',
+          800: 'rgb(var(--c-ink-800) / <alpha-value>)',
+          700: 'rgb(var(--c-ink-700) / <alpha-value>)',
+          500: 'rgb(var(--c-ink-500) / <alpha-value>)',
         },
         ember: {
-          400: '#d4551c',
-          500: '#ff8a4c',
-          600: '#e1591f',
-          700: '#b8430f',
+          400: 'rgb(var(--c-ember-400) / <alpha-value>)',
+          500: 'rgb(var(--c-ember-500) / <alpha-value>)',
+          600: 'rgb(var(--c-ember-600) / <alpha-value>)',
+          700: 'rgb(var(--c-ember-700) / <alpha-value>)',
         },
         gold: {
-          400: '#c98a16',
-          500: '#a7770f',
+          400: 'rgb(var(--c-gold-400) / <alpha-value>)',
+          500: 'rgb(var(--c-gold-500) / <alpha-value>)',
         },
-        cream: '#241a12',
+        cream: 'rgb(var(--c-cream) / <alpha-value>)',
       },
       fontFamily: {
         display: ['var(--font-display)', 'system-ui', 'sans-serif'],

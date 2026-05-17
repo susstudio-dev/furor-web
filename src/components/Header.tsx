@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import type { SiteContent } from '@/lib/content-schema';
 import { BrandMark } from './BrandMark';
+import { ThemeToggle } from './ThemeToggle';
 
 const NAV: { label: string; href: string; children?: { label: string; href: string }[] }[] = [
   { label: 'Home', href: '/' },
@@ -50,6 +51,7 @@ export function Header({ content }: { content: SiteContent }) {
         <Link href="/" aria-label="Furor — Dance Hyderabad home">
           <BrandMark size={52} />
         </Link>
+        <div className="flex items-center gap-2 sm:gap-3">
         <nav className="hidden lg:flex items-center gap-1" aria-label="Primary">
           {navWithDropdowns.map((item) => (
             <div key={item.label} className="group relative">
@@ -75,6 +77,7 @@ export function Header({ content }: { content: SiteContent }) {
             </div>
           ))}
         </nav>
+        <ThemeToggle />
         <button
           type="button"
           className="lg:hidden btn-ghost p-2"
@@ -85,6 +88,7 @@ export function Header({ content }: { content: SiteContent }) {
           <span className="sr-only">Menu</span>
           <Burger open={open} />
         </button>
+        </div>
       </div>
       {open ? (
         <div className="lg:hidden border-t border-cream/10 bg-ink-950/95 backdrop-blur">
