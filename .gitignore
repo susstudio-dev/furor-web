@@ -8,6 +8,7 @@ data/site-content.json
 data/versions/
 data/users.json
 data/audit.log
+data/audit.json
 public/uploads/
 *.log
 .DS_Store

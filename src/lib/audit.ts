@@ -1,8 +1,8 @@
 import 'server-only';
-import { promises as fs } from 'fs';
-import path from 'path';
+import { readJSON, writeJSON } from './storage';
 
-const LOG_PATH = path.join(process.cwd(), 'data', 'audit.log');
+const AUDIT_KEY = 'audit.json';
+const CAP = 500; // keep the most recent N entries
 
 export interface AuditEntry {
   ts: string;
@@ -12,21 +12,13 @@ export interface AuditEntry {
 }
 
 export async function audit(entry: Omit<AuditEntry, 'ts'>): Promise<void> {
-  const line = JSON.stringify({ ts: new Date().toISOString(), ...entry }) + '\n';
-  await fs.mkdir(path.dirname(LOG_PATH), { recursive: true });
-  await fs.appendFile(LOG_PATH, line, 'utf8');
+  const log = (await readJSON<AuditEntry[]>(AUDIT_KEY)) ?? [];
+  log.push({ ts: new Date().toISOString(), ...entry });
+  if (log.length > CAP) log.splice(0, log.length - CAP);
+  await writeJSON(AUDIT_KEY, log);
 }
 
 export async function readAudit(limit = 100): Promise<AuditEntry[]> {
-  try {
-    const raw = await fs.readFile(LOG_PATH, 'utf8');
-    const lines = raw.trim().split('\n').filter(Boolean);
-    return lines
-      .slice(-limit)
-      .reverse()
-      .map((l) => JSON.parse(l) as AuditEntry);
-  } catch (err: unknown) {
-    if ((err as NodeJS.ErrnoException)?.code === 'ENOENT') return [];
-    throw err;
-  }
+  const log = (await readJSON<AuditEntry[]>(AUDIT_KEY)) ?? [];
+  return log.slice(-limit).reverse();
 }

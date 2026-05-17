@@ -1,13 +1,11 @@
 import { NextResponse } from 'next/server';
-import { promises as fs } from 'fs';
-import path from 'path';
 import { randomUUID } from 'crypto';
 import { getSession } from '@/lib/auth';
 import { audit } from '@/lib/audit';
+import { writeBinary } from '@/lib/storage';
 
 const MAX_BYTES = 8 * 1024 * 1024;
 const ALLOWED = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/avif']);
-const PUBLIC_DIR = path.join(process.cwd(), 'public', 'uploads');
 
 export async function POST(req: Request) {
   const session = await getSession();
@@ -22,10 +20,8 @@ export async function POST(req: Request) {
 
   const ext = type === 'image/jpeg' ? 'jpg' : type.split('/')[1];
   const filename = `${randomUUID()}.${ext}`;
-  await fs.mkdir(PUBLIC_DIR, { recursive: true });
   const buf = Buffer.from(await file.arrayBuffer());
-  await fs.writeFile(path.join(PUBLIC_DIR, filename), buf);
-  const url = `/uploads/${filename}`;
+  const url = await writeBinary(`uploads/${filename}`, buf, type);
   await audit({ actor: session.email, action: 'upload_image', detail: filename });
   return NextResponse.json({ url });
 }

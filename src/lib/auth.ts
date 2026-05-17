@@ -4,6 +4,28 @@ import path from 'path';
 import bcrypt from 'bcryptjs';
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
+import { isProdStorage } from './storage';
+
+// In production (Vercel Blob / read-only FS) the owner account is defined by
+// environment variables — we never persist password hashes to a public blob.
+// `ADMIN_OWNER_PASSWORD_HASH` (a bcrypt hash) is preferred; otherwise the
+// plaintext `ADMIN_OWNER_INITIAL_PASSWORD` is accepted and hashed in-memory.
+const ENV_OWNER_EMAIL = (process.env.ADMIN_OWNER_EMAIL || '').toLowerCase();
+let envOwnerHash: string | null = null;
+function getEnvOwnerHash(): string | null {
+  if (envOwnerHash) return envOwnerHash;
+  const h = process.env.ADMIN_OWNER_PASSWORD_HASH;
+  if (h) {
+    envOwnerHash = h;
+    return h;
+  }
+  const pw = process.env.ADMIN_OWNER_INITIAL_PASSWORD;
+  if (pw) {
+    envOwnerHash = bcrypt.hashSync(pw, 10);
+    return envOwnerHash;
+  }
+  return null;
+}
 
 const USERS_PATH = path.join(process.cwd(), 'data', 'users.json');
 const COOKIE_NAME = 'furor_admin';
@@ -40,6 +62,7 @@ async function writeUsers(file: UsersFile): Promise<void> {
 }
 
 export async function ensureSeedOwner(): Promise<void> {
+  if (isProdStorage) return; // prod owner is env-based; no file to seed
   const email = process.env.ADMIN_OWNER_EMAIL;
   const pw = process.env.ADMIN_OWNER_INITIAL_PASSWORD;
   if (!email || !pw) return;
@@ -76,9 +99,21 @@ export async function verifyCredentials(
   email: string,
   password: string,
 ): Promise<User | null> {
+  const lower = email.toLowerCase();
+
+  if (isProdStorage) {
+    const hash = getEnvOwnerHash();
+    if (!ENV_OWNER_EMAIL || !hash) return null;
+    if (lower !== ENV_OWNER_EMAIL) return null;
+    const ok = await bcrypt.compare(password, hash);
+    return ok
+      ? { email: ENV_OWNER_EMAIL, passwordHash: '', role: 'owner', createdAt: '' }
+      : null;
+  }
+
   await ensureSeedOwner();
   const { users } = await readUsers();
-  const user = users.find((u) => u.email === email.toLowerCase());
+  const user = users.find((u) => u.email === lower);
   if (!user) return null;
   const ok = await bcrypt.compare(password, user.passwordHash);
   return ok ? user : null;
@@ -121,11 +156,19 @@ export async function getSession(): Promise<{ email: string; role: Role } | null
 }
 
 export async function listUsers(): Promise<User[]> {
+  if (isProdStorage) {
+    return ENV_OWNER_EMAIL
+      ? [{ email: ENV_OWNER_EMAIL, passwordHash: '', role: 'owner', createdAt: '' }]
+      : [];
+  }
   const { users } = await readUsers();
   return users;
 }
 
 export async function inviteEditor(email: string, password: string): Promise<void> {
+  if (isProdStorage) {
+    throw new Error('In production the owner is managed via environment variables.');
+  }
   const file = await readUsers();
   const lower = email.toLowerCase();
   if (file.users.some((u) => u.email === lower)) throw new Error('User already exists');
