@@ -31,6 +31,15 @@ export async function POST(req: Request) {
     }
     console.error('admin upload error:', err);
     const message = err instanceof Error ? err.message : 'Upload failed';
+    if (/private store|public access/i.test(message)) {
+      return NextResponse.json(
+        {
+          error:
+            'Your Vercel Blob store is private. This app needs a PUBLIC Blob store (uploaded images are shown on the public site). Recreate the store with public access, connect it, then redeploy.',
+        },
+        { status: 503 },
+      );
+    }
     return NextResponse.json({ error: `Upload failed: ${message}` }, { status: 500 });
   }
 }
