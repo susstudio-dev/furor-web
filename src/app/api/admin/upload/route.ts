@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
 import { getSession } from '@/lib/auth';
 import { audit } from '@/lib/audit';
-import { writeBinary } from '@/lib/storage';
+import { StorageUnavailableError, writeBinary } from '@/lib/storage';
 
 const MAX_BYTES = 8 * 1024 * 1024;
 const ALLOWED = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/avif']);
@@ -21,7 +21,16 @@ export async function POST(req: Request) {
   const ext = type === 'image/jpeg' ? 'jpg' : type.split('/')[1];
   const filename = `${randomUUID()}.${ext}`;
   const buf = Buffer.from(await file.arrayBuffer());
-  const url = await writeBinary(`uploads/${filename}`, buf, type);
-  await audit({ actor: session.email, action: 'upload_image', detail: filename });
-  return NextResponse.json({ url });
+  try {
+    const url = await writeBinary(`uploads/${filename}`, buf, type);
+    await audit({ actor: session.email, action: 'upload_image', detail: filename });
+    return NextResponse.json({ url });
+  } catch (err: unknown) {
+    if (err instanceof StorageUnavailableError) {
+      return NextResponse.json({ error: err.message }, { status: 503 });
+    }
+    console.error('admin upload error:', err);
+    const message = err instanceof Error ? err.message : 'Upload failed';
+    return NextResponse.json({ error: `Upload failed: ${message}` }, { status: 500 });
+  }
 }

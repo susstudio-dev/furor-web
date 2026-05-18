@@ -3,6 +3,7 @@ import { revalidatePath } from 'next/cache';
 import { getSession } from '@/lib/auth';
 import { audit } from '@/lib/audit';
 import { ContentValidationError, saveContent } from '@/lib/content-write';
+import { StorageUnavailableError } from '@/lib/storage';
 
 export async function POST(req: Request) {
   const session = await getSession();
@@ -28,7 +29,13 @@ export async function POST(req: Request) {
     if (err instanceof ContentValidationError) {
       return NextResponse.json({ error: 'Validation failed', issues: err.issues }, { status: 400 });
     }
-    console.error(err);
-    return NextResponse.json({ error: 'Save failed' }, { status: 500 });
+    if (err instanceof StorageUnavailableError) {
+      return NextResponse.json({ error: err.message }, { status: 503 });
+    }
+    console.error('admin save error:', err);
+    // Authenticated admin route — surfacing the real reason here is helpful,
+    // not a leak.
+    const message = err instanceof Error ? err.message : 'Save failed';
+    return NextResponse.json({ error: `Save failed: ${message}` }, { status: 500 });
   }
 }
