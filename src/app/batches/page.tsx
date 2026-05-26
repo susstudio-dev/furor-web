@@ -1,4 +1,4 @@
-import { getContent, visibleBatches } from '@/lib/content';
+import { getContent, visibleBatches, batchStyleLabel } from '@/lib/content';
 import { JsonLd } from '@/components/JsonLd';
 import { BatchesBrowser, type BatchRow } from '@/components/BatchesBrowser';
 
@@ -9,12 +9,11 @@ export default async function BatchesPage() {
   const visible = visibleBatches(content);
 
   const rows: BatchRow[] = visible.map((b) => {
-    const style = content.danceStyles.find((s) => s.slug === b.styleSlug);
     const branch = content.studios.find((s) => s.slug === b.branchSlug);
     return {
       batch: b,
-      styleSlug: b.styleSlug,
-      styleName: style?.name ?? b.styleSlug,
+      styleSlugs: b.styleSlugs,
+      styleName: batchStyleLabel(content, b.styleSlugs),
       branchSlug: b.branchSlug,
       branchName: branch?.name ?? b.branchSlug,
       neighborhood: branch?.neighborhood ?? '',
@@ -31,12 +30,12 @@ export default async function BatchesPage() {
     .map((s) => ({ slug: s.slug, name: s.name }));
 
   const courseLd = visible.map((b) => {
-    const style = content.danceStyles.find((s) => s.slug === b.styleSlug);
+    const firstStyle = content.danceStyles.find((s) => s.slug === b.styleSlugs[0]);
     return {
       '@context': 'https://schema.org',
       '@type': 'Course',
-      name: `${style?.name ?? b.styleSlug} ${b.level}`,
-      description: style?.description ?? '',
+      name: `${batchStyleLabel(content, b.styleSlugs)} ${b.level}`,
+      description: firstStyle?.description ?? '',
       provider: { '@type': 'Organization', name: content.site.title, url: 'https://www.dancehyderabad.com' },
       startDate: b.startDate,
       offers: { '@type': 'Offer', price: b.priceInr, priceCurrency: 'INR' },

@@ -24,7 +24,7 @@ export function BatchesEditor({ initial }: { initial: SiteContent }) {
   function add() {
     const fresh: Batch = {
       id: randomId('batch'),
-      styleSlug: c.danceStyles[0]?.slug || 'salsa',
+      styleSlugs: c.danceStyles[0]?.slug ? [c.danceStyles[0].slug] : ['salsa'],
       level: 'Foundation',
       branchSlug: c.studios[0]?.slug || 'jubilee-hills',
       daysOfWeek: ['Sat', 'Sun'],
@@ -57,8 +57,30 @@ export function BatchesEditor({ initial }: { initial: SiteContent }) {
       <div className="mt-6 grid gap-4">
         {c.batches.map((b, i) => (
           <div key={b.id} className="rounded-2xl border border-cream/10 bg-ink-900/40 p-5 grid gap-3">
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <Select label="Style" value={b.styleSlug} onChange={(v) => patch(i, { styleSlug: v })} options={styleOptions} />
+            <Field label="Styles taught in this batch" hint="Tap to toggle. Pick two or more to combine them — e.g. Salsa + Bachata.">
+              <div className="flex flex-wrap gap-2">
+                {styleOptions.map((o) => {
+                  const on = b.styleSlugs.includes(o.value);
+                  return (
+                    <button
+                      key={o.value}
+                      type="button"
+                      onClick={() => {
+                        const next = on
+                          ? b.styleSlugs.filter((s) => s !== o.value)
+                          : [...b.styleSlugs, o.value];
+                        if (next.length === 0) return; // schema requires at least one
+                        patch(i, { styleSlugs: next });
+                      }}
+                      className={`pill ${on ? 'bg-ember-500 text-cream' : 'bg-cream/5 text-cream/70'}`}
+                    >
+                      {o.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </Field>
+            <div className="grid gap-3 sm:grid-cols-3">
               <Select label="Branch" value={b.branchSlug} onChange={(v) => patch(i, { branchSlug: v })} options={branchOptions} />
               <Select label="Level" value={b.level} onChange={(v) => patch(i, { level: v as Batch['level'] })} options={[
                 { value: 'Foundation', label: 'Foundation' },

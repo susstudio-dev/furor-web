@@ -52,5 +52,6 @@ export {
   nextBatchPerStyle,
   styleBySlug,
   studioBySlug,
+  batchStyleLabel,
 } from './content-helpers';
 export { formatBatchDate, formatInr, todayIso } from './format';

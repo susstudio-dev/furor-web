@@ -1,10 +1,9 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { getContent, batchesForStyle, formatBatchDate, formatInr, styleBySlug } from '@/lib/content';
+import { getContent, batchesForStyle, formatBatchDate, formatInr, styleBySlug, batchStyleLabel } from '@/lib/content';
 import { EnquiryCTA } from '@/components/EnquiryCTA';
 import { JsonLd } from '@/components/JsonLd';
 import { Img } from '@/components/Img';
-import { RhythmSignature } from '@/components/RhythmSignature';
 
 export async function generateStaticParams() {
   const c = await getContent();
@@ -106,6 +105,7 @@ export default async function StylePage({ params }: { params: Promise<{ slug: st
           <div className="mt-6 grid gap-3">
             {batches.map((b) => {
               const branch = content.studios.find((s) => s.slug === b.branchSlug)!;
+              const combined = b.styleSlugs.length > 1;
               return (
                 <div
                   key={b.id}
@@ -113,7 +113,7 @@ export default async function StylePage({ params }: { params: Promise<{ slug: st
                 >
                   <div className="grid gap-1">
                     <p className="display text-lg font-semibold">
-                      {b.level} · {branch.name}
+                      {combined ? `${batchStyleLabel(content, b.styleSlugs)} · ` : ''}{b.level} · {branch.name}
                     </p>
                     <p className="text-cream/70 text-sm">
                       {b.daysOfWeek.join('–')} · {b.time} · starts {formatBatchDate(b.startDate)}

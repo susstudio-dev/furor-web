@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { getContent, nextBatchPerStyle, formatBatchDate, formatInr } from '@/lib/content';
+import { getContent, nextBatchPerStyle, formatBatchDate, formatInr, batchStyleLabel } from '@/lib/content';
 import { Hero } from '@/components/Hero';
 import { KineticStrip } from '@/components/KineticStrip';
 import { LiveCounter } from '@/components/LiveCounter';
@@ -117,16 +117,20 @@ export default async function HomePage() {
           {sortedStyles.map((s) => {
             const b = nextPerStyle.get(s.slug);
             const branch = b ? content.studios.find((st) => st.slug === b.branchSlug) : undefined;
+            const combined = b && b.styleSlugs.length > 1;
             return (
               <div
                 key={s.slug}
                 className="rounded-2xl border border-cream/10 bg-ink-900/40 p-5"
               >
-                <p className="display text-xl font-bold">{s.name}</p>
+                <p className="display text-xl font-bold">
+                  {combined ? batchStyleLabel(content, b!.styleSlugs) : s.name}
+                </p>
                 {b && branch ? (
                   <>
                     <p className="mt-2 text-sm text-cream/70">
                       {b.level} · {branch.name}
+                      {combined ? ' · taught together' : ''}
                     </p>
                     <p className="mt-1 text-cream">{b.daysOfWeek.join('–')} · {b.time}</p>
                     <p className="text-sm text-cream/60 mt-1">

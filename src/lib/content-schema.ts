@@ -82,21 +82,44 @@ export const StudioSchema = z.object({
 
 
 
-export const BatchSchema = z.object({
-  id: z.string().min(1),
-  styleSlug: z.string().min(1),
-  level: z.enum(['Foundation', 'Intermediate', 'Advanced']),
-  branchSlug: z.string().min(1),
-  daysOfWeek: z.array(
-    z.enum(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']),
-  ).min(1),
-  time: z.string().min(1),
-  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'YYYY-MM-DD'),
-  priceInr: z.number().int().nonnegative(),
-  seatsLeft: z.number().int().nonnegative().nullable().optional(),
-  status: z.enum(['Open', 'Filling Fast', 'Closed']),
-  razorpayLink: z.string().url().nullable().optional(),
-});
+// A batch can now combine multiple dance styles (e.g. "Salsa + Bachata"
+// taught together in one course). Older records used a single `styleSlug`
+// string — preprocessed here into a one-item array so existing data still
+// validates without manual migration.
+export const BatchSchema = z.preprocess(
+  (val) => {
+    if (
+      val &&
+      typeof val === 'object' &&
+      !Array.isArray(val) &&
+      'styleSlug' in val &&
+      !('styleSlugs' in val)
+    ) {
+      const v = val as Record<string, unknown>;
+      const { styleSlug, ...rest } = v;
+      return {
+        ...rest,
+        styleSlugs: typeof styleSlug === 'string' && styleSlug ? [styleSlug] : [],
+      };
+    }
+    return val;
+  },
+  z.object({
+    id: z.string().min(1),
+    styleSlugs: z.array(z.string().min(1)).min(1, 'Pick at least one dance style'),
+    level: z.enum(['Foundation', 'Intermediate', 'Advanced']),
+    branchSlug: z.string().min(1),
+    daysOfWeek: z.array(
+      z.enum(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']),
+    ).min(1),
+    time: z.string().min(1),
+    startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'YYYY-MM-DD'),
+    priceInr: z.number().int().nonnegative(),
+    seatsLeft: z.number().int().nonnegative().nullable().optional(),
+    status: z.enum(['Open', 'Filling Fast', 'Closed']),
+    razorpayLink: z.string().url().nullable().optional(),
+  }),
+);
 
 export const InstructorSchema = z.object({
   id: z.string().min(1),

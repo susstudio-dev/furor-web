@@ -7,7 +7,7 @@ import { EnquiryCTA } from './EnquiryCTA';
 
 export interface BatchRow {
   batch: Batch;
-  styleSlug: string;
+  styleSlugs: string[];
   styleName: string;
   branchSlug: string;
   branchName: string;
@@ -33,7 +33,7 @@ export function BatchesBrowser({ rows, styles, studios, whatsappNumber, instagra
   const filtered = useMemo(() => {
     let r = rows.filter(
       (x) =>
-        (!style || x.styleSlug === style) &&
+        (!style || x.styleSlugs.includes(style)) &&
         (!branch || x.branchSlug === branch) &&
         (!level || x.batch.level.toLowerCase() === level.toLowerCase()),
     );
@@ -94,7 +94,7 @@ export function BatchesBrowser({ rows, styles, studios, whatsappNumber, instagra
           </div>
         ) : (
           <div className="grid gap-3">
-            {filtered.map(({ batch: b, styleName, styleSlug, branchName, branchSlug, neighborhood }) => (
+            {filtered.map(({ batch: b, styleName, styleSlugs, branchName, branchSlug, neighborhood }) => (
               <div
                 key={b.id}
                 className="grid gap-4 rounded-2xl border border-cream/10 bg-ink-900/40 p-5 lg:grid-cols-12 lg:items-center"
@@ -125,7 +125,7 @@ export function BatchesBrowser({ rows, styles, studios, whatsappNumber, instagra
                     whatsappNumber={whatsappNumber}
                     ctx={{
                       source: 'batch_row',
-                      style: { slug: styleSlug, name: styleName },
+                      style: { slug: styleSlugs[0], name: styleName },
                       branch: { slug: branchSlug, name: branchName },
                       batch: b,
                     }}

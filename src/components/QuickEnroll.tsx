@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { SiteContent } from '@/lib/content-schema';
-import { visibleBatches, formatBatchDate, formatInr } from '@/lib/content';
+import { visibleBatches, formatBatchDate, formatInr, batchStyleLabel } from '@/lib/content';
 import { EnquiryCTA } from './EnquiryCTA';
 import { Reveal } from './Reveal';
 import { RhythmSignature } from './RhythmSignature';
@@ -13,14 +13,12 @@ import { RhythmSignature } from './RhythmSignature';
 
 export function QuickEnroll({ content }: { content: SiteContent }) {
   const batches = visibleBatches(content).slice(0, 4);
-  const styleName = (slug: string) =>
-    content.danceStyles.find((s) => s.slug === slug)?.name ?? slug;
   const branchOf = (slug: string) => content.studios.find((s) => s.slug === slug);
 
   return (
     <section
       id="start-this-week"
-      className="container-x relative z-20 -mt-20 scroll-mt-24 pb-2 sm:-mt-28"
+      className="container-x relative z-20 -mt-20 scroll-mt-24 pb-10 sm:-mt-28 sm:pb-14"
     >
       <Reveal className="quick-enroll relative overflow-hidden rounded-[28px] border border-cream/12 bg-ink-900/80 shadow-2xl shadow-ember-700/10 backdrop-blur-2xl">
         {/* Glowing marquee top edge — this is what peeks over the fold. */}
@@ -37,7 +35,7 @@ export function QuickEnroll({ content }: { content: SiteContent }) {
                 </span>
               </span>
               <RhythmSignature
-                style={batches[0]?.styleSlug ?? 'salsa'}
+                style={batches[0]?.styleSlugs[0] ?? 'salsa'}
                 loop
                 width={90}
                 className="hidden text-ember-500/60 sm:inline-block"
@@ -60,7 +58,7 @@ export function QuickEnroll({ content }: { content: SiteContent }) {
               <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {batches.map((b) => {
                   const branch = branchOf(b.branchSlug);
-                  const sName = styleName(b.styleSlug);
+                  const sName = batchStyleLabel(content, b.styleSlugs);
                   const filling = b.status === 'Filling Fast';
                   return (
                     <div
@@ -109,7 +107,7 @@ export function QuickEnroll({ content }: { content: SiteContent }) {
                           whatsappNumber={content.site.whatsappNumber}
                           ctx={{
                             source: 'batch_row',
-                            style: { slug: b.styleSlug, name: sName },
+                            style: { slug: b.styleSlugs[0], name: sName },
                             branch: branch
                               ? { slug: branch.slug, name: branch.name }
                               : undefined,

@@ -154,33 +154,12 @@
         "west-coast-swing"
       ],
       "displayOrder": 1
-    },
-    {
-      "id": "studio-tklx2l",
-      "slug": "jubilee-hills",
-      "name": " Jubilee Hills",
-      "neighborhood": " Jubilee Hills",
-      "address": " Jubilee Hills",
-      "geo": {
-        "lat": 17.385,
-        "lng": 78.4867
-      },
-      "hours": "Mon–Fri 9 AM–6 PM · Sat–Sun 9:30 AM–4:30 PM",
-      "telephone": "9030577900",
-      "photos": [],
-      "parkingNotes": "",
-      "styleSlugs": [
-        "salsa",
-        "bachata",
-        "west-coast-swing"
-      ],
-      "displayOrder": 2
     }
   ],
   "batches": [
     {
       "id": "batch-001",
-      "styleSlug": "salsa",
+      "styleSlugs": ["salsa", "bachata"],
       "level": "Foundation",
       "branchSlug": "jubilee-hills",
       "daysOfWeek": [
@@ -196,7 +175,7 @@
     },
     {
       "id": "batch-002",
-      "styleSlug": "salsa",
+      "styleSlugs": ["salsa", "bachata"],
       "level": "Foundation",
       "branchSlug": "jubilee-hills",
       "daysOfWeek": [
@@ -211,24 +190,8 @@
       "razorpayLink": null
     },
     {
-      "id": "batch-003",
-      "styleSlug": "bachata",
-      "level": "Foundation",
-      "branchSlug": "jubilee-hills",
-      "daysOfWeek": [
-        "Sat",
-        "Sun"
-      ],
-      "time": "10:45–11:45 AM",
-      "startDate": "2026-05-18",
-      "priceInr": 6500,
-      "seatsLeft": null,
-      "status": "Open",
-      "razorpayLink": null
-    },
-    {
       "id": "batch-004",
-      "styleSlug": "bachata",
+      "styleSlugs": ["salsa", "bachata"],
       "level": "Intermediate",
       "branchSlug": "jubilee-hills",
       "daysOfWeek": [
@@ -244,7 +207,7 @@
     },
     {
       "id": "batch-005",
-      "styleSlug": "west-coast-swing",
+      "styleSlugs": ["west-coast-swing"],
       "level": "Foundation",
       "branchSlug": "jubilee-hills",
       "daysOfWeek": [
@@ -254,22 +217,6 @@
       "startDate": "2026-06-03",
       "priceInr": 6500,
       "seatsLeft": 10,
-      "status": "Open",
-      "razorpayLink": null
-    },
-    {
-      "id": "batch-006",
-      "styleSlug": "salsa",
-      "level": "Intermediate",
-      "branchSlug": "jubilee-hills",
-      "daysOfWeek": [
-        "Sat",
-        "Sun"
-      ],
-      "time": "5:00–6:00 PM",
-      "startDate": "2026-06-08",
-      "priceInr": 7500,
-      "seatsLeft": null,
       "status": "Open",
       "razorpayLink": null
     }
