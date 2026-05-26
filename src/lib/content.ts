@@ -29,18 +29,33 @@ function mergeWithSeed(saved: unknown, seed: unknown): unknown {
 }
 
 // Reads the live content from storage (filesystem in dev, Vercel Blob in
-// prod). On first ever run the bundled seed is written through so subsequent
-// admin edits persist. Wrapped in React cache() => one read per request.
+// prod). On first run it *tries* to write the seed through so later admin
+// edits persist — but a failed write (e.g. read-only Vercel FS before the
+// Blob store is connected) must NEVER crash the request: we just serve the
+// bundled seed. Wrapped in React cache() => one read per request.
 export const getContent = cache(async (): Promise<SiteContent> => {
-  const raw = await readText(CONTENT_KEY);
+  let raw: string | null = null;
+  try {
+    raw = await readText(CONTENT_KEY);
+  } catch {
+    raw = null;
+  }
   if (raw != null) {
-    // Strip BOM if present — Windows PowerShell / some editors add U+FEFF.
-    const cleaned = raw.charCodeAt(0) === 0xfeff ? raw.slice(1) : raw;
-    const parsed = JSON.parse(cleaned);
-    return SiteContentSchema.parse(mergeWithSeed(parsed, seedContent));
+    try {
+      // Strip BOM if present — Windows PowerShell / some editors add U+FEFF.
+      const cleaned = raw.charCodeAt(0) === 0xfeff ? raw.slice(1) : raw;
+      const parsed = JSON.parse(cleaned);
+      return SiteContentSchema.parse(mergeWithSeed(parsed, seedContent));
+    } catch {
+      // corrupt/invalid stored doc — fall back to seed below
+    }
   }
   const seeded = SiteContentSchema.parse(seedContent);
-  await writeText(CONTENT_KEY, JSON.stringify(seeded, null, 2));
+  try {
+    await writeText(CONTENT_KEY, JSON.stringify(seeded, null, 2));
+  } catch {
+    // read-only storage / no Blob store yet — serve the seed, don't crash
+  }
   return seeded;
 });
 

@@ -82,7 +82,7 @@ export function Footer({ content }: { content: SiteContent }) {
 
         <div className="mt-14 flex flex-wrap items-center justify-between gap-4 border-t border-cream/10 pt-6 text-xs text-cream/40">
           <p>© {new Date().getFullYear()} Furor Dance Studio. All rights reserved.</p>
-          <div className="flex items-center gap-5">
+          <div className="flex items-center gap-5 pr-12 sm:pr-28">
             <Link href="/privacy" className="hover:text-cream/70 transition-colors">Privacy</Link>
             <Link href="/terms" className="hover:text-cream/70 transition-colors">Terms</Link>
             <Link href="/admin" className="hover:text-cream/70 transition-colors">Studio login</Link>

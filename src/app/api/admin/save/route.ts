@@ -3,6 +3,7 @@ import { revalidatePath } from 'next/cache';
 import { getSession } from '@/lib/auth';
 import { audit } from '@/lib/audit';
 import { ContentValidationError, saveContent } from '@/lib/content-write';
+import { StorageUnavailableError } from '@/lib/storage';
 
 export async function POST(req: Request) {
   const session = await getSession();
@@ -28,7 +29,24 @@ export async function POST(req: Request) {
     if (err instanceof ContentValidationError) {
       return NextResponse.json({ error: 'Validation failed', issues: err.issues }, { status: 400 });
     }
-    console.error(err);
-    return NextResponse.json({ error: 'Save failed' }, { status: 500 });
+    if (err instanceof StorageUnavailableError) {
+      return NextResponse.json({ error: err.message }, { status: 503 });
+    }
+    console.error('admin save error:', err);
+    const message = err instanceof Error ? err.message : 'Save failed';
+    // Most common prod misconfig: the Vercel Blob store was created PRIVATE.
+    // This app needs a PUBLIC store (uploaded images render via <img> on the
+    // public site). Give the exact fix instead of a raw error.
+    if (/private store|public access/i.test(message)) {
+      return NextResponse.json(
+        {
+          error:
+            'Your Vercel Blob store is private. This app needs a PUBLIC Blob store (uploaded images are shown on the public site). In Vercel: disconnect/delete the store, create a new Blob store with public access, connect it to this project, then redeploy.',
+        },
+        { status: 503 },
+      );
+    }
+    // Authenticated admin route — surfacing the real reason here is helpful.
+    return NextResponse.json({ error: `Save failed: ${message}` }, { status: 500 });
   }
 }

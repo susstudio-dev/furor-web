@@ -101,22 +101,30 @@ export async function verifyCredentials(
 ): Promise<User | null> {
   const lower = email.toLowerCase();
 
-  if (isProdStorage) {
-    const hash = getEnvOwnerHash();
-    if (!ENV_OWNER_EMAIL || !hash) return null;
-    if (lower !== ENV_OWNER_EMAIL) return null;
-    const ok = await bcrypt.compare(password, hash);
+  // Env-based owner is the primary path — works in prod whether or not the
+  // Blob store is connected, and in dev. NOT gated on isProdStorage, because
+  // gating it there meant a deploy without the Blob token fell through to the
+  // filesystem path and 500'd writing users.json on Vercel's read-only FS.
+  const envHash = getEnvOwnerHash();
+  if (ENV_OWNER_EMAIL && envHash && lower === ENV_OWNER_EMAIL) {
+    const ok = await bcrypt.compare(password, envHash);
     return ok
       ? { email: ENV_OWNER_EMAIL, passwordHash: '', role: 'owner', createdAt: '' }
       : null;
   }
 
-  await ensureSeedOwner();
-  const { users } = await readUsers();
-  const user = users.find((u) => u.email === lower);
-  if (!user) return null;
-  const ok = await bcrypt.compare(password, user.passwordHash);
-  return ok ? user : null;
+  // File-based users (dev convenience / invited editors). A read-only FS or
+  // any storage error must yield 401, never a 500.
+  try {
+    await ensureSeedOwner();
+    const { users } = await readUsers();
+    const user = users.find((u) => u.email === lower);
+    if (!user) return null;
+    const ok = await bcrypt.compare(password, user.passwordHash);
+    return ok ? user : null;
+  } catch {
+    return null;
+  }
 }
 
 export async function createSessionToken(user: User): Promise<string> {

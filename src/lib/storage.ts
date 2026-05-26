@@ -8,9 +8,25 @@ import path from 'path';
 // Vercel's runtime filesystem is read-only.
 
 const useBlob = !!process.env.BLOB_READ_WRITE_TOKEN;
+const onVercel = !!process.env.VERCEL;
 
 const DATA_DIR = path.join(process.cwd(), 'data');
 const PUBLIC_UPLOADS = path.join(process.cwd(), 'public', 'uploads');
+
+// Thrown when a write is attempted with no persistent store available
+// (running on Vercel — read-only FS — without a Blob store connected).
+export class StorageUnavailableError extends Error {
+  constructor() {
+    super(
+      'Saving needs a Vercel Blob store. In the Vercel dashboard: Storage → Create → Blob → Connect to this project, then Deployments → Redeploy.',
+    );
+    this.name = 'StorageUnavailableError';
+  }
+}
+
+function assertWritable() {
+  if (!useBlob && onVercel) throw new StorageUnavailableError();
+}
 
 // ---- JSON / text documents -------------------------------------------------
 
@@ -44,6 +60,7 @@ export async function writeText(key: string, value: string): Promise<void> {
     });
     return;
   }
+  assertWritable();
   const full = path.join(DATA_DIR, key);
   await fs.mkdir(path.dirname(full), { recursive: true });
   await fs.writeFile(full, value, 'utf8');
@@ -118,6 +135,7 @@ export async function writeBinary(
     });
     return url;
   }
+  assertWritable();
   const full = path.join(PUBLIC_UPLOADS, path.basename(key));
   await fs.mkdir(PUBLIC_UPLOADS, { recursive: true });
   await fs.writeFile(full, bytes);
