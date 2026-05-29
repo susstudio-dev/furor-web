@@ -33,10 +33,21 @@ function assertWritable() {
 export async function readText(key: string): Promise<string | null> {
   if (useBlob) {
     const { list } = await import('@vercel/blob');
-    const { blobs } = await list({ prefix: key, limit: 1 });
+    // `list` itself is eventually consistent and `limit: 1` plus a prefix
+    // match could pick the wrong sibling if any legacy random-suffix blobs
+    // exist — request several and pick the exact pathname.
+    const { blobs } = await list({ prefix: key, limit: 10 });
     const hit = blobs.find((b) => b.pathname === key);
     if (!hit) return null;
-    const res = await fetch(hit.url, { cache: 'no-store' });
+    // Blob URLs are CDN-fronted. Even with `cacheControlMaxAge: 0` on write
+    // (and `cache: 'no-store'` on the fetch — that only opts out of Next's
+    // data cache), the edge can still serve a stale body right after an
+    // overwrite. The URL is stable thanks to `addRandomSuffix: false`, so a
+    // per-read cache buster forces a fresh origin fetch every time the page
+    // regenerates. The JSON is small and reads are rare (post-revalidation),
+    // so losing the CDN here is a non-issue.
+    const sep = hit.url.includes('?') ? '&' : '?';
+    const res = await fetch(`${hit.url}${sep}_t=${Date.now()}`, { cache: 'no-store' });
     if (!res.ok) return null;
     return res.text();
   }

@@ -17,11 +17,26 @@ export async function POST(req: Request) {
   try {
     const saved = await saveContent(body, session.email);
     await audit({ actor: session.email, action: 'save_content', detail: `version ${saved.version}` });
-    // Site & socials, footer copy and tonight all live in the root layout, so a
-    // single layout-level revalidate covers every static page. Dynamic
-    // [slug] routes still need explicit calls.
+    // Layout-level revalidate is supposed to cascade to every static page
+    // under the root layout, but we've seen cases where the edge holds a
+    // stale HTML response after an admin save. Explicit per-page calls
+    // alongside the layout call guarantee each public route is marked stale.
     revalidatePath('/', 'layout');
-    revalidatePath('/sitemap.xml');
+    for (const p of [
+      '/',
+      '/about',
+      '/faqs',
+      '/contact',
+      '/instructors',
+      '/stories',
+      '/dance-styles',
+      '/batches',
+      '/privacy',
+      '/terms',
+      '/sitemap.xml',
+    ]) {
+      revalidatePath(p);
+    }
     for (const s of saved.danceStyles) revalidatePath(`/dance-styles/${s.slug}`);
     for (const s of saved.stories) revalidatePath(`/stories/${s.slug}`);
     return NextResponse.json({ ok: true });
