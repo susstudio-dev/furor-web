@@ -32,20 +32,26 @@ function assertWritable() {
 
 export async function readText(key: string): Promise<string | null> {
   if (useBlob) {
-    const { list } = await import('@vercel/blob');
-    // `list` itself is eventually consistent and `limit: 1` plus a prefix
-    // match could pick the wrong sibling if any legacy random-suffix blobs
-    // exist — request several and pick the exact pathname.
-    const { blobs } = await list({ prefix: key, limit: 10 });
-    const hit = blobs.find((b) => b.pathname === key);
-    if (!hit) return null;
-    // Blob URLs are CDN-fronted. Even with `cacheControlMaxAge: 0` on write
-    // (and `cache: 'no-store'` on the fetch — that only opts out of Next's
-    // data cache), the edge can still serve a stale body right after an
-    // overwrite. The URL is stable thanks to `addRandomSuffix: false`, so a
-    // per-read cache buster forces a fresh origin fetch every time the page
-    // regenerates. The JSON is small and reads are rare (post-revalidation),
-    // so losing the CDN here is a non-issue.
+    const { head, BlobNotFoundError } = await import('@vercel/blob');
+    // Look the blob up by its exact pathname with `head`, which is a direct,
+    // STRONGLY consistent lookup. We used to use `list` here, but `list` is
+    // eventually consistent: right after a save it could briefly fail to return
+    // the just-written blob, making this read report "no content". That false
+    // "missing" then made getContent() overwrite the fresh save with the seed —
+    // the bug where new content reverted to the default after every save.
+    //
+    // A genuine miss throws BlobNotFoundError -> return null. ANY other error
+    // must propagate (never be swallowed into null), so a transient failure is
+    // never mistaken for an empty store.
+    let hit;
+    try {
+      hit = await head(key);
+    } catch (err) {
+      if (err instanceof BlobNotFoundError) return null;
+      throw err;
+    }
+    // Blob URLs are CDN-fronted; append a per-read cache buster so we always
+    // get the freshly written body rather than a stale edge copy.
     const sep = hit.url.includes('?') ? '&' : '?';
     const res = await fetch(`${hit.url}${sep}_t=${Date.now()}`, { cache: 'no-store' });
     if (!res.ok) return null;

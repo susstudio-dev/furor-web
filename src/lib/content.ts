@@ -1,7 +1,7 @@
 import 'server-only';
 import { cache } from 'react';
 import { SiteContentSchema, type SiteContent } from './content-schema';
-import { readText, writeText } from './storage';
+import { readText } from './storage';
 import seedContent from '@/data/site-content.seed.json';
 
 export const CONTENT_KEY = 'site-content.json';
@@ -38,7 +38,10 @@ export const getContent = cache(async (): Promise<SiteContent> => {
   try {
     raw = await readText(CONTENT_KEY);
   } catch {
-    raw = null;
+    // Transient read error (network/Blob hiccup). Serve the in-memory seed for
+    // THIS request only — never persist it. A temporary read failure must not
+    // be allowed to clobber real stored content with the default.
+    return SiteContentSchema.parse(seedContent);
   }
   if (raw != null) {
     try {
@@ -47,16 +50,16 @@ export const getContent = cache(async (): Promise<SiteContent> => {
       const parsed = JSON.parse(cleaned);
       return SiteContentSchema.parse(mergeWithSeed(parsed, seedContent));
     } catch {
-      // corrupt/invalid stored doc — fall back to seed below
+      // Stored doc is corrupt/unparseable. Serve the seed in-memory but DO NOT
+      // overwrite the stored bytes — the real content stays recoverable.
+      return SiteContentSchema.parse(seedContent);
     }
   }
-  const seeded = SiteContentSchema.parse(seedContent);
-  try {
-    await writeText(CONTENT_KEY, JSON.stringify(seeded, null, 2));
-  } catch {
-    // read-only storage / no Blob store yet — serve the seed, don't crash
-  }
-  return seeded;
+  // Genuinely empty store (first run, before any admin save). Serve the seed.
+  // We deliberately do NOT write it back: the first real save creates the doc,
+  // and writing the seed here is exactly what used to let a spurious "empty"
+  // read replace a real save with the default.
+  return SiteContentSchema.parse(seedContent);
 });
 
 // Re-exports so existing call sites don't break.
