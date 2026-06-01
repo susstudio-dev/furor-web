@@ -2,7 +2,6 @@ import Link from 'next/link';
 import { getContent, nextBatchPerStyle, formatBatchDate, formatInr, batchStyleLabel } from '@/lib/content';
 import { Hero } from '@/components/Hero';
 import { KineticStrip } from '@/components/KineticStrip';
-import { LiveCounter } from '@/components/LiveCounter';
 import { StyleFinder } from '@/components/StyleFinder';
 import { EnquiryCTA } from '@/components/EnquiryCTA';
 import { TonightTile } from '@/components/TonightTile';
@@ -12,14 +11,13 @@ import { Accentuate } from '@/components/Accentuate';
 import { Reveal } from '@/components/Reveal';
 import { Parallax } from '@/components/Parallax';
 import { QuickEnroll } from '@/components/QuickEnroll';
+import { PhotoCarousel } from '@/components/PhotoCarousel';
 
 export default async function HomePage() {
   const content = await getContent();
   const sortedStyles = content.danceStyles.slice().sort((a, b) => a.displayOrder - b.displayOrder);
   const sortedStudios = content.studios.slice().sort((a, b) => a.displayOrder - b.displayOrder);
   const nextPerStyle = nextBatchPerStyle(content);
-  const studentsThisWeek = content.site.stats?.studentsThisWeek;
-  const showCounter = typeof studentsThisWeek === 'number' && studentsThisWeek > 0;
   const h = content.pages.home;
 
   return (
@@ -30,6 +28,25 @@ export default async function HomePage() {
       <QuickEnroll content={content} />
 
       <KineticStrip styles={sortedStyles} />
+
+      {/* Moments — continuously scrolling photo strip */}
+      {content.pages.about.moments.photos.length > 0 ? (
+        <section className="py-10 sm:py-14">
+          <div className="container-x">
+            <Reveal>
+              <p className="display text-sm uppercase tracking-widest text-ember-400">
+                {content.pages.about.moments.eyebrow || 'Moments'}
+              </p>
+              <h2 className="mt-2 display text-3xl font-bold sm:text-4xl lg:text-5xl tracking-tight lg:whitespace-nowrap">
+                {content.pages.about.moments.headline || 'On the floor at Furor.'}
+              </h2>
+            </Reveal>
+          </div>
+          <Reveal className="mt-8">
+            <PhotoCarousel photos={content.pages.about.moments.photos} />
+          </Reveal>
+        </section>
+      ) : null}
 
       {/* What we teach */}
       <section className="container-x py-12 sm:py-16 relative overflow-hidden">
@@ -226,14 +243,6 @@ export default async function HomePage() {
             ))}
           </Reveal>
         </section>
-      ) : null}
-
-      {/* Live counter */}
-      {showCounter ? (
-        <LiveCounter
-          value={studentsThisWeek!}
-          label="students dancing with us this week"
-        />
       ) : null}
 
       {/* Style finder */}
