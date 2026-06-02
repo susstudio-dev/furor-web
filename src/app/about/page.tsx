@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { getContent } from '@/lib/content';
 import { EnquiryCTA } from '@/components/EnquiryCTA';
 import { JsonLd } from '@/components/JsonLd';
-import { Img } from '@/components/Img';
+import { PhotoCarousel } from '@/components/PhotoCarousel';
 
 export const metadata = { title: 'About' };
 
@@ -52,31 +52,8 @@ export default async function AboutPage() {
               <p className="max-w-sm text-cream/70">{a.moments.lead}</p>
             ) : null}
           </div>
-          <div className="mt-10 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4 md:grid-rows-2">
-            {a.moments.photos.map((p, i) => {
-              const span =
-                i === 0
-                  ? 'md:col-span-2 md:row-span-2 aspect-square md:aspect-auto'
-                  : i > 4
-                    ? 'aspect-square hidden md:block'
-                    : 'aspect-square';
-              return (
-                <div
-                  key={`${p.src}-${i}`}
-                  className={`group relative overflow-hidden rounded-2xl border border-cream/10 bg-ink-900/40 ${span}`}
-                >
-                  <Img
-                    src={p.src}
-                    alt={p.alt}
-                    seed={p.src}
-                    fill
-                    sizes="(max-width: 768px) 50vw, 25vw"
-                    className="object-cover transition duration-700 group-hover:scale-[1.05]"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-ink-950/60 via-transparent to-transparent opacity-60 group-hover:opacity-30 transition-opacity" />
-                </div>
-              );
-            })}
+          <div className="mt-10">
+            <PhotoCarousel photos={a.moments.photos} />
           </div>
         </section>
       ) : null}
