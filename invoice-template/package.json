@@ -1,0 +1,16 @@
+{
+  "name": "furor-invoice",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Standalone invoice renderer for susstudios -> Furor Dance Hyderabad. Self-contained; not part of the furor-web app.",
+  "scripts": {
+    "render": "tsx render.tsx"
+  },
+  "dependencies": {
+    "@react-pdf/renderer": "^3.4.5",
+    "mupdf": "^1.27.0",
+    "react": "^18.3.1",
+    "tsx": "^4.19.2"
+  }
+}
