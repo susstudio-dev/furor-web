@@ -45,6 +45,28 @@ export const TonightSchema = z
     { message: 'When enabled, headline, body, when and ctaContext are required', path: ['headline'] },
   );
 
+// Free trial / first-class-on-the-house offer. Surfaced as a ribbon on the
+// home page so people see the offer up front instead of having to ask in
+// WhatsApp. Pattern mirrors TonightSchema.
+export const TrialSchema = z
+  .object({
+    enabled: z.boolean().default(true),
+    eyebrow: z.string().default('Free trial'),
+    headline: z.string().default(''),
+    body: z.string().default(''),
+    when: z.string().default(''),
+    ctaLabel: z.string().default('Book a trial on WhatsApp'),
+    ctaContext: z.string().default(''),
+    footnote: z.string().default(''),
+  })
+  .refine(
+    (t) => !t.enabled || (t.headline && t.ctaContext),
+    {
+      message: 'When enabled, headline and ctaContext are required',
+      path: ['headline'],
+    },
+  );
+
 export const DanceStyleSchema = z.object({
   id: z.string().min(1),
   slug: z.string().regex(/^[a-z0-9-]+$/),
@@ -364,6 +386,16 @@ export const SiteContentSchema = z.object({
     when: '',
     ctaLabel: 'WhatsApp to RSVP',
     ctaContext: '',
+  }),
+  trial: TrialSchema.default({
+    enabled: true,
+    eyebrow: 'Free trial',
+    headline: 'Try a free class this weekend',
+    body: 'First class on the house — Salsa, Bachata or West Coast Swing. No prior experience, no partner needed. Just turn up.',
+    when: 'Sat & Sun · Jubilee Hills',
+    ctaLabel: 'Book a trial on WhatsApp',
+    ctaContext: 'a free trial class this weekend',
+    footnote: 'No card needed. We confirm your slot on WhatsApp in minutes.',
   }),
   whyFuror: z
     .object({

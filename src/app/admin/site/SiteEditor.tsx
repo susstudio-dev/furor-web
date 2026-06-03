@@ -13,6 +13,10 @@ export function SiteEditor({ initial }: { initial: SiteContent }) {
     setC((p) => ({ ...p, site: { ...p.site, ...patch } }));
     setDirty(true);
   }
+  function patchTrial(patch: Partial<SiteContent['trial']>) {
+    setC((p) => ({ ...p, trial: { ...p.trial, ...patch } }));
+    setDirty(true);
+  }
   function patchTonight(patch: Partial<SiteContent['tonight']>) {
     setC((p) => ({ ...p, tonight: { ...p.tonight, ...patch } }));
     setDirty(true);
@@ -114,6 +118,50 @@ export function SiteEditor({ initial }: { initial: SiteContent }) {
             className="input"
           />
         </Field>
+
+        <div className="mt-4 rounded-2xl border border-emerald-400/30 bg-emerald-500/5 p-5">
+          <div className="flex items-center justify-between">
+            <p className="display text-sm uppercase tracking-widest text-emerald-300">Free trial offer</p>
+            <label className="inline-flex items-center gap-2 text-sm text-cream/80">
+              <input
+                type="checkbox"
+                checked={c.trial.enabled}
+                onChange={(e) => patchTrial({ enabled: e.target.checked })}
+              />
+              Show on home page
+            </label>
+          </div>
+          <p className="mt-1 text-xs text-cream/50">
+            A prominent ribbon just under the kinetic strip so visitors see the trial offer before they have to ask. Disable to hide.
+          </p>
+          <div className="mt-4 grid gap-3">
+            <div className="grid sm:grid-cols-2 gap-3">
+              <Field label="Eyebrow tag" hint="Small label on the ribbon. Default: Free trial">
+                <input value={c.trial.eyebrow} onChange={(e) => patchTrial({ eyebrow: e.target.value })} className="input" />
+              </Field>
+              <Field label="When" hint="e.g. Sat & Sun · Jubilee Hills">
+                <input value={c.trial.when} onChange={(e) => patchTrial({ when: e.target.value })} className="input" />
+              </Field>
+            </div>
+            <Field label="Headline" hint="e.g. Try a free class this weekend">
+              <input value={c.trial.headline} onChange={(e) => patchTrial({ headline: e.target.value })} className="input" />
+            </Field>
+            <Field label="Body" hint="One short paragraph that sells the offer.">
+              <textarea rows={2} value={c.trial.body} onChange={(e) => patchTrial({ body: e.target.value })} className="input" />
+            </Field>
+            <Field label="Footnote" hint="Tiny line under the body. Use it to remove friction (e.g. 'No card needed').">
+              <input value={c.trial.footnote} onChange={(e) => patchTrial({ footnote: e.target.value })} className="input" />
+            </Field>
+            <div className="grid sm:grid-cols-2 gap-3">
+              <Field label="CTA label" hint="Default: Book a trial on WhatsApp">
+                <input value={c.trial.ctaLabel} onChange={(e) => patchTrial({ ctaLabel: e.target.value })} className="input" />
+              </Field>
+              <Field label="WhatsApp message context" hint="Inserted into &quot;Hi Furor, I'd like to come to ___.&quot;">
+                <input value={c.trial.ctaContext} onChange={(e) => patchTrial({ ctaContext: e.target.value })} className="input" />
+              </Field>
+            </div>
+          </div>
+        </div>
 
         <div className="mt-4 rounded-2xl border border-ember-500/30 bg-ember-500/5 p-5">
           <div className="flex items-center justify-between">

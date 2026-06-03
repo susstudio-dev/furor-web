@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { getContent, nextBatchPerStyle, formatBatchDate, formatInr, batchStyleLabel } from '@/lib/content';
 import { Hero } from '@/components/Hero';
 import { KineticStrip } from '@/components/KineticStrip';
+import { TrialBanner } from '@/components/TrialBanner';
 import { StyleFinder } from '@/components/StyleFinder';
 import { EnquiryCTA } from '@/components/EnquiryCTA';
 import { TonightTile } from '@/components/TonightTile';
@@ -27,6 +28,8 @@ export default async function HomePage() {
       <QuickEnroll content={content} />
 
       <KineticStrip styles={sortedStyles} />
+
+      <TrialBanner content={content} />
 
       {/* What we teach */}
       <section className="container-x py-12 sm:py-16 relative overflow-hidden">
@@ -138,18 +141,42 @@ export default async function HomePage() {
                         {b.seatsLeft} seats left
                       </p>
                     ) : null}
-                    <div className="mt-4">
-                      <EnquiryCTA
-                        whatsappNumber={content.site.whatsappNumber}
-                        ctx={{
-                          source: 'batch_row',
-                          style: { slug: s.slug, name: s.name },
-                          branch: { slug: branch.slug, name: branch.name },
-                          batch: b,
-                        }}
-                        variant="batch-row"
-                        label="Enquire on WhatsApp"
-                      />
+                    <div className="mt-4 flex flex-wrap items-center gap-2">
+                      {b.razorpayLink ? (
+                        <>
+                          <a
+                            href={b.razorpayLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 rounded-full bg-ember-500 text-cream px-4 py-2 text-sm font-semibold hover:bg-ember-600 transition"
+                          >
+                            Book seat · {formatInr(b.priceInr)}
+                          </a>
+                          <EnquiryCTA
+                            whatsappNumber={content.site.whatsappNumber}
+                            ctx={{
+                              source: 'batch_row',
+                              style: { slug: s.slug, name: s.name },
+                              branch: { slug: branch.slug, name: branch.name },
+                              batch: b,
+                            }}
+                            variant="batch-row"
+                            label="Or chat first"
+                          />
+                        </>
+                      ) : (
+                        <EnquiryCTA
+                          whatsappNumber={content.site.whatsappNumber}
+                          ctx={{
+                            source: 'batch_row',
+                            style: { slug: s.slug, name: s.name },
+                            branch: { slug: branch.slug, name: branch.name },
+                            batch: b,
+                          }}
+                          variant="batch-row"
+                          label="Enquire on WhatsApp"
+                        />
+                      )}
                     </div>
                   </>
                 ) : (

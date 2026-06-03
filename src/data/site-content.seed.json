@@ -32,6 +32,16 @@
     "ctaLabel": "WhatsApp to RSVP",
     "ctaContext": "the La Rumba Latin social tonight at Jubilee Hills"
   },
+  "trial": {
+    "enabled": true,
+    "eyebrow": "Free trial",
+    "headline": "Try a free class this weekend",
+    "body": "First class on the house — Salsa, Bachata or West Coast Swing. No prior experience, no partner needed. Just turn up.",
+    "when": "Sat & Sun · Jubilee Hills",
+    "ctaLabel": "Book a trial on WhatsApp",
+    "ctaContext": "a free trial class this weekend",
+    "footnote": "No card needed. We confirm your slot on WhatsApp in minutes."
+  },
   "whyFuror": {
     "headline": "Why dancers stay with us",
     "points": [
