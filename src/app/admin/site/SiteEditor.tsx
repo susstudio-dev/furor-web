@@ -119,9 +119,9 @@ export function SiteEditor({ initial }: { initial: SiteContent }) {
           />
         </Field>
 
-        <div className="mt-4 rounded-2xl border border-emerald-400/30 bg-emerald-500/5 p-5">
+        <div className="mt-4 rounded-2xl border border-ember-500/30 bg-ember-500/5 p-5">
           <div className="flex items-center justify-between">
-            <p className="display text-sm uppercase tracking-widest text-emerald-300">Free trial offer</p>
+            <p className="display text-sm uppercase tracking-widest text-ember-400">Featured offer ribbon</p>
             <label className="inline-flex items-center gap-2 text-sm text-cream/80">
               <input
                 type="checkbox"
@@ -132,29 +132,49 @@ export function SiteEditor({ initial }: { initial: SiteContent }) {
             </label>
           </div>
           <p className="mt-1 text-xs text-cream/50">
-            A prominent ribbon just under the kinetic strip so visitors see the trial offer before they have to ask. Disable to hide.
+            Prominent ribbon just under the kinetic strip. Use it for anything you want visible at the top — weekend batches, an upcoming bootcamp, a discount. <strong>Only make claims (free / price / dates) that are accurate.</strong>
           </p>
           <div className="mt-4 grid gap-3">
             <div className="grid sm:grid-cols-2 gap-3">
-              <Field label="Eyebrow tag" hint="Small label on the ribbon. Default: Free trial">
+              <Field label="Eyebrow tag" hint="Small label on the ribbon. e.g. Weekend / Bootcamp / Promo">
                 <input value={c.trial.eyebrow} onChange={(e) => patchTrial({ eyebrow: e.target.value })} className="input" />
               </Field>
               <Field label="When" hint="e.g. Sat & Sun · Jubilee Hills">
                 <input value={c.trial.when} onChange={(e) => patchTrial({ when: e.target.value })} className="input" />
               </Field>
             </div>
-            <Field label="Headline" hint="e.g. Try a free class this weekend">
+            <Field label="Headline" hint="e.g. Weekend classes at Jubilee Hills">
               <input value={c.trial.headline} onChange={(e) => patchTrial({ headline: e.target.value })} className="input" />
             </Field>
-            <Field label="Body" hint="One short paragraph that sells the offer.">
+            <Field label="Body" hint="One short paragraph describing the offer.">
               <textarea rows={2} value={c.trial.body} onChange={(e) => patchTrial({ body: e.target.value })} className="input" />
             </Field>
-            <Field label="Footnote" hint="Tiny line under the body. Use it to remove friction (e.g. 'No card needed').">
+            <Field label="Footnote" hint="Tiny line under the body. Leave blank if not needed.">
               <input value={c.trial.footnote} onChange={(e) => patchTrial({ footnote: e.target.value })} className="input" />
             </Field>
             <div className="grid sm:grid-cols-2 gap-3">
-              <Field label="CTA label" hint="Default: Book a trial on WhatsApp">
+              <Field label="Primary CTA label" hint="e.g. See weekend batches">
                 <input value={c.trial.ctaLabel} onChange={(e) => patchTrial({ ctaLabel: e.target.value })} className="input" />
+              </Field>
+              <Field
+                label="Primary CTA link"
+                hint="Internal path like /batches?days=Weekend. Leave blank to make WhatsApp the primary action."
+              >
+                <input
+                  value={c.trial.ctaHref}
+                  onChange={(e) => patchTrial({ ctaHref: e.target.value })}
+                  placeholder="/batches?days=Weekend"
+                  className="input"
+                />
+              </Field>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-3">
+              <Field label="WhatsApp secondary label" hint="Shown next to the primary link. e.g. Or chat on WhatsApp">
+                <input
+                  value={c.trial.whatsappLabel}
+                  onChange={(e) => patchTrial({ whatsappLabel: e.target.value })}
+                  className="input"
+                />
               </Field>
               <Field label="WhatsApp message context" hint="Inserted into &quot;Hi Furor, I'd like to come to ___.&quot;">
                 <input value={c.trial.ctaContext} onChange={(e) => patchTrial({ ctaContext: e.target.value })} className="input" />

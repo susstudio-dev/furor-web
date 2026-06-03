@@ -57,7 +57,8 @@ export default async function InstructorsPage() {
                     variant={(idx % 4) as 0 | 1 | 2 | 3}
                     fill
                     sizes="120px"
-                    className="object-cover"
+                    // Faces sit slightly above centre — anchor up so heads don't get cropped.
+                    className="object-cover object-[center_25%]"
                   />
                 </div>
                 <div className="min-w-0 flex-1">

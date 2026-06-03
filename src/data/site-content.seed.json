@@ -25,7 +25,7 @@
     "posterImage": "/photos/DSC_0166.jpg"
   },
   "tonight": {
-    "enabled": true,
+    "enabled": false,
     "headline": "La Rumba · Latin Social",
     "body": "Hyderabad's weekly Latin social. All levels welcome. Free for current students; ₹300 for guests.",
     "when": "Tonight · 8 PM at Jubilee Hills",
@@ -34,13 +34,15 @@
   },
   "trial": {
     "enabled": true,
-    "eyebrow": "Free trial",
-    "headline": "Try a free class this weekend",
-    "body": "First class on the house — Salsa, Bachata or West Coast Swing. No prior experience, no partner needed. Just turn up.",
+    "eyebrow": "Weekend",
+    "headline": "Weekend classes at Jubilee Hills",
+    "body": "Open Salsa, Bachata and West Coast Swing batches every Saturday and Sunday. Beginner-friendly. No partner needed.",
     "when": "Sat & Sun · Jubilee Hills",
-    "ctaLabel": "Book a trial on WhatsApp",
-    "ctaContext": "a free trial class this weekend",
-    "footnote": "No card needed. We confirm your slot on WhatsApp in minutes."
+    "ctaLabel": "See weekend batches",
+    "ctaHref": "/batches?days=Weekend",
+    "whatsappLabel": "Or chat on WhatsApp",
+    "ctaContext": "a weekend Salsa or Bachata class",
+    "footnote": ""
   },
   "whyFuror": {
     "headline": "Why dancers stay with us",

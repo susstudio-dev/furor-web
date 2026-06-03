@@ -41,7 +41,7 @@ export default async function StylesIndex() {
                   label={s.name}
                   fill
                   sizes="(max-width: 768px) 100vw, 33vw"
-                  className="object-cover transition duration-700 group-hover:scale-[1.04]"
+                  className="object-cover object-[center_30%] transition duration-700 group-hover:scale-[1.04]"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-ink-950 via-ink-950/30 to-transparent" />
               </div>

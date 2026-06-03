@@ -45,26 +45,30 @@ export const TonightSchema = z
     { message: 'When enabled, headline, body, when and ctaContext are required', path: ['headline'] },
   );
 
-// Free trial / first-class-on-the-house offer. Surfaced as a ribbon on the
-// home page so people see the offer up front instead of having to ask in
-// WhatsApp. Pattern mirrors TonightSchema.
+// A generic "featured offer" ribbon on the home page (kept the `trial` key so
+// existing stored content keeps working). Primary CTA can be either an
+// internal link (e.g. "See weekend batches" → /batches?days=Weekend) OR a
+// WhatsApp message. The schema makes no claims about price — fill the copy
+// to match whatever you actually offer.
 export const TrialSchema = z
   .object({
-    enabled: z.boolean().default(true),
-    eyebrow: z.string().default('Free trial'),
+    enabled: z.boolean().default(false),
+    eyebrow: z.string().default('Weekend'),
     headline: z.string().default(''),
     body: z.string().default(''),
     when: z.string().default(''),
-    ctaLabel: z.string().default('Book a trial on WhatsApp'),
+    ctaLabel: z.string().default('See weekend batches'),
+    // If set, the primary CTA becomes a Link to this href instead of WhatsApp.
+    ctaHref: z.string().default(''),
+    // If ctaHref is set, WhatsApp shows as a secondary "Or chat" link.
+    // If ctaHref is empty, WhatsApp IS the primary CTA.
+    whatsappLabel: z.string().default('Or chat on WhatsApp'),
     ctaContext: z.string().default(''),
     footnote: z.string().default(''),
   })
   .refine(
-    (t) => !t.enabled || (t.headline && t.ctaContext),
-    {
-      message: 'When enabled, headline and ctaContext are required',
-      path: ['headline'],
-    },
+    (t) => !t.enabled || !!t.headline,
+    { message: 'When enabled, headline is required', path: ['headline'] },
   );
 
 export const DanceStyleSchema = z.object({
@@ -389,13 +393,15 @@ export const SiteContentSchema = z.object({
   }),
   trial: TrialSchema.default({
     enabled: true,
-    eyebrow: 'Free trial',
-    headline: 'Try a free class this weekend',
-    body: 'First class on the house — Salsa, Bachata or West Coast Swing. No prior experience, no partner needed. Just turn up.',
+    eyebrow: 'Weekend',
+    headline: 'Weekend classes at Jubilee Hills',
+    body: 'Open Salsa, Bachata and West Coast Swing batches every Saturday and Sunday. Beginner-friendly. No partner needed.',
     when: 'Sat & Sun · Jubilee Hills',
-    ctaLabel: 'Book a trial on WhatsApp',
-    ctaContext: 'a free trial class this weekend',
-    footnote: 'No card needed. We confirm your slot on WhatsApp in minutes.',
+    ctaLabel: 'See weekend batches',
+    ctaHref: '/batches?days=Weekend',
+    whatsappLabel: 'Or chat on WhatsApp',
+    ctaContext: 'a weekend Salsa or Bachata class',
+    footnote: '',
   }),
   whyFuror: z
     .object({

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { Batch } from '@/lib/content-schema';
 import { formatBatchDate, formatInr } from '@/lib/format';
 import { EnquiryCTA } from './EnquiryCTA';
+import { BatchActions } from './BatchActions';
 
 export interface BatchRow {
   batch: Batch;
@@ -375,26 +376,17 @@ export function BatchesBrowser({ rows, styles, studios, whatsappNumber, instagra
                       <p className="text-cream/60 text-xs">{b.seatsLeft} seats</p>
                     ) : null}
                   </div>
-                  <div className="lg:col-span-2 flex flex-wrap gap-2 justify-start lg:justify-end">
+                  <div className="lg:col-span-2 flex flex-wrap gap-2 justify-start lg:justify-end items-center">
                     {b.status === 'Filling Fast' ? (
                       <span className="pill bg-gold-500/15 text-gold-400">Filling fast</span>
                     ) : null}
-                    <EnquiryCTA
+                    <BatchActions
+                      batch={b}
+                      style={{ slug: row.styleSlugs[0], name: row.styleName }}
+                      branch={{ slug: row.branchSlug, name: row.branchName }}
                       whatsappNumber={whatsappNumber}
-                      ctx={{
-                        source: 'batch_row',
-                        style: { slug: row.styleSlugs[0], name: row.styleName },
-                        branch: { slug: row.branchSlug, name: row.branchName },
-                        batch: b,
-                      }}
-                      variant="batch-row"
-                      label="Enquire"
+                      primaryLabelWhenNoLink="Enquire"
                     />
-                    {b.razorpayLink ? (
-                      <a className="btn-ghost text-xs" href={b.razorpayLink} target="_blank" rel="noopener noreferrer">
-                        Pre-register
-                      </a>
-                    ) : null}
                   </div>
                 </div>
               );

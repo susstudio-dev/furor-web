@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { getContent, batchesForStyle, formatBatchDate, formatInr, styleBySlug, batchStyleLabel } from '@/lib/content';
 import { EnquiryCTA } from '@/components/EnquiryCTA';
+import { BatchActions } from '@/components/BatchActions';
 import { JsonLd } from '@/components/JsonLd';
 import { Img } from '@/components/Img';
 
@@ -40,14 +41,25 @@ export default async function StylePage({ params }: { params: Promise<{ slug: st
       <JsonLd data={faqLd} />
       <section className="relative isolate overflow-hidden">
         <div className="absolute inset-0 -z-10">
-          <Img src={style.heroImage} alt="" seed={`style-${style.slug}`} label={style.name} fill priority sizes="100vw" className="object-cover animate-kenburns" />
+          <Img
+            src={style.heroImage}
+            alt=""
+            seed={`style-${style.slug}`}
+            label={style.name}
+            fill
+            priority
+            sizes="100vw"
+            // Anchor the subject hard right on portrait mobile so the dancer
+            // isn't cropped to the centre of the frame.
+            className="object-cover object-[78%_38%] sm:object-[center_30%] animate-kenburns"
+          />
           <div className="absolute inset-0 bg-gradient-to-r from-ink-950 via-ink-950/80 to-ink-950/30" />
           <div className="absolute inset-0 bg-gradient-to-t from-ink-950 via-ink-950/45 to-transparent" />
         </div>
-        <div className="container-x py-24 sm:py-32">
+        <div className="container-x pt-16 pb-14 sm:py-24 lg:py-32 max-w-[44rem] sm:max-w-none">
           <p className="pill bg-ember-500/15 text-ember-400">{style.name}</p>
-          <h1 className="mt-4 display text-5xl font-extrabold sm:text-7xl tracking-tight max-w-4xl">{style.tagline}</h1>
-          <p className="mt-6 max-w-2xl text-lg text-cream/80">{style.description}</p>
+          <h1 className="mt-4 display text-[2.4rem] sm:text-6xl lg:text-7xl font-extrabold leading-[1.05] tracking-tight max-w-[18ch] sm:max-w-4xl">{style.tagline}</h1>
+          <p className="mt-6 max-w-2xl text-base sm:text-lg text-cream/80">{style.description}</p>
           <div className="mt-8 flex flex-wrap gap-3">
             <EnquiryCTA
               whatsappNumber={content.site.whatsappNumber}
@@ -120,21 +132,14 @@ export default async function StylePage({ params }: { params: Promise<{ slug: st
                     </p>
                     <p className="text-cream/70 text-sm">{formatInr(b.priceInr)} {b.status === 'Filling Fast' ? <span className="pill ml-2 bg-gold-500/15 text-gold-400">Filling fast</span> : null}</p>
                   </div>
-                  <div className="flex gap-2 flex-wrap">
-                    <EnquiryCTA
+                  <div className="flex gap-2 flex-wrap items-center">
+                    <BatchActions
+                      batch={b}
+                      style={{ slug: style.slug, name: style.name }}
+                      branch={{ slug: branch.slug, name: branch.name }}
                       whatsappNumber={content.site.whatsappNumber}
-                      ctx={{
-                        source: 'batch_row',
-                        style: { slug: style.slug, name: style.name },
-                        branch: { slug: branch.slug, name: branch.name },
-                        batch: b,
-                      }}
-                      variant="batch-row"
-                      label="Enquire"
+                      primaryLabelWhenNoLink="Enquire"
                     />
-                    {b.razorpayLink ? (
-                      <a className="btn-secondary text-sm" href={b.razorpayLink} target="_blank" rel="noopener noreferrer">Pre-register</a>
-                    ) : null}
                   </div>
                 </div>
               );

@@ -66,7 +66,9 @@ export function Footer({ content }: { content: SiteContent }) {
               <li><Link href="/dance-styles" className="hover:text-cream transition-colors">Dance Styles</Link></li>
               <li><Link href="/instructors" className="hover:text-cream transition-colors">Instructors</Link></li>
               <li><Link href="/batches" className="hover:text-cream transition-colors">Batches &amp; Pricing</Link></li>
-              <li><Link href="/stories" className="hover:text-cream transition-colors">Blog</Link></li>
+              {content.stories.length > 0 ? (
+                <li><Link href="/stories" className="hover:text-cream transition-colors">Blog</Link></li>
+              ) : null}
               <li><Link href="/faqs" className="hover:text-cream transition-colors">FAQs</Link></li>
               <li><Link href="/contact" className="hover:text-cream transition-colors">Contact</Link></li>
               {content.customPages
@@ -91,7 +93,7 @@ export function Footer({ content }: { content: SiteContent }) {
         </div>
 
         <div className="mt-14 flex flex-wrap items-center justify-between gap-4 border-t border-cream/10 pt-6 text-xs text-cream/40">
-          <p>© {new Date().getFullYear()} Furor Dance Studio. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Furor Dance Hyderabad. All rights reserved.</p>
           <div className="flex items-center gap-5 pr-12 sm:pr-28">
             <Link href="/privacy" className="hover:text-cream/70 transition-colors">Privacy</Link>
             <Link href="/terms" className="hover:text-cream/70 transition-colors">Terms</Link>
