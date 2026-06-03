@@ -308,6 +308,21 @@ const SimpleIntroPageSchema = z
   .object({ intro: PageIntroSchema.default({ eyebrow: '', headline: '', lead: '' }) })
   .default({});
 
+// Privacy / Terms / similar long-form documents. Each section is a sub-heading
+// + a paragraph (markdown not required — keep editing friction-free).
+const LegalSectionSchema = z.object({
+  heading: z.string().default(''),
+  body: z.string().default(''),
+});
+
+export const LegalPageSchema = z
+  .object({
+    intro: PageIntroSchema.default({ eyebrow: 'Legal', headline: '', lead: '' }),
+    lastUpdated: z.string().default(''),
+    sections: z.array(LegalSectionSchema).default([]),
+  })
+  .default({});
+
 const PagesSchema = z
   .object({
     home: HomePageSchema,
@@ -318,8 +333,25 @@ const PagesSchema = z
     stories: SimpleIntroPageSchema,
     danceStyles: SimpleIntroPageSchema,
     batches: SimpleIntroPageSchema,
+    privacy: LegalPageSchema,
+    terms: LegalPageSchema,
   })
   .default({});
+
+// Admin-creatable pages. Lives at /p/<slug>. Each page is intro + sections
+// (same shape as the legal pages — proven, easy to edit, easy to extend).
+export const CustomPageSchema = z.object({
+  id: z.string().min(1),
+  slug: z.string().regex(/^[a-z0-9-]+$/, 'lowercase letters, numbers, hyphens'),
+  title: z.string().min(1),
+  navLabel: z.string().default(''),
+  seoDescription: z.string().default(''),
+  showInFooter: z.boolean().default(true),
+  published: z.boolean().default(true),
+  intro: PageIntroSchema.default({ eyebrow: '', headline: '', lead: '' }),
+  sections: z.array(LegalSectionSchema).default([]),
+  displayOrder: z.number().int().default(0),
+});
 
 export const SiteContentSchema = z.object({
   version: z.literal(1),
@@ -346,6 +378,7 @@ export const SiteContentSchema = z.object({
   testimonials: z.array(TestimonialSchema).default([]),
   stories: z.array(StorySchema).default([]),
   pages: PagesSchema,
+  customPages: z.array(CustomPageSchema).default([]),
 });
 
 export type SiteContent = z.infer<typeof SiteContentSchema>;
@@ -356,3 +389,5 @@ export type Instructor = z.infer<typeof InstructorSchema>;
 export type Testimonial = z.infer<typeof TestimonialSchema>;
 export type Story = z.infer<typeof StorySchema>;
 export type Pages = z.infer<typeof PagesSchema>;
+export type LegalPage = z.infer<typeof LegalPageSchema>;
+export type CustomPage = z.infer<typeof CustomPageSchema>;

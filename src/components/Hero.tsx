@@ -33,7 +33,9 @@ export function Hero({ content }: { content: SiteContent }) {
             fill
             priority
             sizes="100vw"
-            className="object-cover object-[center_30%] animate-kenburns"
+            // On portrait phones the subject sits hard right so it's not
+            // permanently buried under the text block.
+            className="object-cover object-[78%_38%] sm:object-[center_30%] animate-kenburns"
           />
           {allowVideo ? (
             <video
@@ -60,7 +62,7 @@ export function Hero({ content }: { content: SiteContent }) {
           like a moving stage light. Fine pointers only; never hides the
           cursor. The .lit class + position are set by HeroSpotlight. */}
       <div ref={spotRef} className="spotlight" aria-hidden />
-      <div className="container-x py-12 sm:py-16 lg:py-20 relative z-10">
+      <div className="container-x pt-14 pb-16 sm:py-16 lg:py-20 relative z-10 max-w-[44rem] sm:max-w-none">
         {/* The count-in every dancer knows — 5, 6, 7, 8 — then the words move
             on 1. Pure CSS, on tempo; collapses to nothing on reduced motion. */}
         <p
@@ -75,7 +77,7 @@ export function Hero({ content }: { content: SiteContent }) {
         <p className="pill bg-ember-500/15 text-ember-400 hero-fade" style={{ animationDelay: '60ms' }}>
           India&apos;s largest Latin dance school
         </p>
-        <h1 className="mt-6 display text-4xl font-extrabold leading-[1.04] tracking-tight sm:text-6xl lg:text-7xl max-w-4xl">
+        <h1 className="mt-5 display text-[2.4rem] font-extrabold leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl max-w-[18ch] sm:max-w-4xl">
           <CinematicHeadline text={content.hero.headline} />
         </h1>
         <p

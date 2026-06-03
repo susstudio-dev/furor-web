@@ -9,6 +9,9 @@ const PAGES = [
   { href: '/admin/pages/dance-styles', label: 'Dance Styles index', desc: 'Headline at top of /dance-styles' },
   { href: '/admin/pages/batches', label: 'Batches index', desc: 'Headline at top of /batches' },
   { href: '/admin/pages/stories', label: 'Stories (Blog) index', desc: 'Headline at top of /stories' },
+  { href: '/admin/pages/privacy', label: 'Privacy Policy', desc: 'Headline, last-updated date and section list at /privacy' },
+  { href: '/admin/pages/terms', label: 'Terms & Services', desc: 'Headline, last-updated date and section list at /terms' },
+  { href: '/admin/pages/custom', label: 'Custom pages', desc: 'Create / edit your own pages at /p/<slug>' },
 ];
 
 export default function PagesIndex() {

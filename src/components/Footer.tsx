@@ -69,6 +69,16 @@ export function Footer({ content }: { content: SiteContent }) {
               <li><Link href="/stories" className="hover:text-cream transition-colors">Blog</Link></li>
               <li><Link href="/faqs" className="hover:text-cream transition-colors">FAQs</Link></li>
               <li><Link href="/contact" className="hover:text-cream transition-colors">Contact</Link></li>
+              {content.customPages
+                .filter((p) => p.published && p.showInFooter)
+                .sort((a, b) => a.displayOrder - b.displayOrder)
+                .map((p) => (
+                  <li key={p.id}>
+                    <Link href={`/p/${p.slug}`} className="hover:text-cream transition-colors">
+                      {p.navLabel || p.title}
+                    </Link>
+                  </li>
+                ))}
               {content.site.email ? (
                 <li className="pt-2">
                   <a className="hover:text-cream transition-colors break-all" href={`mailto:${content.site.email}`}>

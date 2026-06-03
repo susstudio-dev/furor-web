@@ -28,6 +28,9 @@ const NAV: NavItem[] = [
   { label: '  Dance Styles index', href: '/admin/pages/dance-styles' },
   { label: '  Batches index', href: '/admin/pages/batches' },
   { label: '  Stories index', href: '/admin/pages/stories' },
+  { label: '  Privacy', href: '/admin/pages/privacy' },
+  { label: '  Terms', href: '/admin/pages/terms' },
+  { label: '  Custom pages', href: '/admin/pages/custom' },
 
   { label: 'Content', href: '#', groupHeader: true },
   { label: 'Dance styles', href: '/admin/styles' },
