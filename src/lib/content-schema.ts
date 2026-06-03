@@ -373,6 +373,7 @@ export const CustomPageSchema = z.object({
   navLabel: z.string().default(''),
   seoDescription: z.string().default(''),
   showInFooter: z.boolean().default(true),
+  showInNav: z.boolean().default(false),
   published: z.boolean().default(true),
   intro: PageIntroSchema.default({ eyebrow: '', headline: '', lead: '' }),
   sections: z.array(LegalSectionSchema).default([]),

@@ -25,6 +25,7 @@ function newPage(): CustomPage {
     navLabel: '',
     seoDescription: '',
     showInFooter: true,
+    showInNav: false,
     published: true,
     intro: { eyebrow: '', headline: 'New page', lead: '' },
     sections: [],
@@ -126,8 +127,9 @@ export function CustomPagesEditor({ initial }: { initial: SiteContent }) {
                   <p className="font-semibold text-cream">{p.title || '(untitled)'}</p>
                   <p className="text-xs text-cream/50 mt-0.5">
                     /p/{effectiveSlug || '(empty)'} ·{' '}
-                    {p.published ? 'published' : 'draft'} ·{' '}
-                    {p.showInFooter ? 'in footer' : 'hidden from footer'}
+                    {p.published ? 'published' : 'draft'}
+                    {p.showInNav ? ' · in main nav' : ''}
+                    {p.showInFooter ? ' · in footer' : ''}
                   </p>
                 </button>
                 <div className="flex items-center gap-1">
@@ -230,6 +232,14 @@ export function CustomPagesEditor({ initial }: { initial: SiteContent }) {
                         onChange={(e) => patchPage(p.id, { showInFooter: e.target.checked })}
                       />
                       Link in footer
+                    </label>
+                    <label className="inline-flex items-center gap-2 text-sm text-cream/80">
+                      <input
+                        type="checkbox"
+                        checked={p.showInNav}
+                        onChange={(e) => patchPage(p.id, { showInNav: e.target.checked })}
+                      />
+                      Link in main nav
                     </label>
                   </div>
 

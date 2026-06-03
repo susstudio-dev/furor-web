@@ -41,6 +41,15 @@ export function Header({ content }: { content: SiteContent }) {
     return item;
   });
 
+  // Admin-created custom pages can opt into the main nav with showInNav.
+  // They sit at the end of the primary nav so the existing IA stays the
+  // anchor and new pages are additive.
+  const customNavItems = content.customPages
+    .filter((p) => p.published && p.showInNav)
+    .slice()
+    .sort((a, b) => a.displayOrder - b.displayOrder)
+    .map((p) => ({ label: p.navLabel || p.title, href: `/p/${p.slug}` }));
+
   return (
     <header
       className={`sticky top-0 z-40 transition-colors ${
@@ -77,6 +86,11 @@ export function Header({ content }: { content: SiteContent }) {
                 </div>
               ) : null}
             </div>
+          ))}
+          {customNavItems.map((c) => (
+            <Link key={c.href} href={c.href} className="btn-ghost">
+              {c.label}
+            </Link>
           ))}
         </nav>
         <div className="ml-auto lg:ml-0 flex shrink-0 items-center gap-2 sm:gap-3">
@@ -119,6 +133,17 @@ export function Header({ content }: { content: SiteContent }) {
                     ))}
                   </div>
                 ) : null}
+              </div>
+            ))}
+            {customNavItems.map((c) => (
+              <div key={c.href} className="border-b border-cream/5 last:border-0">
+                <Link
+                  href={c.href}
+                  onClick={() => setOpen(false)}
+                  className="block py-3 text-base font-medium text-cream"
+                >
+                  {c.label}
+                </Link>
               </div>
             ))}
           </div>
