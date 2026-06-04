@@ -145,17 +145,32 @@ html[data-theme='dark'] .brand-plate img {
    behind the text and the photo left fully vibrant on the right — not a
    uniform milky fog over everything. */
 
-/* LIGHT: opaque paper under the text (left ~half), then quickly to clear so
-   the photo stays crisp and colourful on the right. */
+/* LIGHT — mobile: the text block is full-width on phones, so the desktop
+   "paper-left / photo-right" split leaves dark text sitting on the dark photo
+   and it disappears. Wash the whole hero with paper instead; let the photo
+   bleed through only faintly at the far right edge. */
 .hero-scrim-x {
   background: linear-gradient(
     to right,
     rgb(var(--c-ink-950)) 0%,
-    rgb(var(--c-ink-950)) 34%,
-    rgb(var(--c-ink-950) / 0.72) 52%,
-    rgb(var(--c-ink-950) / 0.15) 70%,
-    transparent 82%
+    rgb(var(--c-ink-950)) 66%,
+    rgb(var(--c-ink-950) / 0.92) 86%,
+    rgb(var(--c-ink-950) / 0.74) 100%
   );
+}
+/* LIGHT — sm and up: there's room for the cinematic split (opaque paper under
+   the text on the left, photo crisp and colourful on the right). */
+@media (min-width: 640px) {
+  .hero-scrim-x {
+    background: linear-gradient(
+      to right,
+      rgb(var(--c-ink-950)) 0%,
+      rgb(var(--c-ink-950)) 34%,
+      rgb(var(--c-ink-950) / 0.72) 52%,
+      rgb(var(--c-ink-950) / 0.15) 70%,
+      transparent 82%
+    );
+  }
 }
 .hero-scrim-y {
   background: linear-gradient(
@@ -214,9 +229,14 @@ html[data-theme='dark'] .hero-vignette {
 .cine-w {
   display: inline-block;
   overflow: hidden;
-  /* room so italic descenders/overhang aren't clipped by the mask */
-  padding-bottom: 0.16em;
-  margin-bottom: -0.16em;
+  /* Vertical room so the reveal mask doesn't clip glyphs under the tight hero
+     leading: tall display caps overflow the top, and the italic serif accent
+     (e.g. "dancing") has descenders/overhang at the bottom. Negative margins
+     cancel the padding so line position/spacing is unchanged. */
+  padding-top: 0.14em;
+  margin-top: -0.14em;
+  padding-bottom: 0.24em;
+  margin-bottom: -0.24em;
 }
 .cine-i {
   display: inline-block;
