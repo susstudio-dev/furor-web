@@ -5,22 +5,18 @@ import { visibleBatches } from '@/lib/content-helpers';
 import { formatBatchDate } from '@/lib/format';
 import { WelcomeView } from './WelcomeView';
 
-// Post-payment landing page, one per beginner track. Set the matching URL as
-// the "redirect after payment" on each Razorpay payment page:
+// Post-payment landing page, one per track. Set the matching URL as the
+// "redirect after payment" on each Razorpay payment page, e.g.
 //   Latin Beginner  → /welcome/latin
 //   WCS Beginner     → /welcome/wcs
 // noindex — this is a post-registration confirmation, not a public/SEO page.
 
-// The set of post-payment tracks is fixed (each maps to a Razorpay "redirect
-// after payment" URL), so the static params are hardcoded here — this keeps the
-// build from reading admin content during generateStaticParams. The per-track
-// labels/timing and all page copy are admin-editable and read at render time
-// from content.welcome.
-const TRACK_KEYS = ['latin', 'wcs'] as const;
-
-export function generateStaticParams() {
-  return TRACK_KEYS.map((track) => ({ track }));
-}
+// Tracks are admin-managed (added/edited in /admin/pages/welcome → Blob), so the
+// page renders per-request rather than being frozen at build: a newly added
+// track works immediately, with no redeploy. (The GitHub Pages static mirror
+// strips this route in CI, so force-dynamic never conflicts with `output:
+// export` there.)
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({
   params,

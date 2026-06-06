@@ -31,7 +31,7 @@ export function JsonEditor({ initial }: { initial: SiteContent }) {
       setMsg(j.error || 'Save failed');
       setIssues(j.issues || null);
     } else {
-      setMsg('Saved. Live in ~60s.');
+      setMsg('Saved ✓ Live now — refresh the public page to see it.');
     }
     setBusy(false);
   }
