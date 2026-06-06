@@ -1,11 +1,31 @@
 'use client';
 
 import { useState } from 'react';
-import type { SiteContent, CustomPage } from '@/lib/content-schema';
+import type { SiteContent, CustomPage, CustomBlock } from '@/lib/content-schema';
 import { SaveBar } from '@/components/admin/SaveBar';
-import { Field, EditorStyles } from '@/components/admin/fields';
+import { Field, Select, EditorStyles } from '@/components/admin/fields';
 import { PageIntroFields } from '@/components/admin/PageIntroFields';
+import { ImageUploader } from '@/components/admin/ImageUploader';
 import { saveSiteContent } from '@/lib/admin-save';
+
+// Pages created before the block builder existed stored their body as text-only
+// `sections`. Convert those to equivalent heading/text blocks the first time the
+// editor loads, so everything is edited as blocks from here on. Saving persists
+// the migration; until then the public renderer still falls back to `sections`.
+function migrateBlocks(c: SiteContent): SiteContent {
+  return {
+    ...c,
+    customPages: (c.customPages ?? []).map((p) => {
+      if (p.blocks.length > 0 || p.sections.length === 0) return p;
+      const blocks: CustomBlock[] = [];
+      for (const s of p.sections) {
+        if (s.heading) blocks.push({ type: 'heading', text: s.heading });
+        if (s.body) blocks.push({ type: 'text', body: s.body });
+      }
+      return { ...p, blocks, sections: [] };
+    }),
+  };
+}
 
 function slugify(s: string): string {
   return s
@@ -29,12 +49,13 @@ function newPage(): CustomPage {
     published: true,
     intro: { eyebrow: '', headline: 'New page', lead: '' },
     sections: [],
+    blocks: [],
     displayOrder: 0,
   };
 }
 
 export function CustomPagesEditor({ initial }: { initial: SiteContent }) {
-  const [c, setC] = useState<SiteContent>(initial);
+  const [c, setC] = useState<SiteContent>(() => migrateBlocks(initial));
   const [dirty, setDirty] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -46,6 +67,32 @@ export function CustomPagesEditor({ initial }: { initial: SiteContent }) {
   }
   function patchPage(id: string, p: Partial<CustomPage>) {
     patchList(pages.map((x) => (x.id === id ? { ...x, ...p } : x)));
+  }
+
+  // ── block helpers (operate on one page's `blocks` array) ──────────────────
+  function addBlock(id: string, block: CustomBlock) {
+    const page = pages.find((x) => x.id === id);
+    if (page) patchPage(id, { blocks: [...page.blocks, block] });
+  }
+  function patchBlock(id: string, bi: number, block: CustomBlock) {
+    const page = pages.find((x) => x.id === id);
+    if (!page) return;
+    const next = page.blocks.slice();
+    next[bi] = block;
+    patchPage(id, { blocks: next });
+  }
+  function removeBlock(id: string, bi: number) {
+    const page = pages.find((x) => x.id === id);
+    if (page) patchPage(id, { blocks: page.blocks.filter((_, j) => j !== bi) });
+  }
+  function moveBlock(id: string, bi: number, dir: -1 | 1) {
+    const page = pages.find((x) => x.id === id);
+    if (!page) return;
+    const j = bi + dir;
+    if (j < 0 || j >= page.blocks.length) return;
+    const next = page.blocks.slice();
+    [next[bi], next[j]] = [next[j], next[bi]];
+    patchPage(id, { blocks: next });
   }
   function add() {
     const p = newPage();
@@ -250,89 +297,53 @@ export function CustomPagesEditor({ initial }: { initial: SiteContent }) {
                     />
                   </Section>
 
-                  <Section title="Sections">
-                    {p.sections.map((s, si) => (
-                      <div
-                        key={si}
-                        className="grid gap-3 rounded-2xl border border-cream/10 bg-ink-900/40 p-4"
+                  <Section title="Content blocks">
+                    <p className="-mt-1 text-xs text-cream/50">
+                      Build the page from blocks — they render top to bottom. Use the arrows to
+                      reorder.
+                    </p>
+                    {p.blocks.length === 0 ? (
+                      <p className="text-sm text-cream/50">No blocks yet. Add one below.</p>
+                    ) : (
+                      p.blocks.map((block, bi) => (
+                        <BlockEditor
+                          key={bi}
+                          index={bi}
+                          total={p.blocks.length}
+                          block={block}
+                          onChange={(nb) => patchBlock(p.id, bi, nb)}
+                          onMove={(dir) => moveBlock(p.id, bi, dir)}
+                          onRemove={() => removeBlock(p.id, bi)}
+                        />
+                      ))
+                    )}
+                    <div className="flex flex-wrap gap-2">
+                      <AddBlockButton onClick={() => addBlock(p.id, { type: 'heading', text: '' })}>
+                        + Heading
+                      </AddBlockButton>
+                      <AddBlockButton onClick={() => addBlock(p.id, { type: 'text', body: '' })}>
+                        + Text
+                      </AddBlockButton>
+                      <AddBlockButton
+                        onClick={() =>
+                          addBlock(p.id, { type: 'image', url: '', alt: '', caption: '' })
+                        }
                       >
-                        <Field label={`Heading ${si + 1}`}>
-                          <input
-                            value={s.heading}
-                            onChange={(e) => {
-                              const next = p.sections.slice();
-                              next[si] = { ...next[si], heading: e.target.value };
-                              patchPage(p.id, { sections: next });
-                            }}
-                            className="input"
-                          />
-                        </Field>
-                        <Field label="Body">
-                          <textarea
-                            rows={4}
-                            value={s.body}
-                            onChange={(e) => {
-                              const next = p.sections.slice();
-                              next[si] = { ...next[si], body: e.target.value };
-                              patchPage(p.id, { sections: next });
-                            }}
-                            className="input"
-                          />
-                        </Field>
-                        <div className="flex justify-between">
-                          <div className="flex gap-2">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (si === 0) return;
-                                const next = p.sections.slice();
-                                [next[si - 1], next[si]] = [next[si], next[si - 1]];
-                                patchPage(p.id, { sections: next });
-                              }}
-                              disabled={si === 0}
-                              className="text-xs text-cream/60 hover:text-cream disabled:opacity-30"
-                            >
-                              ↑ Up
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (si === p.sections.length - 1) return;
-                                const next = p.sections.slice();
-                                [next[si], next[si + 1]] = [next[si + 1], next[si]];
-                                patchPage(p.id, { sections: next });
-                              }}
-                              disabled={si === p.sections.length - 1}
-                              className="text-xs text-cream/60 hover:text-cream disabled:opacity-30"
-                            >
-                              ↓ Down
-                            </button>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              patchPage(p.id, {
-                                sections: p.sections.filter((_, j) => j !== si),
-                              })
-                            }
-                            className="text-xs text-rose-400 hover:text-rose-300"
-                          >
-                            Remove section
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                    <button
-                      type="button"
-                      onClick={() =>
-                        patchPage(p.id, {
-                          sections: [...p.sections, { heading: '', body: '' }],
-                        })
-                      }
-                      className="rounded-full bg-cream/10 px-4 py-2 text-sm text-cream/80 hover:bg-cream/15 w-fit"
-                    >
-                      + Add section
-                    </button>
+                        + Image
+                      </AddBlockButton>
+                      <AddBlockButton
+                        onClick={() =>
+                          addBlock(p.id, {
+                            type: 'button',
+                            label: '',
+                            href: '',
+                            variant: 'primary',
+                          })
+                        }
+                      >
+                        + Button
+                      </AddBlockButton>
+                    </div>
                   </Section>
                 </div>
               ) : null}
@@ -351,5 +362,160 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       <p className="display text-xs uppercase tracking-widest text-cream/50 mb-3">{title}</p>
       <div className="grid gap-3">{children}</div>
     </section>
+  );
+}
+
+function AddBlockButton({
+  onClick,
+  children,
+}: {
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="rounded-full bg-cream/10 px-4 py-2 text-sm text-cream/80 hover:bg-cream/15"
+    >
+      {children}
+    </button>
+  );
+}
+
+const BLOCK_LABELS: Record<CustomBlock['type'], string> = {
+  heading: 'Heading',
+  text: 'Text',
+  image: 'Image',
+  button: 'Button',
+};
+
+function BlockEditor({
+  block,
+  index,
+  total,
+  onChange,
+  onMove,
+  onRemove,
+}: {
+  block: CustomBlock;
+  index: number;
+  total: number;
+  onChange: (next: CustomBlock) => void;
+  onMove: (dir: -1 | 1) => void;
+  onRemove: () => void;
+}) {
+  return (
+    <div className="grid gap-3 rounded-2xl border border-cream/10 bg-ink-900/40 p-4">
+      <div className="flex items-center justify-between">
+        <p className="display text-xs uppercase tracking-widest text-ember-400">
+          {BLOCK_LABELS[block.type]}
+        </p>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => onMove(-1)}
+            disabled={index === 0}
+            className="px-1 text-cream/60 hover:text-cream disabled:opacity-30"
+            aria-label="Move up"
+          >
+            ↑
+          </button>
+          <button
+            type="button"
+            onClick={() => onMove(1)}
+            disabled={index === total - 1}
+            className="px-1 text-cream/60 hover:text-cream disabled:opacity-30"
+            aria-label="Move down"
+          >
+            ↓
+          </button>
+          <button
+            type="button"
+            onClick={onRemove}
+            className="text-xs text-rose-400 hover:text-rose-300"
+          >
+            Remove
+          </button>
+        </div>
+      </div>
+
+      {block.type === 'heading' ? (
+        <Field label="Heading text" hint="Wrap a word in *asterisks* for the accent style.">
+          <input
+            value={block.text}
+            onChange={(e) => onChange({ ...block, text: e.target.value })}
+            className="input"
+          />
+        </Field>
+      ) : null}
+
+      {block.type === 'text' ? (
+        <Field label="Paragraph" hint="Line breaks are preserved.">
+          <textarea
+            rows={4}
+            value={block.body}
+            onChange={(e) => onChange({ ...block, body: e.target.value })}
+            className="input"
+          />
+        </Field>
+      ) : null}
+
+      {block.type === 'image' ? (
+        <>
+          <ImageUploader
+            label="Image"
+            aspect="wide"
+            value={block.url}
+            onChange={(url) => onChange({ ...block, url })}
+          />
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field label="Alt text" hint="Describes the image for screen readers + SEO.">
+              <input
+                value={block.alt}
+                onChange={(e) => onChange({ ...block, alt: e.target.value })}
+                className="input"
+              />
+            </Field>
+            <Field label="Caption" hint="Optional. Shown under the image.">
+              <input
+                value={block.caption}
+                onChange={(e) => onChange({ ...block, caption: e.target.value })}
+                className="input"
+              />
+            </Field>
+          </div>
+        </>
+      ) : null}
+
+      {block.type === 'button' ? (
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Field label="Button label">
+            <input
+              value={block.label}
+              onChange={(e) => onChange({ ...block, label: e.target.value })}
+              className="input"
+            />
+          </Field>
+          <Field label="Link" hint="A URL, or a path like /batches.">
+            <input
+              value={block.href}
+              onChange={(e) => onChange({ ...block, href: e.target.value })}
+              placeholder="/batches or https://..."
+              className="input"
+            />
+          </Field>
+          <Select
+            label="Style"
+            value={block.variant}
+            onChange={(v) => onChange({ ...block, variant: v as 'primary' | 'secondary' })}
+            options={[
+              { value: 'primary', label: 'Primary (filled)' },
+              { value: 'secondary', label: 'Secondary (outline)' },
+            ]}
+          />
+        </div>
+      ) : null}
+    </div>
   );
 }

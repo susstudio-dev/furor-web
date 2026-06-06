@@ -141,6 +141,11 @@ export const BatchSchema = z.preprocess(
     time: z.string().min(1),
     startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'YYYY-MM-DD'),
     priceInr: z.number().int().nonnegative(),
+    // Amount charged up front to reserve a seat (the Razorpay "book now"
+    // deposit). priceInr stays the full course fee shown on the cards; this is
+    // what the "Reserve my seat · ₹X" CTA advertises. Defaults to 500 so it
+    // applies to existing batches without an explicit value.
+    reservationInr: z.number().int().nonnegative().default(500),
     seatsLeft: z.number().int().nonnegative().nullable().optional(),
     status: z.enum(['Open', 'Filling Fast', 'Closed']),
     razorpayLink: z.string().url().nullable().optional(),
@@ -364,8 +369,32 @@ const PagesSchema = z
   })
   .default({});
 
-// Admin-creatable pages. Lives at /p/<slug>. Each page is intro + sections
-// (same shape as the legal pages — proven, easy to edit, easy to extend).
+// A flexible content block for admin-built custom pages. Blocks render top to
+// bottom in order; new block types can be added to this union without breaking
+// existing data (unknown future types would simply fail validation, so keep
+// readers tolerant). `type` is the discriminator.
+export const CustomBlockSchema = z.discriminatedUnion('type', [
+  z.object({ type: z.literal('heading'), text: z.string().default('') }),
+  z.object({ type: z.literal('text'), body: z.string().default('') }),
+  z.object({
+    type: z.literal('image'),
+    url: z.string().default(''),
+    alt: z.string().default(''),
+    caption: z.string().default(''),
+  }),
+  z.object({
+    type: z.literal('button'),
+    label: z.string().default(''),
+    href: z.string().default(''),
+    variant: z.enum(['primary', 'secondary']).default('primary'),
+  }),
+]);
+
+// Admin-creatable pages. Lives at /p/<slug>. A page is an intro header plus an
+// ordered list of `blocks` (heading / text / image / button). `sections` is the
+// legacy text-only shape kept for backward compatibility — the editor migrates
+// it into blocks on first edit, and the renderer falls back to it when a page
+// has no blocks yet.
 export const CustomPageSchema = z.object({
   id: z.string().min(1),
   slug: z.string().regex(/^[a-z0-9-]+$/, 'lowercase letters, numbers, hyphens'),
@@ -377,6 +406,7 @@ export const CustomPageSchema = z.object({
   published: z.boolean().default(true),
   intro: PageIntroSchema.default({ eyebrow: '', headline: '', lead: '' }),
   sections: z.array(LegalSectionSchema).default([]),
+  blocks: z.array(CustomBlockSchema).default([]),
   displayOrder: z.number().int().default(0),
 });
 
@@ -430,3 +460,4 @@ export type Story = z.infer<typeof StorySchema>;
 export type Pages = z.infer<typeof PagesSchema>;
 export type LegalPage = z.infer<typeof LegalPageSchema>;
 export type CustomPage = z.infer<typeof CustomPageSchema>;
+export type CustomBlock = z.infer<typeof CustomBlockSchema>;

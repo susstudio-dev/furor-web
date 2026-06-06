@@ -102,7 +102,7 @@ export function QuickEnroll({ content }: { content: SiteContent }) {
                       ) : (
                         <span className="mt-3 block h-[1px]" />
                       )}
-                      <div className="mt-4">
+                      <div className="mt-auto pt-4">
                         {b.razorpayLink ? (
                           <a
                             href={b.razorpayLink}
@@ -110,7 +110,7 @@ export function QuickEnroll({ content }: { content: SiteContent }) {
                             rel="noopener noreferrer"
                             className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-ember-500 px-4 py-2 text-sm font-semibold text-cream transition hover:bg-ember-600 magnetic"
                           >
-                            Reserve my seat · {formatInr(b.priceInr)}
+                            Reserve my seat · {formatInr(b.reservationInr)}
                           </a>
                         ) : (
                           <EnquiryCTA

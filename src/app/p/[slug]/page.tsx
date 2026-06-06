@@ -1,12 +1,15 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { getContent } from '@/lib/content';
-import { LegalDoc } from '@/components/LegalDoc';
+import { CustomPageView } from '@/components/CustomPageView';
 
-export async function generateStaticParams() {
-  const c = await getContent();
-  return c.customPages.filter((p) => p.published).map((p) => ({ slug: p.slug }));
-}
+// Admin-editable pages live in Blob and are added/edited without a redeploy, so
+// they must render per-request — never frozen at build. Statically prerendering
+// these (via generateStaticParams) made the build read Blob and bake a 500.html
+// for each custom page; it also meant new pages didn't appear until a redeploy.
+// (On the GitHub Pages static mirror this whole route is stripped in CI, so
+// force-dynamic never conflicts with `output: export`.)
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({
   params,
@@ -32,5 +35,5 @@ export default async function CustomPage({
   const c = await getContent();
   const page = c.customPages.find((p) => p.slug === slug && p.published);
   if (!page) notFound();
-  return <LegalDoc intro={page.intro} lastUpdated="" sections={page.sections} />;
+  return <CustomPageView page={page} />;
 }

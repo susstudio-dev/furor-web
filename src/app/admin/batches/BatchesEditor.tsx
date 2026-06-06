@@ -31,6 +31,7 @@ export function BatchesEditor({ initial }: { initial: SiteContent }) {
       time: '9:30–10:30 AM',
       startDate: new Date().toISOString().slice(0, 10),
       priceInr: 6500,
+      reservationInr: 500,
       seatsLeft: null,
       status: 'Open',
       razorpayLink: null,
@@ -101,8 +102,11 @@ export function BatchesEditor({ initial }: { initial: SiteContent }) {
               <Field label="Start date">
                 <input type="date" value={b.startDate} onChange={(e) => patch(i, { startDate: e.target.value })} className="input" />
               </Field>
-              <Field label="Price (INR)">
+              <Field label="Price (INR)" hint="Full course fee — shown on the cards.">
                 <input type="number" min={0} value={b.priceInr} onChange={(e) => patch(i, { priceInr: Number(e.target.value) })} className="input" />
+              </Field>
+              <Field label="Reserve deposit (INR)" hint="Amount the 'Reserve my seat' button charges to book.">
+                <input type="number" min={0} value={b.reservationInr} onChange={(e) => patch(i, { reservationInr: Number(e.target.value) })} className="input" />
               </Field>
               <Field label="Seats left (blank to hide)">
                 <input

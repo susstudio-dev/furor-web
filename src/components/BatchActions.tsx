@@ -37,7 +37,7 @@ export function BatchActions({
           rel="noopener noreferrer"
           className="inline-flex items-center gap-2 rounded-full bg-ember-500 text-cream px-4 py-2 text-sm font-semibold hover:bg-ember-600 transition"
         >
-          Book seat · {formatInr(batch.priceInr)}
+          Book seat · {formatInr(batch.reservationInr)}
         </a>
         <EnquiryCTA
           whatsappNumber={whatsappNumber}
