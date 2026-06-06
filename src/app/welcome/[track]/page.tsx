@@ -11,44 +11,15 @@ import { WelcomeView } from './WelcomeView';
 //   WCS Beginner     → /welcome/wcs
 // noindex — this is a post-registration confirmation, not a public/SEO page.
 
-type TrackKey = 'latin' | 'wcs';
-
-interface WelcomeConfig {
-  trackLabel: string; // e.g. "Latin beginner class"
-  styleSlugs: string[]; // used to find the matching Foundation batch for the date
-  weekendTod: 'AM' | 'PM';
-  // Fallbacks only — used when no matching live batch exists in content. When a
-  // batch is found, its real days/time/venue drive the page instead (single
-  // source of truth = the admin-editable content).
-  whenDays: string;
-  whenTime: string;
-  arriveBy: string;
-  metaDesc: string;
-}
-
-const TRACKS: Record<TrackKey, WelcomeConfig> = {
-  latin: {
-    trackLabel: 'Latin beginner class',
-    styleSlugs: ['salsa', 'bachata'],
-    weekendTod: 'AM',
-    whenDays: 'Saturday & Sunday',
-    whenTime: '9:30 AM – 10:30 AM',
-    arriveBy: '9:15 AM',
-    metaDesc: 'Your Latin beginner intake details and next steps.',
-  },
-  wcs: {
-    trackLabel: 'West Coast Swing beginner class',
-    styleSlugs: ['west-coast-swing'],
-    weekendTod: 'PM',
-    whenDays: 'Saturday & Sunday',
-    whenTime: '6:30 PM – 7:30 PM',
-    arriveBy: '6:15 PM',
-    metaDesc: 'Your West Coast Swing beginner intake details and next steps.',
-  },
-};
+// The set of post-payment tracks is fixed (each maps to a Razorpay "redirect
+// after payment" URL), so the static params are hardcoded here — this keeps the
+// build from reading admin content during generateStaticParams. The per-track
+// labels/timing and all page copy are admin-editable and read at render time
+// from content.welcome.
+const TRACK_KEYS = ['latin', 'wcs'] as const;
 
 export function generateStaticParams() {
-  return Object.keys(TRACKS).map((track) => ({ track }));
+  return TRACK_KEYS.map((track) => ({ track }));
 }
 
 export async function generateMetadata({
@@ -57,10 +28,11 @@ export async function generateMetadata({
   params: Promise<{ track: string }>;
 }): Promise<Metadata> {
   const { track } = await params;
-  const cfg = TRACKS[track as TrackKey];
+  const content = await getContent();
+  const cfg = content.welcome.tracks.find((t) => t.key === track);
   return {
     title: 'You’re in — Furor Hyderabad',
-    description: cfg?.metaDesc ?? 'Your intake details and next steps.',
+    description: cfg?.metaDesc || 'Your intake details and next steps.',
     robots: { index: false, follow: false },
   };
 }
@@ -143,10 +115,10 @@ function icsEscape(text: string): string {
 
 export default async function WelcomePage({ params }: { params: Promise<{ track: string }> }) {
   const { track } = await params;
-  const cfg = TRACKS[track as TrackKey];
+  const content = await getContent();
+  const cfg = content.welcome.tracks.find((t) => t.key === track);
   if (!cfg) notFound();
 
-  const content = await getContent();
   const wa = content.site.whatsappNumber;
 
   // Intake = next upcoming Foundation batch for this track (prefer weekend in the
@@ -232,6 +204,7 @@ export default async function WelcomePage({ params }: { params: Promise<{ track:
     <WelcomeView
       track={track}
       trackLabel={cfg.trackLabel}
+      copy={content.welcome}
       intakeDate={intakeDate}
       whenDays={whenDays}
       whenTime={whenTime}

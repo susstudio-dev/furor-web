@@ -410,6 +410,106 @@ export const CustomPageSchema = z.object({
   displayOrder: z.number().int().default(0),
 });
 
+// Post-payment "welcome" / confirmation pages at /welcome/<track>. The intake
+// date, venue, class times and add-to-calendar links are derived live from
+// Batches + Studios — only the copy and per-track labels live here. `text`
+// fields support {placeholders} (e.g. {number}, {arriveBy}, {trackLabel},
+// {date}) that are filled in at render time. Defaults reproduce the original
+// hardcoded copy so existing pages are unchanged until edited.
+const WelcomeTrackSchema = z.object({
+  key: z.string().min(1),
+  trackLabel: z.string().default(''),
+  styleSlugs: z.array(z.string()).default([]),
+  weekendTod: z.enum(['AM', 'PM']).default('AM'),
+  whenDays: z.string().default(''),
+  whenTime: z.string().default(''),
+  arriveBy: z.string().default(''),
+  metaDesc: z.string().default(''),
+});
+
+const WelcomeSchema = z
+  .object({
+    // Confirmed state
+    confirmedBadge: z.string().default('Registration confirmed'),
+    confirmedHeadline: z.string().default('You’re in. 🎉'),
+    reminderWithDate: z
+      .string()
+      .default('Reminder: your {trackLabel} intake is on {date}.'),
+    reminderNoDate: z
+      .string()
+      .default(
+        'Reminder: your {trackLabel} intake is this coming weekend — we’ll confirm the exact date on WhatsApp.',
+      ),
+    thankYouBody: z
+      .string()
+      .default(
+        'Thank you for registering — this is the first step in your dance journey. Here are a couple of things to do right away.',
+      ),
+    // The two action cards
+    step1Title: z.string().default('Save our WhatsApp number'),
+    step1Body: z
+      .string()
+      .default(
+        'Save {number} as “Furor Hyderabad” — so you get timely reminders for your class and can reach us anytime.',
+      ),
+    step2Title: z.string().default('Add it to your calendar'),
+    step2Body: z
+      .string()
+      .default(
+        'Come early by {arriveBy} to sort out your registration. Add a reminder so the date doesn’t slip.',
+      ),
+    // Intake details
+    intakeHeading: z.string().default('Your intake details'),
+    whatToBringHeading: z.string().default('What to wear & bring'),
+    whatToBring: z
+      .array(z.string())
+      .default([
+        'Smart comfort wear — tees / tracks',
+        'Fresh socks (for footwear)',
+        'A personal water bottle / sipper — refill at the studio',
+      ]),
+    // Sign-off block
+    signoffHeadline: z.string().default('See you all in class! 💃🕺'),
+    signoffBody: z
+      .string()
+      .default('Any questions before then? Just message us on WhatsApp — we reply fast.'),
+    signoffName: z.string().default('Cheers, Rish'),
+    signoffTagline: z.string().default('Furor Hyderabad · Dance for Life'),
+    // Payment-not-confirmed state
+    unconfirmedBadge: z.string().default('Payment not confirmed'),
+    unconfirmedHeadline: z.string().default('We couldn’t confirm your payment yet'),
+    unconfirmedBody: z
+      .string()
+      .default(
+        'It looks like the payment for your {trackLabel} didn’t complete. If any money was deducted, don’t worry — message us and we’ll sort it out right away.',
+      ),
+    tracks: z
+      .array(WelcomeTrackSchema)
+      .default([
+        {
+          key: 'latin',
+          trackLabel: 'Latin beginner class',
+          styleSlugs: ['salsa', 'bachata'],
+          weekendTod: 'AM',
+          whenDays: 'Saturday & Sunday',
+          whenTime: '9:30 AM – 10:30 AM',
+          arriveBy: '9:15 AM',
+          metaDesc: 'Your Latin beginner intake details and next steps.',
+        },
+        {
+          key: 'wcs',
+          trackLabel: 'West Coast Swing beginner class',
+          styleSlugs: ['west-coast-swing'],
+          weekendTod: 'PM',
+          whenDays: 'Saturday & Sunday',
+          whenTime: '6:30 PM – 7:30 PM',
+          arriveBy: '6:15 PM',
+          metaDesc: 'Your West Coast Swing beginner intake details and next steps.',
+        },
+      ]),
+  })
+  .default({});
+
 export const SiteContentSchema = z.object({
   version: z.literal(1),
   site: SiteSettingsSchema,
@@ -448,6 +548,7 @@ export const SiteContentSchema = z.object({
   stories: z.array(StorySchema).default([]),
   pages: PagesSchema,
   customPages: z.array(CustomPageSchema).default([]),
+  welcome: WelcomeSchema,
 });
 
 export type SiteContent = z.infer<typeof SiteContentSchema>;
@@ -461,3 +562,5 @@ export type Pages = z.infer<typeof PagesSchema>;
 export type LegalPage = z.infer<typeof LegalPageSchema>;
 export type CustomPage = z.infer<typeof CustomPageSchema>;
 export type CustomBlock = z.infer<typeof CustomBlockSchema>;
+export type Welcome = z.infer<typeof WelcomeSchema>;
+export type WelcomeTrack = z.infer<typeof WelcomeTrackSchema>;

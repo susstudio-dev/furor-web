@@ -11,6 +11,7 @@ const PAGES = [
   { href: '/admin/pages/stories', label: 'Stories (Blog) index', desc: 'Headline at top of /stories' },
   { href: '/admin/pages/privacy', label: 'Privacy Policy', desc: 'Headline, last-updated date and section list at /privacy' },
   { href: '/admin/pages/terms', label: 'Terms & Services', desc: 'Headline, last-updated date and section list at /terms' },
+  { href: '/admin/pages/welcome', label: 'Welcome (post-payment)', desc: 'All copy on the /welcome/<track> confirmation pages after Razorpay payment' },
   { href: '/admin/pages/custom', label: 'Custom pages', desc: 'Create / edit your own pages at /p/<slug>' },
 ];
 
