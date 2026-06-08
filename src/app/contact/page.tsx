@@ -7,6 +7,9 @@ export const metadata = {
   description: 'Get in touch with Furor Dance Hyderabad — WhatsApp, Instagram, email or visit the Jubilee Hills studio.',
 };
 
+// Render per request so admin edits show immediately (export build strips this).
+export const dynamic = 'force-dynamic';
+
 export default async function ContactPage() {
   const content = await getContent();
   const p = content.pages.contact;

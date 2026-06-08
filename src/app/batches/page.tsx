@@ -4,6 +4,9 @@ import { BatchesBrowser, type BatchRow } from '@/components/BatchesBrowser';
 
 export const metadata = { title: 'Batches & Pricing' };
 
+// Render per request so admin edits show immediately (export build strips this).
+export const dynamic = 'force-dynamic';
+
 export default async function BatchesPage() {
   const content = await getContent();
   const visible = visibleBatches(content);

@@ -6,6 +6,9 @@ import { PhotoCarousel } from '@/components/PhotoCarousel';
 
 export const metadata = { title: 'About' };
 
+// Render per request so admin edits show immediately (export build strips this).
+export const dynamic = 'force-dynamic';
+
 export default async function AboutPage() {
   const content = await getContent();
   const a = content.pages.about;
