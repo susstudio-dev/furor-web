@@ -5,10 +5,11 @@ import Link from 'next/link';
 import { Reveal } from '@/components/Reveal';
 import type { Welcome } from '@/lib/content-schema';
 
-interface Props {
-  track: string;
-  trackLabel: string;
-  copy: Welcome;
+// Everything the page shows for one batch, precomputed server-side. The client
+// picks the right one from the ?d=/?b= redirect param.
+export interface BatchBundle {
+  id: string;
+  startDate: string; // '' when there is no live batch
   intakeDate: string | null;
   whenDays: string;
   whenTime: string;
@@ -22,9 +23,12 @@ interface Props {
 interface Props {
   track: string;
   trackLabel: string;
+  copy: Welcome; // admin-editable text templates from content.welcome
   waNumber: string;
   waDisplay: string;
   vcardHref: string;
+  defaultBundle: BatchBundle;
+  options: BatchBundle[];
 }
 
 // Renders an admin-editable copy template, replacing {placeholders} with live
@@ -65,12 +69,6 @@ export function WelcomeView({
   track,
   trackLabel,
   copy,
-  intakeDate,
-  whenDays,
-  whenTime,
-  arriveBy,
-  venue,
-  mapUrl,
   waNumber,
   waDisplay,
   vcardHref,

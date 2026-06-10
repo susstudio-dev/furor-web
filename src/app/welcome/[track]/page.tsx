@@ -225,12 +225,6 @@ export default async function WelcomePage({ params }: { params: Promise<{ track:
       track={track}
       trackLabel={cfg.trackLabel}
       copy={content.welcome}
-      intakeDate={intakeDate}
-      whenDays={whenDays}
-      whenTime={whenTime}
-      arriveBy={arriveBy}
-      venue={venue}
-      mapUrl={mapUrl}
       waNumber={wa}
       waDisplay={formatPhoneDisplay(wa)}
       vcardHref={vcardHref}
