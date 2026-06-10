@@ -1,14 +1,21 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import type { Batch } from '@/lib/content-schema';
 import { getContent } from '@/lib/content';
 import { visibleBatches } from '@/lib/content-helpers';
 import { formatBatchDate } from '@/lib/format';
-import { WelcomeView } from './WelcomeView';
+import { WelcomeView, type BatchBundle } from './WelcomeView';
 
 // Post-payment landing page, one per beginner track. Set the matching URL as
 // the "redirect after payment" on each Razorpay payment page:
 //   Latin Beginner  → /welcome/latin
 //   WCS Beginner     → /welcome/wcs
+//
+// Multiple batches of the same track (same style, different start dates) can't
+// be told apart by style alone, so the redirect can pin the exact batch:
+//   /welcome/latin?d=2026-07-12   (the batch's start date — easiest to set)
+//   /welcome/latin?b=batch-007    (the batch id)
+// With no param we fall back to the next upcoming batch for the track.
 // noindex — this is a post-registration confirmation, not a public/SEO page.
 
 type TrackKey = 'latin' | 'wcs';
@@ -149,73 +156,90 @@ export default async function WelcomePage({ params }: { params: Promise<{ track:
   const content = await getContent();
   const wa = content.site.whatsappNumber;
 
-  // Intake = next upcoming Foundation batch for this track (prefer weekend in the
-  // right time-of-day), so the reminder + details are always accurate.
+  // Candidate batches for this track. The redirect can pin one via ?d=/?b=;
+  // otherwise we show the next upcoming one (prefer weekend in the right
+  // time-of-day). Either way the date/time/venue come from live content.
   const pool = visibleBatches(content).filter(
     (b) => b.level === 'Foundation' && b.styleSlugs.some((s) => cfg.styleSlugs.includes(s)),
   );
-  const matchesTod = (b: (typeof pool)[number]) =>
-    cfg.weekendTod === 'AM' ? /am/i.test(b.time) : /pm/i.test(b.time);
-  const isWeekend = (b: (typeof pool)[number]) => b.daysOfWeek.some((d) => d === 'Sat' || d === 'Sun');
+  const matchesTod = (b: Batch) => (cfg.weekendTod === 'AM' ? /am/i.test(b.time) : /pm/i.test(b.time));
+  const isWeekend = (b: Batch) => b.daysOfWeek.some((d) => d === 'Sat' || d === 'Sun');
   const next = pool.filter(isWeekend).find(matchesTod) ?? pool.find(isWeekend) ?? pool[0];
-  const intakeDate = next ? formatBatchDate(next.startDate) : null;
 
-  // Venue + map: single source of truth = the studio record for the batch's branch.
-  const studio = content.studios.find((s) => s.slug === next?.branchSlug) ?? content.studios[0];
-  const venue = studio?.address ?? '';
-  const mapUrl = studio
-    ? `https://www.google.com/maps/search/?api=1&query=${studio.geo.lat},${studio.geo.lng}`
-    : null;
+  // Everything the page shows for a given batch, precomputed server-side. We
+  // build one bundle per candidate batch + a default, and the client picks the
+  // right one from the ?d=/?b= param (so this stays static-export safe).
+  const buildBundle = (batch: Batch | undefined): BatchBundle => {
+    const studio = content.studios.find((s) => s.slug === batch?.branchSlug) ?? content.studios[0];
+    const venue = studio?.address ?? '';
+    const mapUrl = studio
+      ? `https://www.google.com/maps/search/?api=1&query=${studio.geo.lat},${studio.geo.lng}`
+      : null;
+    const range = batch ? parseTimeRange(batch.time) : null;
+    const whenDays = batch ? formatDays(batch.daysOfWeek) : cfg.whenDays;
+    const whenTime = batch ? batch.time : cfg.whenTime;
+    const arriveBy = range ? clockLabel(minusMinutes(range.start, 15)) : cfg.arriveBy;
+    const intakeDate = batch ? formatBatchDate(batch.startDate) : null;
 
-  // Timing: prefer the real batch; fall back to the track config.
-  const range = next ? parseTimeRange(next.time) : null;
-  const whenDays = next ? formatDays(next.daysOfWeek) : cfg.whenDays;
-  const whenTime = next ? next.time : cfg.whenTime;
-  const arriveBy = range ? clockLabel(minusMinutes(range.start, 15)) : cfg.arriveBy;
+    let gcalUrl: string | null = null;
+    let icsHref: string | null = null;
+    if (batch && range) {
+      const startStamp = istToUtcStamp(batch.startDate, range.start);
+      const endStamp = istToUtcStamp(batch.startDate, range.end);
+      const title = `Furor — ${cfg.trackLabel} (first class)`;
+      const details = `Your beginner intake at Furor Hyderabad.\nArrive by ${arriveBy} for registration.\nQuestions? WhatsApp ${formatPhoneDisplay(wa)}: https://wa.me/${wa}`;
+      gcalUrl =
+        `https://calendar.google.com/calendar/render?action=TEMPLATE` +
+        `&text=${encodeURIComponent(title)}` +
+        `&dates=${startStamp}/${endStamp}` +
+        `&details=${encodeURIComponent(details)}` +
+        `&location=${encodeURIComponent(venue)}`;
+      const ics = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//Furor Hyderabad//Welcome//EN',
+        'CALSCALE:GREGORIAN',
+        'METHOD:PUBLISH',
+        'BEGIN:VEVENT',
+        `UID:furor-${track}-${batch.startDate}@furordancehyderabad`,
+        `DTSTAMP:${startStamp}`,
+        `DTSTART:${startStamp}`,
+        `DTEND:${endStamp}`,
+        `SUMMARY:${icsEscape(title)}`,
+        `LOCATION:${icsEscape(venue)}`,
+        `DESCRIPTION:${icsEscape(details)}`,
+        'BEGIN:VALARM',
+        'TRIGGER:-P1D',
+        'ACTION:DISPLAY',
+        `DESCRIPTION:${icsEscape(`${cfg.trackLabel} tomorrow`)}`,
+        'END:VALARM',
+        'BEGIN:VALARM',
+        'TRIGGER:-PT2H',
+        'ACTION:DISPLAY',
+        `DESCRIPTION:${icsEscape(`${cfg.trackLabel} in 2 hours`)}`,
+        'END:VALARM',
+        'END:VEVENT',
+        'END:VCALENDAR',
+      ].join('\r\n');
+      icsHref = `data:text/calendar;charset=utf-8,${encodeURIComponent(ics)}`;
+    }
 
-  // Add-to-calendar links (only when we have a concrete date + parseable time).
-  let gcalUrl: string | null = null;
-  let icsHref: string | null = null;
-  if (next && range) {
-    const startStamp = istToUtcStamp(next.startDate, range.start);
-    const endStamp = istToUtcStamp(next.startDate, range.end);
-    const title = `Furor — ${cfg.trackLabel} (first class)`;
-    const details = `Your beginner intake at Furor Hyderabad.\nArrive by ${arriveBy} for registration.\nQuestions? WhatsApp ${formatPhoneDisplay(wa)}: https://wa.me/${wa}`;
-    gcalUrl =
-      `https://calendar.google.com/calendar/render?action=TEMPLATE` +
-      `&text=${encodeURIComponent(title)}` +
-      `&dates=${startStamp}/${endStamp}` +
-      `&details=${encodeURIComponent(details)}` +
-      `&location=${encodeURIComponent(venue)}`;
-    const ics = [
-      'BEGIN:VCALENDAR',
-      'VERSION:2.0',
-      'PRODID:-//Furor Hyderabad//Welcome//EN',
-      'CALSCALE:GREGORIAN',
-      'METHOD:PUBLISH',
-      'BEGIN:VEVENT',
-      `UID:furor-${track}-${next.startDate}@furordancehyderabad`,
-      `DTSTAMP:${startStamp}`,
-      `DTSTART:${startStamp}`,
-      `DTEND:${endStamp}`,
-      `SUMMARY:${icsEscape(title)}`,
-      `LOCATION:${icsEscape(venue)}`,
-      `DESCRIPTION:${icsEscape(details)}`,
-      'BEGIN:VALARM',
-      'TRIGGER:-P1D',
-      'ACTION:DISPLAY',
-      `DESCRIPTION:${icsEscape(`${cfg.trackLabel} tomorrow`)}`,
-      'END:VALARM',
-      'BEGIN:VALARM',
-      'TRIGGER:-PT2H',
-      'ACTION:DISPLAY',
-      `DESCRIPTION:${icsEscape(`${cfg.trackLabel} in 2 hours`)}`,
-      'END:VALARM',
-      'END:VEVENT',
-      'END:VCALENDAR',
-    ].join('\r\n');
-    icsHref = `data:text/calendar;charset=utf-8,${encodeURIComponent(ics)}`;
-  }
+    return {
+      id: batch?.id ?? '',
+      startDate: batch?.startDate ?? '',
+      intakeDate,
+      whenDays,
+      whenTime,
+      arriveBy,
+      venue,
+      mapUrl,
+      gcalUrl,
+      icsHref,
+    };
+  };
+
+  const defaultBundle = buildBundle(next);
+  const options = pool.map(buildBundle);
 
   // One-tap "save contact" (vCard).
   const vcard = [
@@ -232,17 +256,11 @@ export default async function WelcomePage({ params }: { params: Promise<{ track:
     <WelcomeView
       track={track}
       trackLabel={cfg.trackLabel}
-      intakeDate={intakeDate}
-      whenDays={whenDays}
-      whenTime={whenTime}
-      arriveBy={arriveBy}
-      venue={venue}
-      mapUrl={mapUrl}
       waNumber={wa}
       waDisplay={formatPhoneDisplay(wa)}
-      gcalUrl={gcalUrl}
-      icsHref={icsHref}
       vcardHref={vcardHref}
+      defaultBundle={defaultBundle}
+      options={options}
     />
   );
 }

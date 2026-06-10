@@ -153,7 +153,7 @@ export function HomePageEditor({ initial }: { initial: SiteContent }) {
           </div>
         </Section>
 
-        <Section title="Closing CTA (orange gradient block)">
+        <Section title="Closing CTA (brand gradient block)">
           <Field label="Headline" hint="Wrap a word in *asterisks* for the accent style — e.g. Ready when *you* are.">
             <input
               value={h.closingCta.headline}

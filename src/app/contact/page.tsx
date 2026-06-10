@@ -149,7 +149,7 @@ export default async function ContactPage() {
 
       {p.closingCta.headline ? (
       <section className="container-x py-16">
-        <div className="rounded-3xl bg-gradient-to-br from-ember-700 via-ember-600 to-gold-500 p-10 sm:p-14 text-ink-950">
+        <div className="rounded-3xl bg-gradient-to-br from-ember-700 via-ember-600 to-ember-500 p-10 sm:p-14 text-ink-950">
           <h2 className="display text-3xl sm:text-5xl font-extrabold tracking-tight max-w-2xl">
             {p.closingCta.headline}
           </h2>
