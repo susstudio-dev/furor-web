@@ -1,13 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Reveal } from '@/components/Reveal';
+import type { Welcome } from '@/lib/content-schema';
 
-// Everything the page shows for one batch, precomputed server-side.
-export interface BatchBundle {
-  id: string;
-  startDate: string; // '' when there is no live batch
+interface Props {
+  track: string;
+  trackLabel: string;
+  copy: Welcome;
   intakeDate: string | null;
   whenDays: string;
   whenTime: string;
@@ -24,8 +25,35 @@ interface Props {
   waNumber: string;
   waDisplay: string;
   vcardHref: string;
-  defaultBundle: BatchBundle;
-  options: BatchBundle[];
+}
+
+// Renders an admin-editable copy template, replacing {placeholders} with live
+// values shown as bold (or per-placeholder styled) spans.
+function Filled({
+  template,
+  vars,
+  classNames,
+}: {
+  template: string;
+  vars: Record<string, string>;
+  classNames?: Record<string, string>;
+}) {
+  const parts = template.split(/(\{[a-zA-Z]+\})/g);
+  return (
+    <>
+      {parts.map((p, i) => {
+        const m = /^\{([a-zA-Z]+)\}$/.exec(p);
+        if (m && vars[m[1]] != null) {
+          return (
+            <span key={i} className={classNames?.[m[1]] ?? 'font-semibold text-cream'}>
+              {vars[m[1]]}
+            </span>
+          );
+        }
+        return <Fragment key={i}>{p}</Fragment>;
+      })}
+    </>
+  );
 }
 
 interface Payment {
@@ -36,6 +64,13 @@ interface Payment {
 export function WelcomeView({
   track,
   trackLabel,
+  copy,
+  intakeDate,
+  whenDays,
+  whenTime,
+  arriveBy,
+  venue,
+  mapUrl,
   waNumber,
   waDisplay,
   vcardHref,
@@ -100,15 +135,13 @@ export function WelcomeView({
       <section className="container-x pt-20 pb-24">
         <Reveal className="mx-auto max-w-xl rounded-3xl border border-cream/10 bg-ink-900/40 p-8 text-center sm:p-10">
           <span className="inline-flex items-center gap-2 rounded-full border border-gold-500/40 bg-gold-500/10 px-4 py-1.5 text-xs uppercase tracking-widest text-gold-400">
-            Payment not confirmed
+            {copy.unconfirmedBadge}
           </span>
           <h1 className="mt-6 display text-3xl font-extrabold tracking-tight sm:text-4xl">
-            We couldn’t confirm your payment yet
+            {copy.unconfirmedHeadline}
           </h1>
           <p className="mt-4 text-cream/80">
-            It looks like the payment for your{' '}
-            <span className="font-semibold text-cream">{trackLabel}</span> didn’t complete. If any
-            money was deducted, don’t worry — message us and we’ll sort it out right away.
+            <Filled template={copy.unconfirmedBody} vars={{ trackLabel }} />
           </p>
           <div className="mt-7 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
             <a href={waText(helpMsg)} target="_blank" rel="noopener noreferrer" className="btn-primary">
@@ -133,28 +166,23 @@ export function WelcomeView({
       <section className="container-x pt-20 pb-10 text-center">
         <Reveal>
           <span className="inline-flex items-center gap-2 rounded-full border border-ember-500/40 bg-ember-500/10 px-4 py-1.5 text-xs uppercase tracking-widest text-ember-400">
-            <span className="h-1.5 w-1.5 rounded-full bg-ember-500" /> Registration confirmed
+            <span className="h-1.5 w-1.5 rounded-full bg-ember-500" /> {copy.confirmedBadge}
           </span>
           <h1 className="mt-6 display text-4xl font-extrabold tracking-tight sm:text-6xl">
-            You’re in. 🎉
+            {copy.confirmedHeadline}
           </h1>
           <p className="mt-5 mx-auto max-w-2xl text-lg text-cream/80">
             {intakeDate ? (
-              <>
-                Reminder: your <span className="font-semibold text-cream">{trackLabel}</span>{' '}
-                intake is on <span className="font-semibold text-ember-400">{intakeDate}</span>.
-              </>
+              <Filled
+                template={copy.reminderWithDate}
+                vars={{ trackLabel, date: intakeDate }}
+                classNames={{ date: 'font-semibold text-ember-400' }}
+              />
             ) : (
-              <>
-                Reminder: your <span className="font-semibold text-cream">{trackLabel}</span>{' '}
-                intake is this coming weekend — we’ll confirm the exact date on WhatsApp.
-              </>
+              <Filled template={copy.reminderNoDate} vars={{ trackLabel }} />
             )}
           </p>
-          <p className="mt-4 mx-auto max-w-2xl text-cream/70">
-            Thank you for registering — this is the first step in your dance journey. Here are a
-            couple of things to do right away.
-          </p>
+          <p className="mt-4 mx-auto max-w-2xl text-cream/70">{copy.thankYouBody}</p>
           {paymentId ? (
             <p className="mt-5 inline-block rounded-full border border-cream/10 bg-ink-900/50 px-4 py-1.5 text-xs text-cream/55">
               Payment reference: <span className="text-cream/80">{paymentId}</span>
@@ -171,11 +199,9 @@ export function WelcomeView({
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-ember-500 display text-lg font-bold text-ink-950">
               1
             </div>
-            <p className="mt-4 display text-xl font-bold">Save our WhatsApp number</p>
+            <p className="mt-4 display text-xl font-bold">{copy.step1Title}</p>
             <p className="mt-2 leading-relaxed text-cream/75">
-              Save <span className="font-semibold text-cream">{waDisplay}</span> as{' '}
-              <span className="font-semibold text-cream">“Furor Hyderabad”</span> — so you get timely
-              reminders for your class and can reach us anytime.
+              <Filled template={copy.step1Body} vars={{ number: waDisplay }} />
             </p>
             <div className="mt-5 flex flex-wrap gap-3">
               <a href={vcardHref} download="Furor Hyderabad.vcf" className="btn-primary inline-flex">
@@ -197,10 +223,9 @@ export function WelcomeView({
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-ember-500 display text-lg font-bold text-ink-950">
               2
             </div>
-            <p className="mt-4 display text-xl font-bold">Add it to your calendar</p>
+            <p className="mt-4 display text-xl font-bold">{copy.step2Title}</p>
             <p className="mt-2 leading-relaxed text-cream/75">
-              Come early by <span className="font-semibold text-cream">{arriveBy}</span> to sort out
-              your registration. Add a reminder so the date doesn’t slip.
+              <Filled template={copy.step2Body} vars={{ arriveBy }} />
             </p>
             {gcalUrl || icsHref ? (
               <div className="mt-5 flex flex-wrap gap-3">
@@ -232,7 +257,7 @@ export function WelcomeView({
       {/* Intake details */}
       <section className="container-x py-10">
         <Reveal className="rounded-3xl border border-cream/10 bg-ink-900/40 p-8 sm:p-10">
-          <p className="display text-sm uppercase tracking-widest text-ember-400">Your intake details</p>
+          <p className="display text-sm uppercase tracking-widest text-ember-400">{copy.intakeHeading}</p>
           <div className="mt-6 grid gap-8 md:grid-cols-3">
             <div>
               <p className="text-xs uppercase tracking-widest text-cream/50">Where</p>
@@ -262,11 +287,11 @@ export function WelcomeView({
               </p>
             </div>
             <div>
-              <p className="text-xs uppercase tracking-widest text-cream/50">What to wear &amp; bring</p>
+              <p className="text-xs uppercase tracking-widest text-cream/50">{copy.whatToBringHeading}</p>
               <ul className="mt-2 space-y-1.5 leading-relaxed text-cream/85">
-                <li>• Smart comfort wear — tees / tracks</li>
-                <li>• Fresh socks (for footwear)</li>
-                <li>• A personal water bottle / sipper — refill at the studio</li>
+                {copy.whatToBring.map((item, i) => (
+                  <li key={i}>• {item}</li>
+                ))}
               </ul>
             </div>
           </div>
@@ -277,11 +302,9 @@ export function WelcomeView({
       <section className="container-x pb-24">
         <Reveal className="rounded-3xl bg-gradient-to-br from-ember-700 via-ember-600 to-ember-500 p-10 text-ink-950 sm:p-14">
           <p className="display text-3xl font-extrabold tracking-tight sm:text-4xl">
-            See you all in class! 💃🕺
+            {copy.signoffHeadline}
           </p>
-          <p className="mt-4 max-w-xl text-ink-950/80">
-            Any questions before then? Just message us on WhatsApp — we reply fast.
-          </p>
+          <p className="mt-4 max-w-xl text-ink-950/80">{copy.signoffBody}</p>
           <div className="mt-6">
             <a
               href={waText(confirmMsg)}
@@ -292,8 +315,8 @@ export function WelcomeView({
               Chat on WhatsApp
             </a>
           </div>
-          <p className="mt-8 font-semibold text-ink-950/90">Cheers, Rish</p>
-          <p className="text-sm text-ink-950/70">Furor Hyderabad · Dance for Life</p>
+          <p className="mt-8 font-semibold text-ink-950/90">{copy.signoffName}</p>
+          <p className="text-sm text-ink-950/70">{copy.signoffTagline}</p>
         </Reveal>
       </section>
     </>

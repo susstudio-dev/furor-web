@@ -42,7 +42,7 @@ export function QuickEnroll({ content }: { content: SiteContent }) {
               />
             </div>
             <p className="text-sm text-cream/55">
-              Sign up in ~30s on WhatsApp · no account, no payment yet
+              Reserve your seat in ~30s · secure checkout via Razorpay
             </p>
           </div>
 
@@ -102,21 +102,32 @@ export function QuickEnroll({ content }: { content: SiteContent }) {
                       ) : (
                         <span className="mt-3 block h-[1px]" />
                       )}
-                      <div className="mt-4">
-                        <EnquiryCTA
-                          whatsappNumber={content.site.whatsappNumber}
-                          ctx={{
-                            source: 'batch_row',
-                            style: { slug: b.styleSlugs[0], name: sName },
-                            branch: branch
-                              ? { slug: branch.slug, name: branch.name }
-                              : undefined,
-                            batch: b,
-                          }}
-                          variant="batch-row"
-                          label="Reserve my seat →"
-                          className="w-full justify-center magnetic"
-                        />
+                      <div className="mt-auto pt-4">
+                        {b.razorpayLink ? (
+                          <a
+                            href={b.razorpayLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-ember-500 px-4 py-2 text-sm font-semibold text-cream transition hover:bg-ember-600 magnetic"
+                          >
+                            Reserve my seat · {formatInr(b.reservationInr)}
+                          </a>
+                        ) : (
+                          <EnquiryCTA
+                            whatsappNumber={content.site.whatsappNumber}
+                            ctx={{
+                              source: 'batch_row',
+                              style: { slug: b.styleSlugs[0], name: sName },
+                              branch: branch
+                                ? { slug: branch.slug, name: branch.name }
+                                : undefined,
+                              batch: b,
+                            }}
+                            variant="batch-row"
+                            label="Reserve my seat →"
+                            className="w-full justify-center magnetic"
+                          />
+                        )}
                       </div>
                     </div>
                   );

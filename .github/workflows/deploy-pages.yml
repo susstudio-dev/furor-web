@@ -29,10 +29,17 @@ jobs:
 
       # GitHub Pages is static-only. Strip everything that needs a server
       # runtime so `next build` can do a clean static export of the public site.
+      # /p/[slug] (admin-created custom pages) and /welcome/[track] (admin-managed
+      # post-payment pages) live in Vercel Blob — they have no content at build
+      # time on the static mirror, render dynamically (force-dynamic), and Next's
+      # `output: export` cannot emit dynamic routes. The welcome pages are only
+      # reached via the Razorpay redirect to the live Vercel site anyway.
       - name: Strip server-only routes
         run: |
           rm -rf src/app/admin
           rm -rf src/app/api
+          rm -rf src/app/p
+          rm -rf src/app/welcome
           rm -f src/middleware.ts
           rm -f src/app/icon.tsx
           rm -f src/app/opengraph-image.tsx

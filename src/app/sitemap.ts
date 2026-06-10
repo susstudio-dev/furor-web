@@ -15,5 +15,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
   const styles = c.danceStyles.map((s) => ({ url: `${BASE}/dance-styles/${s.slug}`, lastModified: now }));
   const stories = c.stories.map((s) => ({ url: `${BASE}/stories/${s.slug}`, lastModified: new Date(s.publishedAt) }));
-  return [...fixed, ...styles, ...stories];
+  const custom = c.customPages
+    .filter((p) => p.published)
+    .map((p) => ({ url: `${BASE}/p/${p.slug}`, lastModified: now }));
+  return [...fixed, ...styles, ...stories, ...custom];
 }

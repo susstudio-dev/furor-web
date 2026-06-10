@@ -39,6 +39,7 @@ export async function POST(req: Request) {
     }
     for (const s of saved.danceStyles) revalidatePath(`/dance-styles/${s.slug}`);
     for (const s of saved.stories) revalidatePath(`/stories/${s.slug}`);
+    for (const p of saved.customPages) revalidatePath(`/p/${p.slug}`);
     return NextResponse.json({ ok: true });
   } catch (err: unknown) {
     if (err instanceof ContentValidationError) {

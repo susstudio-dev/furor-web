@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { getContent, nextBatchPerStyle, formatBatchDate, formatInr, batchStyleLabel } from '@/lib/content';
 import { Hero } from '@/components/Hero';
 import { KineticStrip } from '@/components/KineticStrip';
+import { TrialBanner } from '@/components/TrialBanner';
 import { StyleFinder } from '@/components/StyleFinder';
 import { EnquiryCTA } from '@/components/EnquiryCTA';
 import { TonightTile } from '@/components/TonightTile';
@@ -11,6 +12,7 @@ import { Accentuate } from '@/components/Accentuate';
 import { Reveal } from '@/components/Reveal';
 import { Parallax } from '@/components/Parallax';
 import { QuickEnroll } from '@/components/QuickEnroll';
+import { BatchActions } from '@/components/BatchActions';
 
 export default async function HomePage() {
   const content = await getContent();
@@ -27,6 +29,8 @@ export default async function HomePage() {
       <QuickEnroll content={content} />
 
       <KineticStrip styles={sortedStyles} />
+
+      <TrialBanner content={content} />
 
       {/* What we teach */}
       <section className="container-x py-12 sm:py-16 relative overflow-hidden">
@@ -72,7 +76,7 @@ export default async function HomePage() {
                   label={s.name}
                   fill
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                  className="object-cover transition duration-700 group-hover:scale-[1.04]"
+                  className="object-cover object-[center_30%] transition duration-700 group-hover:scale-[1.04]"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-ink-950 via-ink-950/30 to-transparent" />
               </div>
@@ -139,16 +143,11 @@ export default async function HomePage() {
                       </p>
                     ) : null}
                     <div className="mt-4">
-                      <EnquiryCTA
+                      <BatchActions
+                        batch={b}
+                        style={{ slug: s.slug, name: s.name }}
+                        branch={{ slug: branch.slug, name: branch.name }}
                         whatsappNumber={content.site.whatsappNumber}
-                        ctx={{
-                          source: 'batch_row',
-                          style: { slug: s.slug, name: s.name },
-                          branch: { slug: branch.slug, name: branch.name },
-                          batch: b,
-                        }}
-                        variant="batch-row"
-                        label="Enquire on WhatsApp"
                       />
                     </div>
                   </>
@@ -290,7 +289,7 @@ export default async function HomePage() {
                     <div className="rounded-3xl border border-cream/10 bg-ink-900/40 p-8 sm:p-10 flex flex-col">
                       <p className="display text-2xl sm:text-3xl font-bold">{s.name}</p>
                       <p className="mt-1 text-xs uppercase tracking-widest text-ember-400/80">
-                        Furor Dance Studio · Hyderabad
+                        {content.site.title}
                       </p>
                       <div className="mt-6 space-y-4 text-cream/85">
                         <div>

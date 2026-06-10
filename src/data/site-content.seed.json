@@ -25,12 +25,24 @@
     "posterImage": "/photos/DSC_0166.jpg"
   },
   "tonight": {
-    "enabled": true,
+    "enabled": false,
     "headline": "La Rumba · Latin Social",
     "body": "Hyderabad's weekly Latin social. All levels welcome. Free for current students; ₹300 for guests.",
     "when": "Tonight · 8 PM at Jubilee Hills",
     "ctaLabel": "WhatsApp to RSVP",
     "ctaContext": "the La Rumba Latin social tonight at Jubilee Hills"
+  },
+  "trial": {
+    "enabled": true,
+    "eyebrow": "Weekend",
+    "headline": "Weekend classes at Jubilee Hills",
+    "body": "Open Salsa, Bachata and West Coast Swing batches every Saturday and Sunday. Beginner-friendly. No partner needed.",
+    "when": "Sat & Sun · Jubilee Hills",
+    "ctaLabel": "See weekend batches",
+    "ctaHref": "/batches?days=Weekend",
+    "whatsappLabel": "Or chat on WhatsApp",
+    "ctaContext": "a weekend Salsa or Bachata class",
+    "footnote": ""
   },
   "whyFuror": {
     "headline": "Why dancers stay with us",
@@ -662,6 +674,83 @@
         "headline": "What's open. What it costs. Real seats, real dates.",
         "lead": "No forms. Pick a batch, tap WhatsApp, and we'll confirm in minutes."
       }
+    },
+    "privacy": {
+      "intro": {
+        "eyebrow": "Legal",
+        "headline": "Privacy Policy",
+        "lead": ""
+      },
+      "lastUpdated": "14 May 2026",
+      "sections": [
+        {
+          "heading": "What we collect",
+          "body": "When you contact us — through our website forms, WhatsApp, Instagram, email or in person — we collect the information you choose to share with us. Typically that is your name, phone number, and the class or batch you are interested in."
+        },
+        {
+          "heading": "How we use it",
+          "body": "We use your information only to respond to your enquiry, schedule classes, send you class reminders and the occasional update about new batches or socials. We do not sell your data, ever."
+        },
+        {
+          "heading": "Payments",
+          "body": "Payments are processed by Razorpay. We do not store your card or bank details on our servers — those are held by Razorpay under PCI-DSS-compliant infrastructure."
+        },
+        {
+          "heading": "Cookies and analytics",
+          "body": "We use basic, privacy-respecting analytics to understand how the site is used (page views, referrers, general device type). We do not track you across other websites and we do not use advertising cookies."
+        },
+        {
+          "heading": "Your rights",
+          "body": "You can ask us at any time to share, correct or delete the information we have about you. Email furorhyd@dancehyderabad.com or message us on WhatsApp at +91 88860 72572 and we will get to it within 7 working days."
+        },
+        {
+          "heading": "Contact",
+          "body": "Furor Dance Hyderabad, 2nd Floor, Alcazar Mall, Road No. 36, Jubilee Hills, Hyderabad 500033."
+        }
+      ]
+    },
+    "terms": {
+      "intro": {
+        "eyebrow": "Legal",
+        "headline": "Terms & Services",
+        "lead": ""
+      },
+      "lastUpdated": "14 May 2026",
+      "sections": [
+        {
+          "heading": "Booking a class",
+          "body": "A seat in a batch is confirmed only after full payment or a token payment that we have acknowledged on WhatsApp. Without confirmation, seats are not held."
+        },
+        {
+          "heading": "Make-up classes",
+          "body": "If you miss a class, we offer a flexible make-up policy — message us on WhatsApp and we will find you a session in another batch of the same level, subject to availability. Make-ups are valid for the duration of your current batch."
+        },
+        {
+          "heading": "Refunds",
+          "body": "Full refunds are available before the batch starts. Once the batch has begun, refunds are pro-rated for the remaining unattended classes and require at least 7 days' notice. Refunds for missed classes that were eligible for a make-up are not available."
+        },
+        {
+          "heading": "Conduct on the floor",
+          "body": "We expect respectful behaviour on the dance floor and in class — no harassment, no unsolicited advances, no negative coaching of fellow students. Repeat issues will result in removal from class and our weekly socials without refund. We take this seriously."
+        },
+        {
+          "heading": "Photography",
+          "body": "We occasionally photograph and film classes and socials for our website and social channels. If you would rather not appear in our content, tell any instructor and we will respect that — both at the point of capture and in any later edits you find online."
+        },
+        {
+          "heading": "Injury and risk",
+          "body": "Partner dancing carries a small risk of injury. By joining a class you confirm that you are physically able to participate, and that any medical conditions we should know about have been disclosed to us."
+        },
+        {
+          "heading": "Changes",
+          "body": "We may update these terms from time to time. The current version is always at this page, with the updated date at the top."
+        },
+        {
+          "heading": "Contact",
+          "body": "Questions about these terms? Email furorhyd@dancehyderabad.com or WhatsApp +91 88860 72572."
+        }
+      ]
     }
-  }
+  },
+  "customPages": []
 }

@@ -17,7 +17,7 @@ export function SaveBar({
     setMsg(null);
     try {
       await onSave();
-      setMsg('Saved. Live in ~60s.');
+      setMsg('Saved ✓ Live now — refresh the public page to see it.');
     } catch (err: unknown) {
       setMsg((err as Error)?.message || 'Save failed');
     } finally {

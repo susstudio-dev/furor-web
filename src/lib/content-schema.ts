@@ -45,6 +45,32 @@ export const TonightSchema = z
     { message: 'When enabled, headline, body, when and ctaContext are required', path: ['headline'] },
   );
 
+// A generic "featured offer" ribbon on the home page (kept the `trial` key so
+// existing stored content keeps working). Primary CTA can be either an
+// internal link (e.g. "See weekend batches" → /batches?days=Weekend) OR a
+// WhatsApp message. The schema makes no claims about price — fill the copy
+// to match whatever you actually offer.
+export const TrialSchema = z
+  .object({
+    enabled: z.boolean().default(false),
+    eyebrow: z.string().default('Weekend'),
+    headline: z.string().default(''),
+    body: z.string().default(''),
+    when: z.string().default(''),
+    ctaLabel: z.string().default('See weekend batches'),
+    // If set, the primary CTA becomes a Link to this href instead of WhatsApp.
+    ctaHref: z.string().default(''),
+    // If ctaHref is set, WhatsApp shows as a secondary "Or chat" link.
+    // If ctaHref is empty, WhatsApp IS the primary CTA.
+    whatsappLabel: z.string().default('Or chat on WhatsApp'),
+    ctaContext: z.string().default(''),
+    footnote: z.string().default(''),
+  })
+  .refine(
+    (t) => !t.enabled || !!t.headline,
+    { message: 'When enabled, headline is required', path: ['headline'] },
+  );
+
 export const DanceStyleSchema = z.object({
   id: z.string().min(1),
   slug: z.string().regex(/^[a-z0-9-]+$/),
@@ -115,6 +141,11 @@ export const BatchSchema = z.preprocess(
     time: z.string().min(1),
     startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'YYYY-MM-DD'),
     priceInr: z.number().int().nonnegative(),
+    // Amount charged up front to reserve a seat (the Razorpay "book now"
+    // deposit). priceInr stays the full course fee shown on the cards; this is
+    // what the "Reserve my seat · ₹X" CTA advertises. Defaults to 500 so it
+    // applies to existing batches without an explicit value.
+    reservationInr: z.number().int().nonnegative().default(500),
     seatsLeft: z.number().int().nonnegative().nullable().optional(),
     status: z.enum(['Open', 'Filling Fast', 'Closed']),
     razorpayLink: z.string().url().nullable().optional(),
@@ -308,6 +339,21 @@ const SimpleIntroPageSchema = z
   .object({ intro: PageIntroSchema.default({ eyebrow: '', headline: '', lead: '' }) })
   .default({});
 
+// Privacy / Terms / similar long-form documents. Each section is a sub-heading
+// + a paragraph (markdown not required — keep editing friction-free).
+const LegalSectionSchema = z.object({
+  heading: z.string().default(''),
+  body: z.string().default(''),
+});
+
+export const LegalPageSchema = z
+  .object({
+    intro: PageIntroSchema.default({ eyebrow: 'Legal', headline: '', lead: '' }),
+    lastUpdated: z.string().default(''),
+    sections: z.array(LegalSectionSchema).default([]),
+  })
+  .default({});
+
 const PagesSchema = z
   .object({
     home: HomePageSchema,
@@ -318,6 +364,149 @@ const PagesSchema = z
     stories: SimpleIntroPageSchema,
     danceStyles: SimpleIntroPageSchema,
     batches: SimpleIntroPageSchema,
+    privacy: LegalPageSchema,
+    terms: LegalPageSchema,
+  })
+  .default({});
+
+// A flexible content block for admin-built custom pages. Blocks render top to
+// bottom in order; new block types can be added to this union without breaking
+// existing data (unknown future types would simply fail validation, so keep
+// readers tolerant). `type` is the discriminator.
+export const CustomBlockSchema = z.discriminatedUnion('type', [
+  z.object({ type: z.literal('heading'), text: z.string().default('') }),
+  z.object({ type: z.literal('text'), body: z.string().default('') }),
+  z.object({
+    type: z.literal('image'),
+    url: z.string().default(''),
+    alt: z.string().default(''),
+    caption: z.string().default(''),
+  }),
+  z.object({
+    type: z.literal('button'),
+    label: z.string().default(''),
+    href: z.string().default(''),
+    variant: z.enum(['primary', 'secondary']).default('primary'),
+  }),
+]);
+
+// Admin-creatable pages. Lives at /p/<slug>. A page is an intro header plus an
+// ordered list of `blocks` (heading / text / image / button). `sections` is the
+// legacy text-only shape kept for backward compatibility — the editor migrates
+// it into blocks on first edit, and the renderer falls back to it when a page
+// has no blocks yet.
+export const CustomPageSchema = z.object({
+  id: z.string().min(1),
+  slug: z.string().regex(/^[a-z0-9-]+$/, 'lowercase letters, numbers, hyphens'),
+  title: z.string().min(1),
+  navLabel: z.string().default(''),
+  seoDescription: z.string().default(''),
+  showInFooter: z.boolean().default(true),
+  showInNav: z.boolean().default(false),
+  published: z.boolean().default(true),
+  intro: PageIntroSchema.default({ eyebrow: '', headline: '', lead: '' }),
+  sections: z.array(LegalSectionSchema).default([]),
+  blocks: z.array(CustomBlockSchema).default([]),
+  displayOrder: z.number().int().default(0),
+});
+
+// Post-payment "welcome" / confirmation pages at /welcome/<track>. The intake
+// date, venue, class times and add-to-calendar links are derived live from
+// Batches + Studios — only the copy and per-track labels live here. `text`
+// fields support {placeholders} (e.g. {number}, {arriveBy}, {trackLabel},
+// {date}) that are filled in at render time. Defaults reproduce the original
+// hardcoded copy so existing pages are unchanged until edited.
+const WelcomeTrackSchema = z.object({
+  key: z.string().min(1),
+  trackLabel: z.string().default(''),
+  styleSlugs: z.array(z.string()).default([]),
+  weekendTod: z.enum(['AM', 'PM']).default('AM'),
+  whenDays: z.string().default(''),
+  whenTime: z.string().default(''),
+  arriveBy: z.string().default(''),
+  metaDesc: z.string().default(''),
+});
+
+const WelcomeSchema = z
+  .object({
+    // Confirmed state
+    confirmedBadge: z.string().default('Registration confirmed'),
+    confirmedHeadline: z.string().default('You’re in. 🎉'),
+    reminderWithDate: z
+      .string()
+      .default('Reminder: your {trackLabel} intake is on {date}.'),
+    reminderNoDate: z
+      .string()
+      .default(
+        'Reminder: your {trackLabel} intake is this coming weekend — we’ll confirm the exact date on WhatsApp.',
+      ),
+    thankYouBody: z
+      .string()
+      .default(
+        'Thank you for registering — this is the first step in your dance journey. Here are a couple of things to do right away.',
+      ),
+    // The two action cards
+    step1Title: z.string().default('Save our WhatsApp number'),
+    step1Body: z
+      .string()
+      .default(
+        'Save {number} as “Furor Hyderabad” — so you get timely reminders for your class and can reach us anytime.',
+      ),
+    step2Title: z.string().default('Add it to your calendar'),
+    step2Body: z
+      .string()
+      .default(
+        'Come early by {arriveBy} to sort out your registration. Add a reminder so the date doesn’t slip.',
+      ),
+    // Intake details
+    intakeHeading: z.string().default('Your intake details'),
+    whatToBringHeading: z.string().default('What to wear & bring'),
+    whatToBring: z
+      .array(z.string())
+      .default([
+        'Smart comfort wear — tees / tracks',
+        'Fresh socks (for footwear)',
+        'A personal water bottle / sipper — refill at the studio',
+      ]),
+    // Sign-off block
+    signoffHeadline: z.string().default('See you all in class! 💃🕺'),
+    signoffBody: z
+      .string()
+      .default('Any questions before then? Just message us on WhatsApp — we reply fast.'),
+    signoffName: z.string().default('Cheers, Rish'),
+    signoffTagline: z.string().default('Furor Hyderabad · Dance for Life'),
+    // Payment-not-confirmed state
+    unconfirmedBadge: z.string().default('Payment not confirmed'),
+    unconfirmedHeadline: z.string().default('We couldn’t confirm your payment yet'),
+    unconfirmedBody: z
+      .string()
+      .default(
+        'It looks like the payment for your {trackLabel} didn’t complete. If any money was deducted, don’t worry — message us and we’ll sort it out right away.',
+      ),
+    tracks: z
+      .array(WelcomeTrackSchema)
+      .default([
+        {
+          key: 'latin',
+          trackLabel: 'Latin beginner class',
+          styleSlugs: ['salsa', 'bachata'],
+          weekendTod: 'AM',
+          whenDays: 'Saturday & Sunday',
+          whenTime: '9:30 AM – 10:30 AM',
+          arriveBy: '9:15 AM',
+          metaDesc: 'Your Latin beginner intake details and next steps.',
+        },
+        {
+          key: 'wcs',
+          trackLabel: 'West Coast Swing beginner class',
+          styleSlugs: ['west-coast-swing'],
+          weekendTod: 'PM',
+          whenDays: 'Saturday & Sunday',
+          whenTime: '6:30 PM – 7:30 PM',
+          arriveBy: '6:15 PM',
+          metaDesc: 'Your West Coast Swing beginner intake details and next steps.',
+        },
+      ]),
   })
   .default({});
 
@@ -333,6 +522,18 @@ export const SiteContentSchema = z.object({
     ctaLabel: 'WhatsApp to RSVP',
     ctaContext: '',
   }),
+  trial: TrialSchema.default({
+    enabled: true,
+    eyebrow: 'Weekend',
+    headline: 'Weekend classes at Jubilee Hills',
+    body: 'Open Salsa, Bachata and West Coast Swing batches every Saturday and Sunday. Beginner-friendly. No partner needed.',
+    when: 'Sat & Sun · Jubilee Hills',
+    ctaLabel: 'See weekend batches',
+    ctaHref: '/batches?days=Weekend',
+    whatsappLabel: 'Or chat on WhatsApp',
+    ctaContext: 'a weekend Salsa or Bachata class',
+    footnote: '',
+  }),
   whyFuror: z
     .object({
       headline: z.string(),
@@ -346,6 +547,8 @@ export const SiteContentSchema = z.object({
   testimonials: z.array(TestimonialSchema).default([]),
   stories: z.array(StorySchema).default([]),
   pages: PagesSchema,
+  customPages: z.array(CustomPageSchema).default([]),
+  welcome: WelcomeSchema,
 });
 
 export type SiteContent = z.infer<typeof SiteContentSchema>;
@@ -356,3 +559,8 @@ export type Instructor = z.infer<typeof InstructorSchema>;
 export type Testimonial = z.infer<typeof TestimonialSchema>;
 export type Story = z.infer<typeof StorySchema>;
 export type Pages = z.infer<typeof PagesSchema>;
+export type LegalPage = z.infer<typeof LegalPageSchema>;
+export type CustomPage = z.infer<typeof CustomPageSchema>;
+export type CustomBlock = z.infer<typeof CustomBlockSchema>;
+export type Welcome = z.infer<typeof WelcomeSchema>;
+export type WelcomeTrack = z.infer<typeof WelcomeTrackSchema>;

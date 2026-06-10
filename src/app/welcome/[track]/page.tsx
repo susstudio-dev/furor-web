@@ -6,8 +6,8 @@ import { visibleBatches } from '@/lib/content-helpers';
 import { formatBatchDate } from '@/lib/format';
 import { WelcomeView, type BatchBundle } from './WelcomeView';
 
-// Post-payment landing page, one per beginner track. Set the matching URL as
-// the "redirect after payment" on each Razorpay payment page:
+// Post-payment landing page, one per track. Set the matching URL as the
+// "redirect after payment" on each Razorpay payment page, e.g.
 //   Latin Beginner  → /welcome/latin
 //   WCS Beginner     → /welcome/wcs
 //
@@ -18,45 +18,12 @@ import { WelcomeView, type BatchBundle } from './WelcomeView';
 // With no param we fall back to the next upcoming batch for the track.
 // noindex — this is a post-registration confirmation, not a public/SEO page.
 
-type TrackKey = 'latin' | 'wcs';
-
-interface WelcomeConfig {
-  trackLabel: string; // e.g. "Latin beginner class"
-  styleSlugs: string[]; // used to find the matching Foundation batch for the date
-  weekendTod: 'AM' | 'PM';
-  // Fallbacks only — used when no matching live batch exists in content. When a
-  // batch is found, its real days/time/venue drive the page instead (single
-  // source of truth = the admin-editable content).
-  whenDays: string;
-  whenTime: string;
-  arriveBy: string;
-  metaDesc: string;
-}
-
-const TRACKS: Record<TrackKey, WelcomeConfig> = {
-  latin: {
-    trackLabel: 'Latin beginner class',
-    styleSlugs: ['salsa', 'bachata'],
-    weekendTod: 'AM',
-    whenDays: 'Saturday & Sunday',
-    whenTime: '9:30 AM – 10:30 AM',
-    arriveBy: '9:15 AM',
-    metaDesc: 'Your Latin beginner intake details and next steps.',
-  },
-  wcs: {
-    trackLabel: 'West Coast Swing beginner class',
-    styleSlugs: ['west-coast-swing'],
-    weekendTod: 'PM',
-    whenDays: 'Saturday & Sunday',
-    whenTime: '6:30 PM – 7:30 PM',
-    arriveBy: '6:15 PM',
-    metaDesc: 'Your West Coast Swing beginner intake details and next steps.',
-  },
-};
-
-export function generateStaticParams() {
-  return Object.keys(TRACKS).map((track) => ({ track }));
-}
+// Tracks are admin-managed (added/edited in /admin/pages/welcome → Blob), so the
+// page renders per-request rather than being frozen at build: a newly added
+// track works immediately, with no redeploy. (The GitHub Pages static mirror
+// strips this route in CI, so force-dynamic never conflicts with `output:
+// export` there.)
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({
   params,
@@ -64,10 +31,11 @@ export async function generateMetadata({
   params: Promise<{ track: string }>;
 }): Promise<Metadata> {
   const { track } = await params;
-  const cfg = TRACKS[track as TrackKey];
+  const content = await getContent();
+  const cfg = content.welcome.tracks.find((t) => t.key === track);
   return {
     title: 'You’re in — Furor Hyderabad',
-    description: cfg?.metaDesc ?? 'Your intake details and next steps.',
+    description: cfg?.metaDesc || 'Your intake details and next steps.',
     robots: { index: false, follow: false },
   };
 }
@@ -150,10 +118,10 @@ function icsEscape(text: string): string {
 
 export default async function WelcomePage({ params }: { params: Promise<{ track: string }> }) {
   const { track } = await params;
-  const cfg = TRACKS[track as TrackKey];
+  const content = await getContent();
+  const cfg = content.welcome.tracks.find((t) => t.key === track);
   if (!cfg) notFound();
 
-  const content = await getContent();
   const wa = content.site.whatsappNumber;
 
   // Candidate batches for this track. The redirect can pin one via ?d=/?b=;
@@ -256,6 +224,13 @@ export default async function WelcomePage({ params }: { params: Promise<{ track:
     <WelcomeView
       track={track}
       trackLabel={cfg.trackLabel}
+      copy={content.welcome}
+      intakeDate={intakeDate}
+      whenDays={whenDays}
+      whenTime={whenTime}
+      arriveBy={arriveBy}
+      venue={venue}
+      mapUrl={mapUrl}
       waNumber={wa}
       waDisplay={formatPhoneDisplay(wa)}
       vcardHref={vcardHref}
