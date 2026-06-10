@@ -2,7 +2,6 @@ import Link from 'next/link';
 import { getContent, nextBatchPerStyle, formatBatchDate, formatInr, batchStyleLabel } from '@/lib/content';
 import { Hero } from '@/components/Hero';
 import { KineticStrip } from '@/components/KineticStrip';
-import { LiveCounter } from '@/components/LiveCounter';
 import { StyleFinder } from '@/components/StyleFinder';
 import { EnquiryCTA } from '@/components/EnquiryCTA';
 import { TonightTile } from '@/components/TonightTile';
@@ -18,8 +17,6 @@ export default async function HomePage() {
   const sortedStyles = content.danceStyles.slice().sort((a, b) => a.displayOrder - b.displayOrder);
   const sortedStudios = content.studios.slice().sort((a, b) => a.displayOrder - b.displayOrder);
   const nextPerStyle = nextBatchPerStyle(content);
-  const studentsThisWeek = content.site.stats?.studentsThisWeek;
-  const showCounter = typeof studentsThisWeek === 'number' && studentsThisWeek > 0;
   const h = content.pages.home;
 
   return (
@@ -226,14 +223,6 @@ export default async function HomePage() {
             ))}
           </Reveal>
         </section>
-      ) : null}
-
-      {/* Live counter */}
-      {showCounter ? (
-        <LiveCounter
-          value={studentsThisWeek!}
-          label="students dancing with us this week"
-        />
       ) : null}
 
       {/* Style finder */}
