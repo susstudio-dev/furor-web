@@ -11,7 +11,8 @@ import { readJSON, writeJSON } from '@/lib/storage';
 //   • URL    : https://www.dancehyderabad.com/api/razorpay/webhook
 //   • Secret : a strong random string you choose — also set it in Vercel as
 //              RAZORPAY_WEBHOOK_SECRET (Production + Preview).
-//   • Events : payment.failed (+ payment.captured / payment_link.* if wanted).
+//   • Events : payment.captured + payment.failed (required). refund.* and
+//              payment_link.* are optional — handled here too if you tick them.
 //
 // This route is server-only; the GitHub Pages static mirror strips src/app/api
 // in CI, so it never needs to exist there.
@@ -65,22 +66,33 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  // Razorpay nests the payment entity under payload.payment.entity.
+  // The event name (e.g. "payment.failed", "refund.processed") tells us which
+  // entity Razorpay nested under payload.<kind>.entity. payment.* → payment,
+  // refund.* → refund, payment_link.* → payment_link. We pick the first entity
+  // present so every ticked event logs with real data, not blanks.
   const event = String(body.event ?? 'unknown');
-  const payment =
-    (((body.payload as Record<string, unknown> | undefined)?.payment as
+  const payload = (body.payload as Record<string, unknown> | undefined) ?? {};
+  const entityOf = (kind: string): Record<string, unknown> | undefined =>
+    (payload[kind] as Record<string, unknown> | undefined)?.entity as
       | Record<string, unknown>
-      | undefined)?.entity as Record<string, unknown> | undefined) ?? {};
+      | undefined;
+
+  const kind = event.split('.')[0]; // 'payment' | 'refund' | 'payment_link' | ...
+  // Prefer the entity matching the event; fall back to a payment entity if
+  // Razorpay also bundled one (refund events include the parent payment).
+  const e = entityOf(kind) ?? entityOf('payment') ?? entityOf('refund') ?? {};
+  // refund.* carries the refunded payment under payment_id; payment.* uses id.
+  const paymentId = (e.payment_id as string) ?? (e.id as string) ?? null;
 
   const record: PaymentEvent = {
     ts: new Date().toISOString(),
     event,
-    status: String(payment.status ?? event),
-    paymentId: (payment.id as string) ?? null,
-    amount: typeof payment.amount === 'number' ? payment.amount : null,
-    email: (payment.email as string) ?? null,
-    contact: (payment.contact as string) ?? null,
-    errorDescription: (payment.error_description as string) ?? null,
+    status: String(e.status ?? event),
+    paymentId,
+    amount: typeof e.amount === 'number' ? e.amount : null,
+    email: (e.email as string) ?? null,
+    contact: (e.contact as string) ?? null,
+    errorDescription: (e.error_description as string) ?? null,
   };
 
   // Persist best-effort. We always 200 after a valid signature so Razorpay
