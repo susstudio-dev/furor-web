@@ -4,6 +4,9 @@ import { JsonLd } from '@/components/JsonLd';
 
 export const metadata = { title: 'FAQs' };
 
+// Render per request so admin edits show immediately (export build strips this).
+export const dynamic = 'force-dynamic';
+
 export default async function FaqsPage() {
   const content = await getContent();
   const f = content.pages.faqs;

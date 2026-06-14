@@ -18,7 +18,7 @@ export function QuickEnroll({ content }: { content: SiteContent }) {
   return (
     <section
       id="start-this-week"
-      className="container-x relative z-20 -mt-20 scroll-mt-24 pb-10 sm:-mt-28 sm:pb-14"
+      className="container-x relative z-20 mt-6 scroll-mt-24 pb-10 sm:mt-10 sm:pb-14"
     >
       <Reveal className="quick-enroll relative overflow-hidden rounded-[28px] border border-cream/12 bg-ink-900/80 shadow-2xl shadow-ember-700/10 backdrop-blur-2xl">
         {/* Glowing marquee top edge — this is what peeks over the fold. */}
