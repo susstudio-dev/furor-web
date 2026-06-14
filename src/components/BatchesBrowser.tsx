@@ -110,6 +110,9 @@ export function BatchesBrowser({ rows, styles, studios, whatsappNumber, instagra
     status: new Set(),
   });
   const [sort, setSort] = useState<'soon' | 'late' | 'priceLow' | 'priceHigh'>('soon');
+  // Detailed facets are collapsed by default on mobile so the batch list isn't
+  // pushed off-screen by a wall of pills. Always expanded on lg+ (room for it).
+  const [showFilters, setShowFilters] = useState(false);
 
   // ── URL sync (works in static export + server) ──
   useEffect(() => {
@@ -245,22 +248,49 @@ export function BatchesBrowser({ rows, styles, studios, whatsappNumber, instagra
     <>
       <section className="container-x">
         <div className="sticky top-16 z-20 -mx-5 sm:-mx-6 lg:-mx-8 px-5 sm:px-6 lg:px-8 py-5 bg-ink-950/85 backdrop-blur border-y border-cream/10">
-          {/* Quick picks */}
+          {/* Quick picks — wrap so all presets stay visible (no off-screen scroll) */}
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[11px] uppercase tracking-widest text-cream/45 mr-1">Quick picks</span>
+            <span className="w-full sm:w-auto text-[11px] uppercase tracking-widest text-cream/45 sm:mr-1">
+              Quick picks
+            </span>
             {presets.map((pre) => (
               <button
                 key={pre.label}
                 onClick={() => applyPreset(pre.p)}
-                className="pill bg-ember-500/12 text-ember-400 hover:bg-ember-500/22 transition"
+                className="pill whitespace-nowrap bg-ember-500/12 text-ember-400 hover:bg-ember-500/22 transition"
               >
                 {pre.label}
               </button>
             ))}
           </div>
 
-          {/* Facet groups — all on screen */}
-          <div className="mt-4 grid gap-x-8 gap-y-4 sm:grid-cols-2 lg:grid-cols-4">
+          {/* Filters toggle — mobile only. Detailed facets live behind this so
+              the batch list stays reachable without a long scroll. */}
+          <button
+            type="button"
+            onClick={() => setShowFilters((v) => !v)}
+            aria-expanded={showFilters}
+            className="lg:hidden mt-3 flex w-full items-center justify-between rounded-xl border border-cream/10 bg-cream/5 px-4 py-2.5 text-sm text-cream/85 hover:bg-cream/10 transition"
+          >
+            <span className="flex items-center gap-2">
+              {showFilters ? 'Hide filters' : 'All filters'}
+              {activeChips.length ? (
+                <span className="rounded-full bg-ember-500 px-2 py-0.5 text-xs font-semibold text-cream">
+                  {activeChips.length}
+                </span>
+              ) : null}
+            </span>
+            <span aria-hidden className={`transition-transform ${showFilters ? 'rotate-180' : ''}`}>
+              ▾
+            </span>
+          </button>
+
+          {/* Facet groups — collapsed on mobile (toggle above), always shown lg+ */}
+          <div
+            className={`mt-4 gap-x-8 gap-y-4 sm:grid-cols-2 lg:grid-cols-4 max-h-[55vh] overflow-y-auto lg:mt-4 lg:max-h-none lg:overflow-visible ${
+              showFilters ? 'grid' : 'hidden'
+            } lg:grid`}
+          >
             {groups.map((g) =>
               g.options.length === 0 ? null : (
                 <div key={g.key}>
