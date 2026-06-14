@@ -44,7 +44,7 @@ export function RhythmSignature({ style, className, loop = false, width = 200 }:
             <>
               <line x1="6" y1="20" x2="194" y2="20" stroke="currentColor" strokeOpacity="0.18" strokeWidth="1.5" />
               {[10, 56, 94, 134, 158].map((cx, i) => (
-                <circle key={i} className="rs-dot" cx={cx} cy="20" r="6.5" fill="#ff8a4c" />
+                <circle key={i} className="rs-dot" cx={cx} cy="20" r="6.5" fill="#e0313f" />
               ))}
             </>
           ) : null}
@@ -53,9 +53,9 @@ export function RhythmSignature({ style, className, loop = false, width = 200 }:
             <>
               <line x1="6" y1="20" x2="194" y2="20" stroke="currentColor" strokeOpacity="0.18" strokeWidth="1.5" />
               {[24, 72, 120].map((cx, i) => (
-                <circle key={i} className="rs-dot" cx={cx} cy="20" r="6" fill="#ff8a4c" />
+                <circle key={i} className="rs-dot" cx={cx} cy="20" r="6" fill="#e0313f" />
               ))}
-              <rect className="rs-tap" x="156" y="14" width="22" height="12" rx="6" fill="#e6a73a" />
+              <rect className="rs-tap" x="156" y="14" width="22" height="12" rx="6" fill="#3a5fd6" />
             </>
           ) : null}
           {style === 'west-coast-swing' ? (
@@ -66,8 +66,8 @@ export function RhythmSignature({ style, className, loop = false, width = 200 }:
                 <circle key={i} cx={cx} cy="20" r="3.5" fill="currentColor" opacity="0.35" />
               ))}
               <g className="rs-anchor">
-                <circle cx="100" cy="20" r="9" fill="#ff8a4c" />
-                <circle cx="100" cy="20" r="14" fill="none" stroke="#ff8a4c" strokeOpacity="0.4" strokeWidth="1.5" />
+                <circle cx="100" cy="20" r="9" fill="#e0313f" />
+                <circle cx="100" cy="20" r="14" fill="none" stroke="#e0313f" strokeOpacity="0.4" strokeWidth="1.5" />
               </g>
             </>
           ) : null}

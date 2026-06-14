@@ -5,21 +5,30 @@ import Link from 'next/link';
 import { Reveal } from '@/components/Reveal';
 import type { Welcome } from '@/lib/content-schema';
 
-interface Props {
-  track: string;
-  trackLabel: string;
-  copy: Welcome;
+// Everything the page shows for one batch, precomputed server-side. The client
+// picks the right one from the ?d=/?b= redirect param.
+export interface BatchBundle {
+  id: string;
+  startDate: string; // '' when there is no live batch
   intakeDate: string | null;
   whenDays: string;
   whenTime: string;
   arriveBy: string;
   venue: string;
   mapUrl: string | null;
-  waNumber: string;
-  waDisplay: string;
   gcalUrl: string | null;
   icsHref: string | null;
+}
+
+interface Props {
+  track: string;
+  trackLabel: string;
+  copy: Welcome; // admin-editable text templates from content.welcome
+  waNumber: string;
+  waDisplay: string;
   vcardHref: string;
+  defaultBundle: BatchBundle;
+  options: BatchBundle[];
 }
 
 // Renders an admin-editable copy template, replacing {placeholders} with live
@@ -60,26 +69,30 @@ export function WelcomeView({
   track,
   trackLabel,
   copy,
-  intakeDate,
-  whenDays,
-  whenTime,
-  arriveBy,
-  venue,
-  mapUrl,
   waNumber,
   waDisplay,
-  gcalUrl,
-  icsHref,
   vcardHref,
+  defaultBundle,
+  options,
 }: Props) {
   // Razorpay appends its result to the redirect URL
-  // (razorpay_payment_link_status, razorpay_payment_id, …). We read it on the
-  // client so this works identically on the server deployment and the static
-  // (GitHub Pages) export — neither can rely on server-side searchParams here.
+  // (razorpay_payment_link_status, razorpay_payment_id, …), and the redirect
+  // may also pin a specific batch with ?d=<startDate> or ?b=<batchId>. We read
+  // both on the client so this works on the server deployment and the static
+  // (GitHub Pages) export alike.
   const [payment, setPayment] = useState<Payment | null>(null);
+  const [bundle, setBundle] = useState<BatchBundle>(defaultBundle);
 
   useEffect(() => {
     const q = new URLSearchParams(window.location.search);
+
+    // Pin the exact batch the customer paid for, if the redirect named one.
+    const b = q.get('b');
+    const d = q.get('d');
+    const picked =
+      (b && options.find((o) => o.id === b)) || (d && options.find((o) => o.startDate === d));
+    if (picked) setBundle(picked);
+
     const status = q.get('razorpay_payment_link_status');
     const paymentId = q.get('razorpay_payment_id');
     setPayment({ status, paymentId });
@@ -93,6 +106,7 @@ export function WelcomeView({
         payment_id: paymentId ?? null,
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [track]);
 
   // Optimistic: unknown (no params / before the effect runs) is treated as
@@ -100,6 +114,8 @@ export function WelcomeView({
   // the first client render. A genuinely failed payment flips after mount.
   const confirmed = !payment || !payment.status || payment.status.toLowerCase() === 'paid';
   const paymentId = payment?.paymentId ?? null;
+
+  const { intakeDate, whenDays, whenTime, arriveBy, venue, mapUrl, gcalUrl, icsHref } = bundle;
 
   const waText = (msg: string) => `https://wa.me/${waNumber}?text=${encodeURIComponent(msg)}`;
   const confirmMsg =
@@ -282,7 +298,7 @@ export function WelcomeView({
 
       {/* Sign-off */}
       <section className="container-x pb-24">
-        <Reveal className="rounded-3xl bg-gradient-to-br from-ember-700 via-ember-600 to-gold-500 p-10 text-ink-950 sm:p-14">
+        <Reveal className="rounded-3xl bg-gradient-to-br from-ember-700 via-ember-600 to-ember-500 p-10 text-ink-950 sm:p-14">
           <p className="display text-3xl font-extrabold tracking-tight sm:text-4xl">
             {copy.signoffHeadline}
           </p>

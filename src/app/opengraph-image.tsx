@@ -19,7 +19,7 @@ export default async function OG() {
           justifyContent: 'space-between',
           padding: 80,
           background:
-            'radial-gradient(800px 600px at 80% -10%, rgba(255,138,76,0.45), transparent 60%), linear-gradient(135deg, #0b0709, #1d1015)',
+            'radial-gradient(800px 600px at 80% -10%, rgba(224,49,63,0.45), transparent 60%), linear-gradient(135deg, #0b0709, #1d1015)',
           color: '#f6efe7',
           fontFamily: 'system-ui',
         }}
@@ -34,8 +34,8 @@ export default async function OG() {
               justifyContent: 'center',
               fontWeight: 900,
               fontSize: 44,
-              color: '#ff8a4c',
-              border: '4px solid #ff8a4c',
+              color: '#e0313f',
+              border: '4px solid #e0313f',
               borderRadius: 12,
             }}
           >

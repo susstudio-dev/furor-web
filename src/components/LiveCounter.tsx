@@ -44,7 +44,7 @@ export function LiveCounter({ value, label }: { value: number; label: string }) 
           className="display text-7xl font-extrabold tracking-tight sm:text-8xl"
           aria-live="polite"
         >
-          <span className="bg-gradient-to-br from-ember-400 via-ember-500 to-gold-500 bg-clip-text text-transparent">
+          <span className="bg-gradient-to-br from-ember-400 via-ember-500 to-ember-600 bg-clip-text text-transparent">
             {new Intl.NumberFormat('en-IN').format(n)}
           </span>
         </p>
