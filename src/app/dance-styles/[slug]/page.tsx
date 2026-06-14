@@ -6,6 +6,12 @@ import { BatchActions } from '@/components/BatchActions';
 import { JsonLd } from '@/components/JsonLd';
 import { Img } from '@/components/Img';
 
+// force-dynamic (below) makes this render fresh per request on Vercel.
+// generateStaticParams is still used by the GitHub Pages static export to
+// enumerate every slug (the deploy workflow strips the force-dynamic line so
+// `output: export` can emit them all as static files).
+export const dynamic = 'force-dynamic';
+
 export async function generateStaticParams() {
   const c = await getContent();
   return c.danceStyles.map((s) => ({ slug: s.slug }));

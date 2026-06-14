@@ -33,12 +33,29 @@ function mergeWithSeed(saved: unknown, seed: unknown): unknown {
 // edits persist — but a failed write (e.g. read-only Vercel FS before the
 // Blob store is connected) must NEVER crash the request: we just serve the
 // bundled seed. Wrapped in React cache() => one read per request.
+//
+// Freshness is handled at the route level: public pages export
+// `dynamic = 'force-dynamic'` so they re-read on every request (no stale
+// statically-cached HTML after an admin save). This reader just reads.
 export const getContent = cache(async (): Promise<SiteContent> => {
   let raw: string | null = null;
-  try {
-    raw = await readText(CONTENT_KEY);
-  } catch {
-    // Transient read error (network/Blob hiccup). Serve the in-memory seed for
+  let readErr: unknown;
+  // Retry a throwing read a few times with short backoff before giving up. A
+  // single Blob/network blip must not surface the seed: combined with dynamic
+  // rendering this means a momentary hiccup almost never reaches the user, and
+  // when it does it affects one request and self-heals (it is never cached).
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      raw = await readText(CONTENT_KEY);
+      readErr = undefined;
+      break;
+    } catch (err) {
+      readErr = err;
+      await new Promise((resolve) => setTimeout(resolve, 150 * (attempt + 1)));
+    }
+  }
+  if (readErr !== undefined) {
+    // Sustained read failure (not a one-off blip). Serve the in-memory seed for
     // THIS request only — never persist it. A temporary read failure must not
     // be allowed to clobber real stored content with the default.
     return SiteContentSchema.parse(seedContent);

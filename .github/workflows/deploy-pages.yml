@@ -43,6 +43,11 @@ jobs:
           rm -f src/middleware.ts
           rm -f src/app/icon.tsx
           rm -f src/app/opengraph-image.tsx
+          # Public pages are `force-dynamic` on the Vercel (server) build so admin
+          # edits show instantly. `output: export` can't emit dynamic routes, so
+          # strip that directive here — the static mirror is a build-time snapshot
+          # of the committed content anyway. (sed is a no-op on files without it.)
+          find src/app -name page.tsx -exec sed -i "/export const dynamic = 'force-dynamic';/d" {} +
 
       - name: Build static export
         env:

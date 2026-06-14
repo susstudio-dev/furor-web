@@ -149,6 +149,8 @@ export function BatchesEditor({ initial }: { initial: SiteContent }) {
               />
             </Field>
 
+            <RazorpayRedirectHint batch={b} tracks={c.welcome.tracks} />
+
             <div className="flex justify-end">
               <button onClick={() => remove(i)} className="text-sm text-cream/40 hover:text-ember-400">Delete</button>
             </div>
@@ -173,6 +175,63 @@ export function BatchesEditor({ initial }: { initial: SiteContent }) {
         }
       `}</style>
     </>
+  );
+}
+
+// Tells the studio admin which exact URL to paste into Razorpay as the
+// "redirect after payment" — pinning the welcome page to THIS batch's date so
+// two batches of the same style don't get conflated.
+function RazorpayRedirectHint({
+  batch,
+  tracks,
+}: {
+  batch: Batch;
+  tracks: SiteContent['welcome']['tracks'];
+}) {
+  const [copied, setCopied] = useState(false);
+  const matchingTrack = tracks.find((t) => t.styleSlugs.some((s) => batch.styleSlugs.includes(s)));
+  if (!matchingTrack) {
+    return (
+      <p className="text-xs text-cream/50">
+        No welcome page matches this batch&apos;s styles yet — add one in{' '}
+        <a href="/admin/pages/welcome" className="text-ember-400 hover:text-ember-300">
+          Welcome pages
+        </a>{' '}
+        to enable a post-payment redirect.
+      </p>
+    );
+  }
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  const url = `${origin}/welcome/${matchingTrack.key}?d=${batch.startDate}&b=${batch.id}`;
+  return (
+    <div className="rounded-lg border border-cream/10 bg-cream/5 p-3 text-xs">
+      <p className="text-cream/60">
+        Razorpay redirect URL for this batch — paste into the &ldquo;redirect after payment&rdquo; field
+        on the Razorpay payment page:
+      </p>
+      <div className="mt-2 flex items-center gap-2">
+        <code className="flex-1 break-all rounded bg-ink-950/30 px-2 py-1 text-cream/90">{url}</code>
+        <button
+          type="button"
+          onClick={async () => {
+            try {
+              await navigator.clipboard.writeText(url);
+              setCopied(true);
+              setTimeout(() => setCopied(false), 1500);
+            } catch {
+              /* clipboard blocked — user can still copy manually */
+            }
+          }}
+          className="rounded-full bg-ember-500 px-3 py-1 font-semibold text-cream hover:bg-ember-600"
+        >
+          {copied ? 'Copied' : 'Copy'}
+        </button>
+      </div>
+      <p className="mt-2 text-cream/40">
+        The <code>?d=</code> param pins the welcome page to this batch&apos;s start date, so two
+        batches of the same style stay distinct.
+      </p>
+    </div>
   );
 }
 
