@@ -19,7 +19,7 @@
   },
   "hero": {
     "headline": "The night was made for *dancing*.",
-    "subHeadline": "Learn Salsa, Bachata and West Coast Swing with India's most loved Latin dance school. Our home is in Jubilee Hills, Hyderabad. Beginner-friendly.  Register with a small token, try a class and then dive in for the full program. Whisper a yes — we'll take it from there on WhatsApp.",
+    "subHeadline": "Learn Salsa, Bachata and West Coast Swing with India's most loved Latin dance school. Our home is in Jubilee Hills, Hyderabad. Beginner-friendly. Register with a small token, try a class and then dive in for the full program. Whisper a yes — we'll take it from there on WhatsApp.",
     "videoMp4Url": "",
     "videoWebmUrl": "",
     "posterImage": "/photos/DSC_0166.jpg"
@@ -147,10 +147,10 @@
       "slug": "pup-unleash-huda-colony",
       "name": "PUP Unleash - HUDA Colony",
       "neighborhood": "Jubilee Hills",
-      "address": "PUP - Paws, Unleash, Play\nHUDA Enclave, Jubilee Hills, Hyderabad, Telangana 500110",
+      "address": "PUP – Paws Unleash Play, HUDA Enclave, Jubilee Hills, Hyderabad, Telangana 500110",
       "geo": {
-        "lat": 17.385,
-        "lng": 78.4867
+        "lat": 17.426,
+        "lng": 78.4005
       },
       "hours": "Mon–Fri 9 AM–6 PM · Sat–Sun 12:00 PM–6:00 PM",
       "telephone": "+91 88860 72572",
