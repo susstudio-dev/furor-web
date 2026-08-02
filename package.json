@@ -14,7 +14,7 @@
     "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
-    "dev:clean": "node -e \"const{rmSync}=require('node:fs');const{join,basename}=require('node:path');const{tmpdir}=require('node:os');for(const p of ['.next',join(tmpdir(),'next-cache-'+basename(process.cwd()))]){try{rmSync(p,{recursive:true,force:true});console.log('removed',p)}catch{}};\" && next dev"
+    "dev:clean": "node -e \"const{rmSync}=require('node:fs');const{join,basename}=require('node:path');const{tmpdir}=require('node:os');for(const p of ['.next','.next-dev',join(tmpdir(),'next-cache-'+basename(process.cwd()))]){try{rmSync(p,{recursive:true,force:true});console.log('removed',p)}catch{}};\" && next dev"
   },
   "dependencies": {
     "@opennextjs/cloudflare": "^1.20.2",

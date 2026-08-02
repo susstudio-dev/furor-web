@@ -7,14 +7,17 @@ import { JsonLd } from '@/components/JsonLd';
 import { Img } from '@/components/Img';
 import { breadcrumbLd, courseLd } from '@/lib/seo';
 
-// On the static GH Pages export every style page must be prerendered. On
-// Cloudflare Workers we return no params so every request renders live —
-// prerendered HTML would freeze admin edits (no ISR machinery on free plan).
-export async function generateStaticParams() {
-  if (process.env.GH_PAGES !== 'true') return [];
+// On the static GH Pages export every style page must be prerendered
+// (`output: export` requires generateStaticParams on dynamic routes). On
+// Cloudflare Workers the export must be ABSENT: with it present, unlisted
+// params render in static-generation mode where the layout's connection()
+// call throws — and prerendered HTML would freeze admin edits anyway.
+async function staticParamsForExport() {
   const c = await getContent();
   return c.danceStyles.map((s) => ({ slug: s.slug }));
 }
+export const generateStaticParams =
+  process.env.GH_PAGES === 'true' ? staticParamsForExport : undefined;
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;

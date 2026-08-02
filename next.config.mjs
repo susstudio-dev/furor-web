@@ -90,6 +90,10 @@ const CSP = [
 
 const nextConfig = {
   reactStrictMode: true,
+  // Dev server compiles into its own directory so a concurrent
+  // `next build` / `opennextjs-cloudflare build` (which writes production
+  // output to `.next`) can never clobber the running dev server's chunks.
+  distDir: process.env.NODE_ENV === 'development' ? '.next-dev' : '.next',
   // No image optimizer on the Cloudflare free plan — serve images as-is.
   // (Remote hero/gallery images are already CDN-optimized; local photos are
   // pre-sized. The old *.public.blob.vercel-storage.com URLs keep rendering
