@@ -35,14 +35,16 @@ export function QuickEnroll({ content }: { content: SiteContent }) {
           globals.css. At any alpha the hero photograph showed through the top
           of the card on the light theme, where ink-900 is plain white. */}
       <div className="quick-enroll relative overflow-hidden rounded-[28px] border border-cream/12">
-        {/* A single lit hairline along the top edge. One hue only: pairing
-            ember with gold-500 reads as a red-to-blue rainbow in dark theme,
-            where that token is the brand's royal blue. Fades out at both ends
-            so it doesn't butt into the corner radius. */}
-        <div
-          aria-hidden
-          className="h-0.5 w-full bg-gradient-to-r from-transparent via-ember-500 to-transparent"
-        />
+        {/* The lit top border. One hue only — pairing ember with gold-500 read
+            as a red-to-blue rainbow in dark theme, where that token is the
+            brand's royal blue — so the gradient is a luminance ramp within
+            ember: deep at the shoulders, bright at the centre, fading out
+            before the corner radius. The soft glow underneath is what makes
+            it read as light on glass rather than a printed rule. */}
+        <div aria-hidden className="relative h-[3px] w-full">
+          <div className="absolute inset-0 [background:linear-gradient(to_right,transparent,rgb(var(--c-ember-600)/0.9)_28%,rgb(var(--c-ember-400))_50%,rgb(var(--c-ember-600)/0.9)_72%,transparent)]" />
+          <div className="absolute inset-x-[14%] inset-y-0 bg-ember-500/50 blur-[6px]" />
+        </div>
 
         <div className="p-6 sm:p-8">
           <div className="flex flex-wrap items-center justify-between gap-4">

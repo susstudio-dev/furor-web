@@ -72,7 +72,11 @@ export function Hero({ content }: { content: SiteContent }) {
           booking card further under the fold. The card's peek is the hero's
           real call to action, so the content block sits high and the reserved
           bottom padding (which the card overlaps) stays generous. */}
-      <div className="container-x relative z-10 pt-8 pb-32 sm:pt-10 sm:pb-40 lg:pt-12 lg:pb-40">
+      {/* Bottom padding minus QuickEnroll's pull-up (-mt-24/-mt-32/-mt-36)
+          leaves a constant 48px of clear air between the hero CTAs and the
+          card edge at every breakpoint — enough for the card to peek without
+          crowding the buttons above it. */}
+      <div className="container-x relative z-10 pt-8 pb-36 sm:pt-10 sm:pb-44 lg:pt-12 lg:pb-48">
         {/* The count-in every dancer knows — 5, 6, 7, 8 — then the words move
             on 1. Pure CSS, on tempo; collapses to nothing on reduced motion. */}
         <p
