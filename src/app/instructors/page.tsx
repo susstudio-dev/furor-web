@@ -3,7 +3,16 @@ import { EnquiryCTA } from '@/components/EnquiryCTA';
 import { JsonLd } from '@/components/JsonLd';
 import { Img } from '@/components/Img';
 
-export const metadata = { title: 'Instructors' };
+export async function generateMetadata() {
+  const c = await getContent();
+  return {
+    title: 'Instructors',
+    description:
+      c.pages.instructorsPage.intro.lead ||
+      'Meet the instructors behind Furor’s Salsa, Bachata and West Coast Swing classes.',
+    alternates: { canonical: '/instructors' },
+  };
+}
 
 export default async function InstructorsPage() {
   const content = await getContent();

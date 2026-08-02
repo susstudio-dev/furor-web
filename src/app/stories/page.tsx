@@ -1,7 +1,16 @@
 import Link from 'next/link';
 import { getContent } from '@/lib/content';
 
-export const metadata = { title: 'Blog' };
+export async function generateMetadata() {
+  const c = await getContent();
+  return {
+    title: 'Stories',
+    description:
+      c.pages.stories.intro.lead ||
+      'Stories from the Furor floor — festivals, showcases and student journeys.',
+    alternates: { canonical: '/stories' },
+  };
+}
 
 export default async function StoriesIndex() {
   const content = await getContent();

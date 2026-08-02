@@ -2,7 +2,16 @@ import { getContent, visibleBatches, batchStyleLabel } from '@/lib/content';
 import { JsonLd } from '@/components/JsonLd';
 import { BatchesBrowser, type BatchRow } from '@/components/BatchesBrowser';
 
-export const metadata = { title: 'Batches & Pricing' };
+export async function generateMetadata() {
+  const c = await getContent();
+  return {
+    title: 'Batches & Pricing',
+    description:
+      c.pages.batches.intro.lead ||
+      'Upcoming Salsa, Bachata and West Coast Swing batches in Hyderabad with transparent pricing.',
+    alternates: { canonical: '/batches' },
+  };
+}
 
 export default async function BatchesPage() {
   const content = await getContent();
@@ -29,16 +38,34 @@ export default async function BatchesPage() {
     .sort((a, b) => a.displayOrder - b.displayOrder)
     .map((s) => ({ slug: s.slug, name: s.name }));
 
+  // Course rich-result shape: startDate belongs on the CourseInstance, not
+  // the Course (the flat form fails Google's Rich Results validation).
   const courseLd = visible.map((b) => {
     const firstStyle = content.danceStyles.find((s) => s.slug === b.styleSlugs[0]);
+    const branch = content.studios.find((s) => s.slug === b.branchSlug);
     return {
       '@context': 'https://schema.org',
       '@type': 'Course',
       name: `${batchStyleLabel(content, b.styleSlugs)} ${b.level}`,
       description: firstStyle?.description ?? '',
       provider: { '@type': 'Organization', name: content.site.title, url: 'https://www.dancehyderabad.com' },
-      startDate: b.startDate,
-      offers: { '@type': 'Offer', price: b.priceInr, priceCurrency: 'INR' },
+      offers: {
+        '@type': 'Offer',
+        price: b.priceInr,
+        priceCurrency: 'INR',
+        availability:
+          b.status === 'Filling Fast'
+            ? 'https://schema.org/LimitedAvailability'
+            : 'https://schema.org/InStock',
+      },
+      hasCourseInstance: {
+        '@type': 'CourseInstance',
+        courseMode: 'Onsite',
+        startDate: b.startDate,
+        ...(branch
+          ? { location: { '@type': 'Place', name: branch.name, address: branch.address } }
+          : {}),
+      },
     };
   });
 

@@ -4,7 +4,17 @@ import { StyleFinder } from '@/components/StyleFinder';
 import { Img } from '@/components/Img';
 import { RhythmSignature } from '@/components/RhythmSignature';
 
-export const metadata = { title: 'Dance Styles' };
+export async function generateMetadata() {
+  const c = await getContent();
+  return {
+    title: 'Dance Styles',
+    description:
+      c.pages.danceStyles.intro.lead ||
+      c.pages.danceStyles.intro.headline ||
+      'Salsa, Bachata and West Coast Swing classes in Hyderabad — find the style that fits you.',
+    alternates: { canonical: '/dance-styles' },
+  };
+}
 
 export default async function StylesIndex() {
   const content = await getContent();

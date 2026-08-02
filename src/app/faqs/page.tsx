@@ -2,7 +2,16 @@ import { getContent } from '@/lib/content';
 import { EnquiryCTA } from '@/components/EnquiryCTA';
 import { JsonLd } from '@/components/JsonLd';
 
-export const metadata = { title: 'FAQs' };
+export async function generateMetadata() {
+  const c = await getContent();
+  return {
+    title: 'FAQs',
+    description:
+      c.pages.faqs.intro.lead ||
+      'Answers to common questions about classes, batches, pricing and getting started at Furor.',
+    alternates: { canonical: '/faqs' },
+  };
+}
 
 export default async function FaqsPage() {
   const content = await getContent();

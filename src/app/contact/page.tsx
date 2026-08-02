@@ -1,40 +1,21 @@
 import { getContent } from '@/lib/content';
 import { EnquiryCTA } from '@/components/EnquiryCTA';
-import { JsonLd } from '@/components/JsonLd';
 
 export const metadata = {
   title: 'Contact',
   description: 'Get in touch with Furor Dance Hyderabad — WhatsApp, Instagram, email or visit the Jubilee Hills studio.',
+  alternates: { canonical: '/contact' },
 };
 
+// The DanceSchool/LocalBusiness JSON-LD is emitted site-wide from the root
+// layout (one node per studio, with geo + sameAs) — no page-local copy here.
 export default async function ContactPage() {
   const content = await getContent();
   const p = content.pages.contact;
   const studios = content.studios.slice().sort((a, b) => a.displayOrder - b.displayOrder);
 
-  const ld = studios[0]
-    ? {
-        '@context': 'https://schema.org',
-        '@type': 'LocalBusiness',
-        name: 'Furor Dance Hyderabad',
-        address: {
-          '@type': 'PostalAddress',
-          streetAddress: studios[0].address,
-          addressLocality: 'Hyderabad',
-          addressRegion: 'Telangana',
-          postalCode: '500033',
-          addressCountry: 'IN',
-        },
-        telephone: studios[0].telephone,
-        email: content.site.email,
-        openingHours: studios[0].hours,
-        url: 'https://www.dancehyderabad.com',
-      }
-    : undefined;
-
   return (
     <>
-      {ld ? <JsonLd data={ld} /> : null}
       <section className="container-x pt-20 pb-12">
         {p.intro.eyebrow ? (
           <p className="display text-sm uppercase tracking-widest text-ember-400">{p.intro.eyebrow}</p>

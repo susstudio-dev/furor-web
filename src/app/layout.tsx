@@ -6,7 +6,10 @@ import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { FloatingTalkToUs } from '@/components/FloatingTalkToUs';
 import { NoticeBanner } from '@/components/NoticeBanner';
+import { Analytics } from '@/components/Analytics';
+import { JsonLd } from '@/components/JsonLd';
 import { getContent } from '@/lib/content';
+import { danceSchoolsLd, organizationLd, webSiteLd } from '@/lib/seo';
 
 const display = Bricolage_Grotesque({
   subsets: ['latin'],
@@ -26,24 +29,43 @@ const sans = Inter({
   display: 'swap',
 });
 
+const isMirror = process.env.GH_PAGES === 'true';
+
 export async function generateMetadata(): Promise<Metadata> {
   const content = await getContent();
   return {
     metadataBase: new URL('https://www.dancehyderabad.com'),
     title: { default: content.site.title, template: `%s · ${content.site.title}` },
     description: content.site.tagline,
+    // NB: no alternates.canonical here — layout metadata is inherited, and a
+    // site-wide '/' canonical would point every page at the home page. Each
+    // page declares its own.
+    // The GH Pages mirror is a duplicate of the real site — never index it.
+    ...(isMirror ? { robots: { index: false, follow: false } } : {}),
+    formatDetection: { telephone: false },
     openGraph: {
       title: content.site.title,
       description: content.site.tagline,
       type: 'website',
       siteName: content.site.title,
+      url: 'https://www.dancehyderabad.com',
+      locale: 'en_IN',
+      images: ['/og.png'],
     },
-    twitter: { card: 'summary_large_image', title: content.site.title, description: content.site.tagline },
+    twitter: {
+      card: 'summary_large_image',
+      title: content.site.title,
+      description: content.site.tagline,
+      images: ['/og.png'],
+    },
   };
 }
 
 export const viewport: Viewport = {
-  themeColor: '#fbf7f1',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#f7f3ec' },
+    { media: '(prefers-color-scheme: dark)', color: '#0b0709' },
+  ],
   width: 'device-width',
   initialScale: 1,
 };
@@ -64,6 +86,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               "(function(){try{var s=localStorage.getItem('theme');var t=(s==='light'||s==='dark')?s:(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();",
           }}
         />
+        {/* Brand entity graph: Organization + WebSite + one DanceSchool
+            (LocalBusiness) node per studio, on every page. */}
+        <JsonLd data={organizationLd(content)} />
+        <JsonLd data={webSiteLd(content)} />
+        {danceSchoolsLd(content).map((studio) => (
+          <JsonLd key={String(studio['@id'])} data={studio} />
+        ))}
+        <Analytics />
         {/* The room: a warm stage-light wash that breathes with the tempo,
             behind everything, never interactive. */}
         <div className="stage-lights" aria-hidden />

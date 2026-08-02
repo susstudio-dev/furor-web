@@ -1,5 +1,15 @@
 import Link from 'next/link';
 import { getContent, nextBatchPerStyle, formatBatchDate, formatInr, batchStyleLabel } from '@/lib/content';
+
+export async function generateMetadata() {
+  const c = await getContent();
+  return {
+    // The hero sub-headline carries the service+city phrasing ("Learn Salsa,
+    // Bachata… Jubilee Hills, Hyderabad") — the highest-value local query.
+    description: c.hero.subHeadline || c.site.tagline,
+    alternates: { canonical: '/' },
+  };
+}
 import { Hero } from '@/components/Hero';
 import { KineticStrip } from '@/components/KineticStrip';
 import { TrialBanner } from '@/components/TrialBanner';

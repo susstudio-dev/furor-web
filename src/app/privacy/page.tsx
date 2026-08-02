@@ -8,6 +8,7 @@ export async function generateMetadata() {
     description:
       c.pages.privacy.intro.lead ||
       'How Furor Dance Hyderabad collects, uses and protects your information.',
+    alternates: { canonical: '/privacy' },
   };
 }
 

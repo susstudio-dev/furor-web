@@ -8,6 +8,7 @@ export async function generateMetadata() {
     description:
       c.pages.terms.intro.lead ||
       'Terms of service for Furor Dance Hyderabad — classes, payments, conduct and refunds.',
+    alternates: { canonical: '/terms' },
   };
 }
 

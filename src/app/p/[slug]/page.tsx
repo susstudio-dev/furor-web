@@ -23,6 +23,7 @@ export async function generateMetadata({
   return {
     title: page.title,
     description: page.seoDescription || page.intro.lead || undefined,
+    alternates: { canonical: `/p/${page.slug}` },
   };
 }
 
