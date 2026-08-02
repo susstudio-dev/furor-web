@@ -6,7 +6,10 @@ import { useRouter, useSearchParams } from 'next/navigation';
 export default function LoginPage() {
   const router = useRouter();
   const sp = useSearchParams();
-  const next = sp.get('next') || '/admin';
+  // Only same-site absolute paths — an absolute URL here would be an open
+  // redirect off the real login page ('//' is protocol-relative, also external).
+  const rawNext = sp.get('next') || '/admin';
+  const next = rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '/admin';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);

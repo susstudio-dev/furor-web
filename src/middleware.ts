@@ -33,7 +33,11 @@ export async function middleware(req: NextRequest) {
   const secret = getSecret();
   if (!token || !secret) return toLogin();
   try {
-    await jwtVerify(token, secret);
+    await jwtVerify(token, secret, {
+      algorithms: ['HS256'],
+      issuer: 'furor-web',
+      audience: 'furor-admin',
+    });
     return NextResponse.next();
   } catch {
     return toLogin();

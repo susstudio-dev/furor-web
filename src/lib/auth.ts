@@ -202,10 +202,15 @@ export async function verifyCredentials(
   }
 }
 
+export const JWT_ISSUER = 'furor-web';
+export const JWT_AUDIENCE = 'furor-admin';
+
 export async function createSessionToken(user: User): Promise<string> {
   return new SignJWT({ email: user.email, role: user.role })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
+    .setIssuer(JWT_ISSUER)
+    .setAudience(JWT_AUDIENCE)
     .setExpirationTime('14d')
     .sign(getJwtSecret());
 }
@@ -231,7 +236,11 @@ export async function getSession(): Promise<{ email: string; role: Role } | null
     const c = await cookies();
     const token = c.get(COOKIE_NAME)?.value;
     if (!token) return null;
-    const { payload } = await jwtVerify(token, getJwtSecret());
+    const { payload } = await jwtVerify(token, getJwtSecret(), {
+      algorithms: ['HS256'],
+      issuer: JWT_ISSUER,
+      audience: JWT_AUDIENCE,
+    });
     return { email: String(payload.email), role: payload.role as Role };
   } catch {
     return null;

@@ -5,8 +5,13 @@ import { EnquiryCTA } from '@/components/EnquiryCTA';
 import { BatchActions } from '@/components/BatchActions';
 import { JsonLd } from '@/components/JsonLd';
 import { Img } from '@/components/Img';
+import { breadcrumbLd, courseLd } from '@/lib/seo';
 
+// On the static GH Pages export every style page must be prerendered. On
+// Cloudflare Workers we return no params so every request renders live —
+// prerendered HTML would freeze admin edits (no ISR machinery on free plan).
 export async function generateStaticParams() {
+  if (process.env.GH_PAGES !== 'true') return [];
   const c = await getContent();
   return c.danceStyles.map((s) => ({ slug: s.slug }));
 }
@@ -16,7 +21,16 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const c = await getContent();
   const s = styleBySlug(c, slug);
   if (!s) return {};
-  return { title: s.name, description: s.tagline };
+  return {
+    title: `${s.name} Classes in Hyderabad`,
+    description: `${s.tagline} ${s.description}`.slice(0, 160),
+    alternates: { canonical: `/dance-styles/${s.slug}` },
+    openGraph: {
+      title: `${s.name} Classes in Hyderabad`,
+      description: s.tagline,
+      ...(s.heroImage ? { images: [s.heroImage] } : {}),
+    },
+  };
 }
 
 export default async function StylePage({ params }: { params: Promise<{ slug: string }> }) {
@@ -39,6 +53,14 @@ export default async function StylePage({ params }: { params: Promise<{ slug: st
   return (
     <>
       <JsonLd data={faqLd} />
+      <JsonLd data={courseLd(content, style)} />
+      <JsonLd
+        data={breadcrumbLd([
+          { name: 'Home', path: '/' },
+          { name: 'Dance Styles', path: '/dance-styles' },
+          { name: style.name, path: `/dance-styles/${style.slug}` },
+        ])}
+      />
       <section className="relative isolate overflow-hidden">
         <div className="absolute inset-0 -z-10">
           <Img
@@ -57,8 +79,11 @@ export default async function StylePage({ params }: { params: Promise<{ slug: st
           <div className="absolute inset-0 bg-gradient-to-t from-ink-950 via-ink-950/45 to-transparent" />
         </div>
         <div className="container-x pt-16 pb-14 sm:py-24 lg:py-32 max-w-[44rem] sm:max-w-none">
-          <p className="pill bg-ember-500/15 text-ember-400">{style.name}</p>
-          <h1 className="mt-4 display text-[2.4rem] sm:text-6xl lg:text-7xl font-extrabold leading-[1.05] tracking-tight max-w-[18ch] sm:max-w-4xl">{style.tagline}</h1>
+          <h1 className="pill bg-ember-500/15 text-ember-400">
+            {style.name}
+            <span className="sr-only"> classes in Hyderabad</span>
+          </h1>
+          <p className="mt-4 display text-[2.4rem] sm:text-6xl lg:text-7xl font-extrabold leading-[1.05] tracking-tight max-w-[18ch] sm:max-w-4xl">{style.tagline}</p>
           <p className="mt-6 max-w-2xl text-base sm:text-lg text-cream/80">{style.description}</p>
           <div className="mt-8 flex flex-wrap gap-3">
             <EnquiryCTA
@@ -81,12 +106,12 @@ export default async function StylePage({ params }: { params: Promise<{ slug: st
       </section>
 
       <section className="container-x py-20">
-        <p className="display text-sm uppercase tracking-widest text-ember-400">Who it&apos;s for</p>
+        <h2 className="display text-sm uppercase tracking-widest text-ember-400">Who it&apos;s for</h2>
         <p className="mt-3 display text-2xl sm:text-3xl max-w-3xl text-cream/90">{style.whoItsFor}</p>
       </section>
 
       <section className="container-x py-12">
-        <p className="display text-sm uppercase tracking-widest text-ember-400">Level path</p>
+        <h2 className="display text-sm uppercase tracking-widest text-ember-400">Level path</h2>
         <div className="mt-6 grid gap-4 md:grid-cols-3">
           {(['foundation', 'intermediate', 'advanced'] as const).map((k) => (
             <div key={k} className="rounded-2xl border border-cream/10 bg-ink-900/40 p-6">
@@ -98,7 +123,7 @@ export default async function StylePage({ params }: { params: Promise<{ slug: st
       </section>
 
       <section className="container-x py-12">
-        <p className="display text-sm uppercase tracking-widest text-ember-400">Upcoming batches</p>
+        <h2 className="display text-sm uppercase tracking-widest text-ember-400">Upcoming batches</h2>
         {batches.length === 0 ? (
           <div className="mt-6 rounded-2xl border border-cream/10 bg-ink-900/40 p-8">
             <p className="text-cream/80">
@@ -150,7 +175,7 @@ export default async function StylePage({ params }: { params: Promise<{ slug: st
 
       {style.faqs.length > 0 ? (
         <section className="container-x py-20">
-          <p className="display text-sm uppercase tracking-widest text-ember-400">Questions, asked</p>
+          <h2 className="display text-sm uppercase tracking-widest text-ember-400">Questions, asked</h2>
           <div className="mt-6 grid gap-3">
             {style.faqs.map((f, i) => (
               <details key={i} className="group rounded-2xl border border-cream/10 bg-ink-900/40 p-5">

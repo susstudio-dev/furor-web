@@ -1,7 +1,8 @@
 import 'server-only';
 import { SiteContentSchema, type SiteContent } from './content-schema';
-import { CONTENT_KEY } from './content';
+import { CONTENT_KEY, mergeWithSeed } from './content';
 import { deleteKey, listKeys, readText, writeText } from './storage';
+import seedContent from '@/data/site-content.seed.json';
 
 const VERSIONS_PREFIX = 'versions/';
 const RETENTION = 30;
@@ -49,10 +50,12 @@ export async function listVersions(): Promise<string[]> {
 }
 
 export async function restoreVersion(filename: string, actor: string): Promise<SiteContent> {
-  const safe = filename.replace(/[^a-zA-Z0-9._-]/g, '');
-  const raw = await readText(`${VERSIONS_PREFIX}${safe}`);
+  if (!/^[a-zA-Z0-9._-]+\.json$/.test(filename)) throw new Error('Invalid version filename');
+  const raw = await readText(`${VERSIONS_PREFIX}${filename}`);
   if (raw == null) throw new Error('Version not found');
-  const parsed = SiteContentSchema.parse(JSON.parse(raw));
+  // Merge through the seed like getContent() does — a snapshot taken before a
+  // schema addition must stay restorable, not rot into a ZodError.
+  const parsed = SiteContentSchema.parse(mergeWithSeed(JSON.parse(raw), seedContent));
   await snapshotCurrent(actor);
   await writeText(CONTENT_KEY, JSON.stringify(parsed, null, 2));
   return parsed;

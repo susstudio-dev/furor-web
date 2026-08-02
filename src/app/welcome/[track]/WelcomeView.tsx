@@ -109,10 +109,15 @@ export function WelcomeView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [track]);
 
-  // Optimistic: unknown (no params / before the effect runs) is treated as
-  // confirmed, so the common success case renders immediately and SSR matches
-  // the first client render. A genuinely failed payment flips after mount.
-  const confirmed = !payment || !payment.status || payment.status.toLowerCase() === 'paid';
+  // Before the effect runs (SSR + first client render) stay optimistic so the
+  // common Razorpay-redirect case doesn't flash. After mount, confirmation
+  // requires actual redirect params: status=paid, or a payment id when the
+  // link omits status. A bare /welcome/<track> visit (no params) is NOT
+  // treated as a confirmed payment — anyone can type that URL.
+  const confirmed =
+    payment === null ||
+    payment.status?.toLowerCase() === 'paid' ||
+    (!payment.status && !!payment.paymentId);
   const paymentId = payment?.paymentId ?? null;
 
   const { intakeDate, whenDays, whenTime, arriveBy, venue, mapUrl, gcalUrl, icsHref } = bundle;
