@@ -35,7 +35,7 @@ export function BatchActions({
           href={batch.razorpayLink}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 rounded-full bg-ember-500 text-cream px-4 py-2 text-sm font-semibold hover:bg-ember-600 transition"
+          className="inline-flex min-h-[44px] items-center gap-2 rounded-full bg-ember-600 text-on-ember px-4 py-2 text-sm font-semibold hover:bg-ember-700 transition"
         >
           Book seat · {formatInr(batch.reservationInr)}
         </a>

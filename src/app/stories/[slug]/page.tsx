@@ -54,7 +54,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
           { name: story.title, path: `/stories/${story.slug}` },
         ])}
       />
-      <p className="text-cream/50 text-xs uppercase tracking-widest">
+      <p className="text-cream/70 text-xs uppercase tracking-widest">
         {new Date(story.publishedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
       </p>
       <h1 className="display text-4xl font-extrabold sm:text-5xl tracking-tight">{story.title}</h1>

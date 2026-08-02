@@ -106,7 +106,10 @@ export function StyleFinder({ content }: { content: SiteContent }) {
             </div>
           </div>
         ) : (
-          <div className="mt-8 rounded-2xl border border-ember-500/30 bg-ember-500/5 p-6">
+          // The one genuinely interactive moment on the page deserves to land
+          // rather than snap. Reuses the existing disclosure language rather
+          // than inventing a new one.
+          <div className="animate-fade-up mt-8 rounded-2xl border border-ember-500/30 bg-ember-500/5 p-6">
             <p className="display text-sm uppercase tracking-widest text-ember-400">We recommend</p>
             <h3 className="mt-1 display text-3xl font-bold">{track.name}</h3>
             <p className="mt-2 text-cream/80">{track.tagline}</p>

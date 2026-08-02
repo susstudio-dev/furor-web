@@ -80,7 +80,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   if (process.env.GH_PAGES !== 'true') await connection();
   const content = await getContent();
   return (
-    <html lang="en" className={`${display.variable} ${serif.variable} ${sans.variable}`} suppressHydrationWarning>
+    // data-scroll-behavior tells Next to neutralise smooth scrolling on route
+    // changes while leaving hash navigation smooth. Without it, once Next 16
+    // enables its router-scroll optimisation, every route change on this very
+    // long page becomes a slow animated scroll to the top.
+    <html
+      lang="en"
+      data-scroll-behavior="smooth"
+      className={`${display.variable} ${serif.variable} ${sans.variable}`}
+      suppressHydrationWarning
+    >
       <body suppressHydrationWarning>
         <script
           dangerouslySetInnerHTML={{
@@ -88,6 +97,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               "(function(){try{var s=localStorage.getItem('theme');var t=(s==='light'||s==='dark')?s:(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();",
           }}
         />
+        {/* No reveal-rescue <noscript> or timer here any more: scroll reveals
+            are pure CSS scroll-driven animations now, declared entirely inside
+            @supports (animation-timeline: view()). Browsers without support
+            render the content visible and static, and nothing about the
+            entrance depends on JavaScript running at all. */}
         {/* Brand entity graph: Organization + WebSite + one DanceSchool
             (LocalBusiness) node per studio, on every page. */}
         <JsonLd data={organizationLd(content)} />

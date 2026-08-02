@@ -72,17 +72,25 @@ if (isOnOneDrive && !isVercel && process.platform === 'win32') {
 //   (real CPU cost on the Workers free plan). Everything else is locked down.
 // - frame-src must allow the Google Maps embeds on / and /contact.
 // - googletagmanager/google-analytics cover the GA4 loader (Analytics.tsx).
+// Dev-only allowance so impeccable live mode can load. Guarded by NODE_ENV.
+const __impeccableLiveDev =
+  process.env.NODE_ENV === 'development' ? ' http://localhost:8400' : '';
+// React Fast Refresh compiles modules with eval(). Without this the dev server
+// serves a page whose bundle dies on CSP, so hydration never runs and every
+// <Reveal> stays at opacity:0 — i.e. `next dev` renders a near-blank site.
+// Dev only; the production CSP stays eval-free.
+const __devEval = process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : '';
 const CSP = [
   "default-src 'self'",
   "base-uri 'self'",
   "object-src 'none'",
   "frame-ancestors 'none'",
   "form-action 'self'",
-  "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com",
+  `script-src 'self' 'unsafe-inline'${__devEval} https://www.googletagmanager.com${__impeccableLiveDev}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
-  "connect-src 'self' https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com",
+  `connect-src 'self' https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com${__impeccableLiveDev}`,
   "media-src 'self' https:",
   'frame-src https://www.google.com https://maps.google.com',
   'upgrade-insecure-requests',

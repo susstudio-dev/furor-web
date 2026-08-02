@@ -22,17 +22,17 @@ export function Footer({ content }: { content: SiteContent }) {
             </p>
             <div className="mt-6 flex items-center gap-4 text-sm text-cream/70">
               {content.site.socials.instagram ? (
-                <a aria-label="Instagram" className="hover:text-cream transition-colors" href={content.site.socials.instagram} target="_blank" rel="noopener noreferrer">
+                <a aria-label="Instagram" className="inline-block py-1 hover:text-cream transition-colors" href={content.site.socials.instagram} target="_blank" rel="noopener noreferrer">
                   Instagram
                 </a>
               ) : null}
               {content.site.socials.facebook ? (
-                <a aria-label="Facebook" className="hover:text-cream transition-colors" href={content.site.socials.facebook} target="_blank" rel="noopener noreferrer">
+                <a aria-label="Facebook" className="inline-block py-1 hover:text-cream transition-colors" href={content.site.socials.facebook} target="_blank" rel="noopener noreferrer">
                   Facebook
                 </a>
               ) : null}
               {content.site.socials.youtube ? (
-                <a aria-label="YouTube" className="hover:text-cream transition-colors" href={content.site.socials.youtube} target="_blank" rel="noopener noreferrer">
+                <a aria-label="YouTube" className="inline-block py-1 hover:text-cream transition-colors" href={content.site.socials.youtube} target="_blank" rel="noopener noreferrer">
                   YouTube
                 </a>
               ) : null}
@@ -43,14 +43,14 @@ export function Footer({ content }: { content: SiteContent }) {
           <div className="md:col-span-4 space-y-6">
             {content.studios.map((s) => (
               <div key={s.slug}>
-                <h3 className="display text-sm uppercase tracking-widest text-cream/50">{s.name}</h3>
+                <h3 className="display text-sm uppercase tracking-widest text-cream/70">{s.name}</h3>
                 <p className="mt-3 text-sm text-cream/80 leading-relaxed">{s.address}</p>
-                <p className="mt-2 text-xs text-cream/50">{s.hours}</p>
+                <p className="mt-2 text-xs text-cream/70">{s.hours}</p>
                 <div className="mt-3 flex gap-4 text-sm">
-                  <a className="text-ember-400 hover:text-ember-300 transition-colors" href={`tel:${s.telephone.replace(/\s/g, '')}`}>
+                  <a className="inline-block py-1 text-ember-400 hover:text-ember-300 transition-colors" href={`tel:${s.telephone.replace(/\s/g, '')}`}>
                     Call
                   </a>
-                  <a className="text-ember-400 hover:text-ember-300 transition-colors" href={wa(s.slug, s.name)} target="_blank" rel="noopener noreferrer">
+                  <a className="inline-block py-1 text-ember-400 hover:text-ember-300 transition-colors" href={wa(s.slug, s.name)} target="_blank" rel="noopener noreferrer">
                     WhatsApp
                   </a>
                 </div>
@@ -60,30 +60,30 @@ export function Footer({ content }: { content: SiteContent }) {
 
           {/* More */}
           <div className="md:col-span-3">
-            <h3 className="display text-sm uppercase tracking-widest text-cream/50">Explore</h3>
+            <h3 className="display text-sm uppercase tracking-widest text-cream/70">Explore</h3>
             <ul className="mt-3 space-y-2 text-sm text-cream/80">
-              <li><Link href="/about" className="hover:text-cream transition-colors">About</Link></li>
-              <li><Link href="/dance-styles" className="hover:text-cream transition-colors">Dance Styles</Link></li>
-              <li><Link href="/instructors" className="hover:text-cream transition-colors">Instructors</Link></li>
-              <li><Link href="/batches" className="hover:text-cream transition-colors">Batches &amp; Pricing</Link></li>
+              <li><Link href="/about" className="inline-block py-1 hover:text-cream transition-colors">About</Link></li>
+              <li><Link href="/dance-styles" className="inline-block py-1 hover:text-cream transition-colors">Dance Styles</Link></li>
+              <li><Link href="/instructors" className="inline-block py-1 hover:text-cream transition-colors">Instructors</Link></li>
+              <li><Link href="/batches" className="inline-block py-1 hover:text-cream transition-colors">Batches &amp; Pricing</Link></li>
               {content.stories.length > 0 ? (
-                <li><Link href="/stories" className="hover:text-cream transition-colors">Blog</Link></li>
+                <li><Link href="/stories" className="inline-block py-1 hover:text-cream transition-colors">Blog</Link></li>
               ) : null}
-              <li><Link href="/faqs" className="hover:text-cream transition-colors">FAQs</Link></li>
-              <li><Link href="/contact" className="hover:text-cream transition-colors">Contact</Link></li>
+              <li><Link href="/faqs" className="inline-block py-1 hover:text-cream transition-colors">FAQs</Link></li>
+              <li><Link href="/contact" className="inline-block py-1 hover:text-cream transition-colors">Contact</Link></li>
               {content.customPages
                 .filter((p) => p.published && p.showInFooter)
                 .sort((a, b) => a.displayOrder - b.displayOrder)
                 .map((p) => (
                   <li key={p.id}>
-                    <Link href={`/p/${p.slug}`} className="hover:text-cream transition-colors">
+                    <Link href={`/p/${p.slug}`} className="inline-block py-1 hover:text-cream transition-colors">
                       {p.navLabel || p.title}
                     </Link>
                   </li>
                 ))}
               {content.site.email ? (
                 <li className="pt-2">
-                  <a className="hover:text-cream transition-colors break-all" href={`mailto:${content.site.email}`}>
+                  <a className="inline-block py-1 hover:text-cream transition-colors break-all" href={`mailto:${content.site.email}`}>
                     {content.site.email}
                   </a>
                 </li>
@@ -92,12 +92,12 @@ export function Footer({ content }: { content: SiteContent }) {
           </div>
         </div>
 
-        <div className="mt-14 flex flex-wrap items-center justify-between gap-4 border-t border-cream/10 pt-6 text-xs text-cream/40">
+        <div className="mt-14 flex flex-wrap items-center justify-between gap-4 border-t border-cream/10 pt-6 text-xs text-cream/70">
           <p>© {new Date().getFullYear()} Furor Dance Hyderabad. All rights reserved.</p>
           <div className="flex items-center gap-5 pr-12 sm:pr-28">
-            <Link href="/privacy" className="hover:text-cream/70 transition-colors">Privacy</Link>
-            <Link href="/terms" className="hover:text-cream/70 transition-colors">Terms</Link>
-            <Link href="/admin" className="hover:text-cream/70 transition-colors">Studio login</Link>
+            <Link href="/privacy" className="inline-block py-1.5 hover:text-cream transition-colors">Privacy</Link>
+            <Link href="/terms" className="inline-block py-1.5 hover:text-cream transition-colors">Terms</Link>
+            <Link href="/admin" className="inline-block py-1.5 hover:text-cream transition-colors">Studio login</Link>
           </div>
         </div>
       </div>

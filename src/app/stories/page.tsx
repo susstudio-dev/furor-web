@@ -32,17 +32,20 @@ export default async function StoriesIndex() {
       ) : (
         <ul className="mt-10 grid gap-4 md:grid-cols-2">
           {stories.map((s) => (
-            <li key={s.id}>
+            // The <li> stretches to the row height; the card is a flex column
+            // inside it so every card in a row ends on the same line and the
+            // "Read" links sit on one baseline, whatever the excerpt length.
+            <li key={s.id} className="flex">
               <Link
                 href={`/stories/${s.slug}`}
-                className="group block rounded-2xl border border-cream/10 bg-ink-900/40 p-6 transition-colors hover:border-ember-400/40"
+                className="group flex w-full flex-col rounded-2xl border border-cream/10 bg-ink-900/40 p-6 transition-colors hover:border-ember-400/40"
               >
-                <p className="text-cream/50 text-xs uppercase tracking-widest">
+                <p className="text-cream/70 text-xs uppercase tracking-widest">
                   {new Date(s.publishedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
                 </p>
                 <p className="mt-2 display text-xl font-bold group-hover:text-ember-400 transition">{s.title}</p>
                 {s.excerpt ? <p className="mt-2 text-cream/70 text-sm leading-relaxed">{s.excerpt}</p> : null}
-                <p className="mt-4 text-ember-400 text-sm">Read →</p>
+                <p className="mt-auto pt-4 text-ember-400 text-sm">Read →</p>
               </Link>
             </li>
           ))}
