@@ -14,6 +14,9 @@ export async function generateMetadata() {
   };
 }
 
+// Render per request so admin edits show immediately (export build strips this).
+export const dynamic = 'force-dynamic';
+
 export default async function InstructorsPage() {
   const content = await getContent();
   const p = content.pages.instructorsPage;

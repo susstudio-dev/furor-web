@@ -62,9 +62,10 @@ export function Hero({ content }: { content: SiteContent }) {
           like a moving stage light. Fine pointers only; never hides the
           cursor. The .lit class + position are set by HeroSpotlight. */}
       <div ref={spotRef} className="spotlight" aria-hidden />
-      {/* NB: no max-w override here. container-x's max-w-7xl is the site grid —
-          the header, the QuickEnroll card and every section below sit on it, so
-          the headline has to as well or the hero reads as a different page.
+      {/* NB: no max-w override here. Whatever width container-x defines IS the
+          site grid — the header, the QuickEnroll card and every section below
+          sit on it, so the headline has to as well or the hero reads as a
+          different page.
           Bottom padding must exceed QuickEnroll's negative top margin (-mt-20 /
           sm:-mt-28) so the card overlaps empty space, not the scroll cue. */}
       <div className="container-x relative z-10 pt-14 pb-32 sm:pt-16 sm:pb-40 lg:pt-20 lg:pb-40">

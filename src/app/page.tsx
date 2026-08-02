@@ -36,6 +36,11 @@ import { Reveal } from '@/components/Reveal';
 import { QuickEnroll } from '@/components/QuickEnroll';
 import { BatchActions } from '@/components/BatchActions';
 
+// Render per request so admin edits show immediately and no stale/blip HTML is
+// cached. The GitHub Pages export workflow strips this line (static export
+// forbids dynamic rendering).
+export const dynamic = 'force-dynamic';
+
 export default async function HomePage() {
   const content = await getContent();
   const sortedStyles = content.danceStyles.slice().sort((a, b) => a.displayOrder - b.displayOrder);

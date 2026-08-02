@@ -42,6 +42,12 @@ jobs:
           rm -rf src/app/welcome
           rm -rf src/app/uploads
           rm -f src/middleware.ts
+          # Public pages carry `force-dynamic` so admin edits show instantly on
+          # Workers (belt-and-braces with the root layout's connection() call).
+          # `output: export` can't emit dynamic routes, so strip the directive
+          # here — the static mirror is a build-time snapshot of the committed
+          # content anyway. (sed is a no-op on files without it.)
+          find src/app -name page.tsx -exec sed -i "/export const dynamic = 'force-dynamic';/d" {} +
           # `output: export` requires force-static on the sitemap route; on
           # Workers the same file must stay dynamic, so it's appended here.
           printf "\nexport const dynamic = 'force-static';\n" >> src/app/sitemap.ts

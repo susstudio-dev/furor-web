@@ -41,6 +41,9 @@ const NAV: NavItem[] = [
   { label: 'Testimonials', href: '/admin/testimonials' },
   { label: 'Stories', href: '/admin/stories' },
 
+  { label: 'Operations', href: '#', groupHeader: true },
+  { label: 'Payments', href: '/admin/payments' },
+
   { label: 'System', href: '#', groupHeader: true },
   { label: 'Raw JSON', href: '/admin/json' },
   { label: 'Versions', href: '/admin/versions' },

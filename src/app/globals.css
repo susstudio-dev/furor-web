@@ -14,23 +14,26 @@
     --c-ink-800: 252 248 242;
     --c-ink-700: 233 224 210;
     --c-ink-500: 188 170 146;
-    /* Furor brand: red wordmark (ember) + royal-blue tagline (gold). */
+    /* Furor brand — sampled from the logo (pure-pixel average):
+       red wordmark = rgb(222,0,0) #DE0000
+       royal-blue swoosh/tagline = rgb(0,50,154) #00329A */
     /* 300 is the hover step for ember text links — deeper here so hovering a
-       link on paper gains contrast rather than losing it. */
-    --c-ember-300: 150 22 32;
-    --c-ember-400: 193 30 41;
-    --c-ember-500: 233 58 70;
-    --c-ember-600: 205 38 50;
-    --c-ember-700: 168 28 40;
-    --c-gold-400: 36 70 170;
-    --c-gold-500: 30 58 140;
+       link on paper gains contrast rather than losing it. It lands on the same
+       value as 700 by design: that is the deepest red in the sampled ramp. */
+    --c-ember-300: 160 0 16;    /* #A00010 — hover for links on paper */
+    --c-ember-400: 230 16 16;   /* #E61010 — bright accent red */
+    --c-ember-500: 222 0 0;     /* #DE0000 — primary red (wordmark) */
+    --c-ember-600: 192 0 8;     /* #C00008 — pressed/darker */
+    --c-ember-700: 160 0 16;    /* #A00010 — deepest red shadow */
+    --c-gold-400: 0 64 184;     /* #0040B8 — brighter blue accent */
+    --c-gold-500: 0 50 154;     /* #00329A — primary royal blue */
     --c-cream: 30 22 16;
     /* Generative-art convenience colours */
     --art-bg-a: #f3ebdf;
     --art-bg-b: #e7dac6;
-    --art-accent: #e93a46;
-    --art-accent-2: #a81c28;
-    --art-gold: #1e3a8c;
+    --art-accent: #de0000;
+    --art-accent-2: #a00010;
+    --art-gold: #00329a;
     --art-fg: #241a12;
   }
 
@@ -42,20 +45,23 @@
     --c-ink-800: 29 16 21;
     --c-ink-700: 40 22 29;
     --c-ink-500: 74 34 48;
-    /* Furor brand: red (ember) + royal-blue (gold), brightened for dark bg. */
-    --c-ember-300: 252 165 172;
-    --c-ember-400: 248 113 124;
-    --c-ember-500: 224 49 63;
-    --c-ember-600: 194 34 48;
-    --c-ember-700: 150 26 38;
-    --c-gold-400: 127 163 247;
-    --c-gold-500: 58 95 214;
+    /* Furor brand — sampled from the logo, brightened slightly for dark bg
+       so the red still reads as the logo red rather than going maroon. */
+    /* 300 is the hover step for ember text links — brighter here (the mirror
+       of the light theme) so hovering on dark gains contrast, not loses it. */
+    --c-ember-300: 250 140 140; /* #FA8C8C — hover for links on dark */
+    --c-ember-400: 240 60 60;   /* #F03C3C — bright accent red */
+    --c-ember-500: 224 16 16;   /* #E01010 — primary red */
+    --c-ember-600: 200 0 0;     /* #C80000 — pressed */
+    --c-ember-700: 160 0 16;    /* #A00010 — deep shadow */
+    --c-gold-400: 80 128 232;   /* #5080E8 — bright royal blue */
+    --c-gold-500: 40 88 200;    /* #2858C8 — primary blue on dark */
     --c-cream: 246 239 231;
     --art-bg-a: #1d1015;
     --art-bg-b: #0b0709;
-    --art-accent: #e0313f;
-    --art-accent-2: #961a26;
-    --art-gold: #3a5fd6;
+    --art-accent: #e01010;
+    --art-accent-2: #a00010;
+    --art-gold: #2858c8;
     --art-fg: #f6efe7;
   }
 
@@ -125,7 +131,7 @@
     @apply inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-cream/80 transition hover:text-cream hover:bg-cream/5;
   }
   .container-x {
-    @apply mx-auto max-w-7xl px-5 sm:px-6 lg:px-8;
+    @apply mx-auto max-w-screen-2xl px-5 sm:px-6 lg:px-10;
   }
   .pill {
     @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs uppercase tracking-wider;

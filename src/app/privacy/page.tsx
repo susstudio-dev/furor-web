@@ -12,6 +12,9 @@ export async function generateMetadata() {
   };
 }
 
+// Render per request so admin edits show immediately (export build strips this).
+export const dynamic = 'force-dynamic';
+
 export default async function PrivacyPage() {
   const c = await getContent();
   const p = c.pages.privacy;
