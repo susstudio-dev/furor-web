@@ -68,7 +68,20 @@ for (const j of jobs) {
   ];
   console.log('  node ' + args.join(' '));
   if (!dryRun) {
-    execFileSync(process.execPath, args, { stdio: 'inherit' });
+    try {
+      execFileSync(process.execPath, args, { stdio: 'inherit' });
+    } catch {
+      console.error(
+        '\nUpload failed. Common causes, in order:\n' +
+          '  1. R2 not enabled on the account (error 10042) — dash.cloudflare.com →\n' +
+          '     R2 Object Storage → Get started. Needs a card on file; stays $0\n' +
+          '     within the free tier.\n' +
+          '  2. Bucket missing — npx wrangler r2 bucket create furor-content\n' +
+          '  3. Not logged in / token lacks R2 write — npx wrangler login\n' +
+          'Then rerun: npm run migrate-to-r2  (re-uploading is harmless)',
+      );
+      process.exit(1);
+    }
   }
 }
 console.log(dryRun ? '\nDry run only — rerun without --dry-run to upload.' : '\nDone. Verify with: npx wrangler r2 object get ' + BUCKET + '/site-content.json --pipe | head');
