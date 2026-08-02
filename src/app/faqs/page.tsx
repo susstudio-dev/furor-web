@@ -47,7 +47,7 @@ export default async function FaqsPage() {
       <section className="container-x pb-16 space-y-12">
         {f.sections.map((section, si) => (
           <div key={si}>
-            <p className="display text-sm uppercase tracking-widest text-ember-400/90">{section.section}</p>
+            <h2 className="display text-sm uppercase tracking-widest text-ember-400/90">{section.section}</h2>
             <div className="mt-4 grid gap-3">
               {section.items.map((item, i) => (
                 <details

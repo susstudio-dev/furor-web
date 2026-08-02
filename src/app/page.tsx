@@ -310,7 +310,7 @@ export default async function HomePage() {
                 <div key={s.id}>
                   <Reveal from="up" delay={80} className="grid gap-6 md:grid-cols-2 items-stretch">
                     <div className="rounded-3xl border border-cream/10 bg-ink-900/40 p-8 sm:p-10 flex flex-col">
-                      <p className="display text-2xl sm:text-3xl font-bold">{s.name}</p>
+                      <h3 className="display text-2xl sm:text-3xl font-bold">{s.name}</h3>
                       <p className="mt-1 text-xs uppercase tracking-widest text-ember-400/80">
                         {content.site.title}
                       </p>
