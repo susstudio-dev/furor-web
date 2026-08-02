@@ -73,6 +73,38 @@ Actions):
 CI builds on Linux, which sidesteps the Windows/OneDrive build quirks this
 repo works around in `next.config.mjs`.
 
+### Cloudflare Workers Builds (the dashboard-connected build)
+
+If the Worker is also connected to a git repo in the Cloudflare dashboard
+(Workers & Pages → furor-web → Settings → Build), that build runs *in addition*
+to the GitHub Actions workflow above. Its defaults are a build command of
+`npm run build` and a deploy command of `npx wrangler versions upload`.
+
+`npm run build` is plain `next build` on purpose — the GitHub Pages export and
+the quality gate both need it — and it does **not** emit
+`.open-next/worker.js`, which `wrangler.jsonc` points `main` at. `wrangler
+deploy` papers over that by detecting an OpenNext project and delegating to the
+OpenNext CLI, but `wrangler versions upload` does not, so it would fail with:
+
+```
+✘ [ERROR] The entry-point file at ".open-next/worker.js" was not found.
+```
+
+The `build.command` in `wrangler.jsonc` closes that gap: wrangler runs
+`scripts/build-worker.mjs` right before its entry-point check, which runs the
+OpenNext build when `.open-next/worker.js` is missing and no-ops when it is
+already there (so `npm run deploy` and the Actions workflow, which build first,
+aren't slowed down). No dashboard change is required.
+
+Two things worth knowing about this build:
+
+- `NEXT_PUBLIC_GA4_ID` is inlined at build time, so it has to be set as a build
+  variable in the dashboard too — the GitHub Actions variable does not apply.
+- `versions upload` uploads a version without making it live, and
+  `preview_urls` is `false` in `wrangler.jsonc`, so those versions are only
+  reachable by promoting them manually. Production still goes out via the
+  Actions workflow on push to `main`.
+
 ## How the studio edits content (production)
 
 1. Visit `https://www.dancehyderabad.com/admin` → log in with the owner email
