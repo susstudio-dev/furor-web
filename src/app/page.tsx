@@ -4,7 +4,19 @@ import { truncateAtWord } from '@/lib/seo';
 
 export async function generateMetadata() {
   const c = await getContent();
+  const styleNames = c.danceStyles
+    .slice()
+    .sort((a, b) => a.displayOrder - b.displayOrder)
+    .map((s) => s.name);
+  const classes =
+    styleNames.length > 1
+      ? `${styleNames.slice(0, -1).join(', ')} & ${styleNames[styleNames.length - 1]}`
+      : styleNames[0] || 'Dance';
   return {
+    // The layout default title is brand-only; the homepage must also say what
+    // we sell ("… Classes") for queries like "dance classes in Hyderabad".
+    // `absolute` opts out of the layout's "%s · brand" template.
+    title: { absolute: `${c.site.title} | ${classes} Classes` },
     // The hero sub-headline carries the service+city phrasing ("Learn Salsa,
     // Bachata… Jubilee Hills, Hyderabad") — the highest-value local query.
     description: truncateAtWord(c.hero.subHeadline || c.site.tagline),
