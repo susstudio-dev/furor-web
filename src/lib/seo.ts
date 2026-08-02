@@ -68,8 +68,50 @@ export function danceSchoolsLd(content: SiteContent) {
       latitude: s.geo.lat,
       longitude: s.geo.lng,
     },
+    openingHoursSpecification: openingHoursLd(s.hours),
+    hasMap: `https://www.google.com/maps/search/?api=1&query=${s.geo.lat},${s.geo.lng}`,
     sameAs: sameAs(content),
   }));
+}
+
+const DAY_ABBRS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+function to24h(h: number, m: number, ampm: string): string | undefined {
+  if (h < 1 || h > 12 || m < 0 || m > 59) return undefined;
+  let hh = h % 12;
+  if (ampm.toUpperCase() === 'PM') hh += 12;
+  return `${String(hh).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+}
+
+// The content store keeps hours as display text ("Mon–Fri 9 AM–6 PM ·
+// Sat–Sun 9:30 AM–4:30 PM"). Parse that into OpeningHoursSpecification;
+// hours are admin-edited free text, so all-or-nothing: any segment that
+// doesn't parse suppresses the whole property — wrong hours are worse for
+// local SEO than none.
+export function openingHoursLd(hours: string) {
+  const segments = hours.split('·').map((s) => s.trim()).filter(Boolean);
+  if (segments.length === 0) return undefined;
+  const specs = [];
+  for (const seg of segments) {
+    const m = seg.match(
+      /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)(?:\s*[–-]\s*(Mon|Tue|Wed|Thu|Fri|Sat|Sun))?\s+(\d{1,2})(?::(\d{2}))?\s*(AM|PM)\s*[–-]\s*(\d{1,2})(?::(\d{2}))?\s*(AM|PM)$/i,
+    );
+    if (!m) return undefined;
+    const [, d1, d2, openH, openM, openAp, closeH, closeM, closeAp] = m;
+    const start = DAY_ABBRS.findIndex((d) => d.toLowerCase() === d1.toLowerCase());
+    const end = d2 ? DAY_ABBRS.findIndex((d) => d.toLowerCase() === d2.toLowerCase()) : start;
+    if (end < start) return undefined;
+    const opens = to24h(Number(openH), Number(openM ?? 0), openAp);
+    const closes = to24h(Number(closeH), Number(closeM ?? 0), closeAp);
+    if (!opens || !closes) return undefined;
+    specs.push({
+      '@type': 'OpeningHoursSpecification',
+      dayOfWeek: DAY_ABBRS.slice(start, end + 1).map(expandDay),
+      opens,
+      closes,
+    });
+  }
+  return specs;
 }
 
 export function courseLd(
