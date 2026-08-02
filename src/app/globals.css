@@ -17,6 +17,10 @@
     /* Furor brand — sampled from the logo (pure-pixel average):
        red wordmark = rgb(222,0,0) #DE0000
        royal-blue swoosh/tagline = rgb(0,50,154) #00329A */
+    /* 300 is the hover step for ember text links — deeper here so hovering a
+       link on paper gains contrast rather than losing it. It lands on the same
+       value as 700 by design: that is the deepest red in the sampled ramp. */
+    --c-ember-300: 160 0 16;    /* #A00010 — hover for links on paper */
     --c-ember-400: 230 16 16;   /* #E61010 — bright accent red */
     --c-ember-500: 222 0 0;     /* #DE0000 — primary red (wordmark) */
     --c-ember-600: 192 0 8;     /* #C00008 — pressed/darker */
@@ -43,6 +47,9 @@
     --c-ink-500: 74 34 48;
     /* Furor brand — sampled from the logo, brightened slightly for dark bg
        so the red still reads as the logo red rather than going maroon. */
+    /* 300 is the hover step for ember text links — brighter here (the mirror
+       of the light theme) so hovering on dark gains contrast, not loses it. */
+    --c-ember-300: 250 140 140; /* #FA8C8C — hover for links on dark */
     --c-ember-400: 240 60 60;   /* #F03C3C — bright accent red */
     --c-ember-500: 224 16 16;   /* #E01010 — primary red */
     --c-ember-600: 200 0 0;     /* #C80000 — pressed */
@@ -68,9 +75,33 @@
     --bar: 2.8s; /* 4 beats */
   }
 
+  /* Foreground for brand-red surfaces. `cream` and `ink` swap places between
+     themes, but ember stays red in both — so text sitting ON ember must not
+     swap with them, or one theme always loses. Pairing this with ember-600/700
+     clears 5.3:1 in light and 5.9:1 in dark; the old cream-on-ember-500 was
+     4.4:1 / 3.9:1 and failed AA in both. */
+  :root {
+    --c-on-ember: 255 251 249;
+  }
+
   html {
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+  }
+  /* In-page anchors glide instead of teleporting. Browsers deliberately skip
+     this for the initial-load fragment jump, which is what we want — no 1s
+     animated scroll running through the LCP window. */
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+  /* Clears the sticky h-16 header. #visit had no scroll-margin at all, so a
+     deep link landed with its heading tucked underneath. Doing it on :target
+     makes every future id safe by default. scroll-margin DOES apply on the
+     initial-load jump, unlike scroll-behavior. */
+  :target {
+    scroll-margin-top: 6rem;
   }
   body {
     @apply bg-ink-950 text-cream font-sans;
@@ -86,7 +117,12 @@
 
 @layer components {
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-full bg-ember-500 px-6 py-3 text-cream font-semibold tracking-wide transition hover:bg-ember-600 hover:text-ink-950 active:scale-[0.98];
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-ember-600 px-6 py-3 text-on-ember font-semibold tracking-wide transition hover:bg-ember-700 active:scale-[0.98];
+  }
+  /* The deep-red panel that closes a page. Deliberately bottoms out at
+     ember-600 rather than ember-500 so body copy on it clears AA. */
+  .accent-panel {
+    @apply bg-gradient-to-br from-ember-700 via-ember-600 to-ember-700 text-on-ember;
   }
   .btn-secondary {
     @apply inline-flex items-center justify-center gap-2 rounded-full border border-cream/30 px-6 py-3 text-cream font-medium tracking-wide transition hover:border-cream/60 active:scale-[0.98];
@@ -113,9 +149,9 @@
     letter-spacing: -0.01em;
     color: rgb(var(--c-ember-600));
   }
-  /* Inside the deep ember/gold CTA blocks, the accent matches the light heading. */
+  /* Inside the deep ember CTA blocks, the accent matches the light heading. */
   .on-accent .accent {
-    color: rgb(var(--c-ink-950));
+    color: rgb(var(--c-on-ember));
   }
 }
 
@@ -139,10 +175,15 @@ html[data-theme='dark'] .brand-plate img {
   opacity: 0.92;
 }
 
-/* Magnetic button — applied via JS */
+/* Magnetic button — applied via JS, fine pointers only. will-change is scoped
+   to match: the effect never runs on touch, so promoting 11 buttons to their
+   own compositor layers on the phones that make up most of the traffic was
+   pure cost for no benefit. */
 .magnetic {
   transition: transform 200ms cubic-bezier(0.2, 0.6, 0.2, 1);
-  will-change: transform;
+}
+@media (pointer: fine) {
+  .magnetic { will-change: transform }
 }
 
 /* Hero scrims are theme-aware. The same overlay can't work for both: a dark
@@ -243,67 +284,198 @@ html[data-theme='dark'] .hero-vignette {
   padding-bottom: 0.24em;
   margin-bottom: -0.24em;
 }
+/* will-change is deliberately absent: these run once at load and the browser
+   composites transform/opacity animations automatically while they play.
+   Leaving the hint on afterwards pins a layer per headline word forever.
+   Timings live in the motion gate at the end of the file. */
 .cine-i {
   display: inline-block;
-  animation: cineRise 0.95s cubic-bezier(0.16, 0.8, 0.2, 1) both;
-  will-change: transform, opacity;
-}
-.hero-fade {
-  animation: cineFade 0.85s ease-out both;
 }
 
-/* Choreographed scroll reveal -------------------------------------------
-   Content enters like a dancer stepping onto a count: it waits offset and
-   slightly dim, then lands with a confident, faintly over-shot settle
-   (the cubic-bezier crests past 1 then resolves — anticipation + follow-
-   through, the spine of every dance move). The .is-in class is toggled by
-   <Reveal> when the block first scrolls into view. */
-[data-reveal] {
-  opacity: 0;
-  transition:
-    transform 0.9s cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 0.7s ease-out;
-  transition-delay: var(--reveal-delay, 0ms);
-  will-change: transform, opacity;
-}
-[data-reveal='up'] {
-  transform: translateY(34px);
-}
-[data-reveal='left'] {
-  transform: translateX(-40px);
-}
-[data-reveal='right'] {
-  transform: translateX(40px);
-}
-[data-reveal].is-in {
-  opacity: 1;
-  transform: none;
+/* ENTRANCE -------------------------------------------------------------
+   Content enters like a dancer stepping onto a count. The scroll position is
+   the clock: these are scrubbed by `animation-timeline: view()`, so an
+   entrance reads differently when you flick past than when you ease in.
+
+   Two registers only — headings LIFT (short, close), card groups RISE in
+   sequence — because thirteen identical fades is sameness, not choreography.
+
+   Everything that HIDES content lives inside @supports. A browser without
+   scroll timelines renders the page visible and static, which is strictly
+   safer than the old opacity:0 + JS-adds-a-class arrangement: that one left
+   most of the page invisible whenever hydration failed.
+
+   These are the only motions on the site that don't derive from --beat, and
+   deliberately so: a progress timeline has no duration. animation-delay is
+   ignored on one too, so the stagger is expressed as offset ranges. */
+@keyframes revealRise { from { opacity: 0; translate: 0 34px } to { opacity: 1; translate: 0 0 } }
+@keyframes revealLift { from { opacity: 0; translate: 0 14px } to { opacity: 1; translate: 0 0 } }
+@keyframes revealFade { from { opacity: 0.35 }                to { opacity: 1 } }
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    [data-reveal] {
+      animation: revealLift linear both;
+      animation-timeline: view();
+      animation-range: entry 8% entry 40%;
+    }
+    /* A stagger container never moves itself — its children carry the phrase.
+       Without this the parent's translate compounds with each child's. */
+    [data-reveal][data-stagger] { animation: none }
+
+    [data-stagger] > * {
+      animation: revealRise linear both;
+      animation-timeline: view();
+    }
+    [data-stagger] > *:nth-child(1)   { animation-range: entry  6% entry 38% }
+    [data-stagger] > *:nth-child(2)   { animation-range: entry 12% entry 44% }
+    [data-stagger] > *:nth-child(3)   { animation-range: entry 18% entry 50% }
+    [data-stagger] > *:nth-child(n+4) { animation-range: entry 24% entry 56% }
+  }
+
+  /* Reduced motion keeps the arrival, drops the travel: content still resolves
+     into place on scroll, it just never moves and never starts invisible. */
+  @media (prefers-reduced-motion: reduce) {
+    [data-reveal],
+    [data-stagger] > * {
+      animation: revealFade linear both;
+      animation-timeline: view();
+      animation-range: entry 8% entry 36%;
+    }
+  }
 }
 
-/* Staggered children — the group reads as a danced phrase, each element
-   landing one beat after the last instead of the whole block snapping in. */
-[data-stagger] > * {
-  opacity: 0;
-  transform: translateY(26px);
-  transition:
-    transform 0.85s cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 0.65s ease-out;
-  will-change: transform, opacity;
+/* DEPTH — the giant count behind the styles grid lags the scroll, so the
+   section reads as two planes instead of one flat page. ±32px reproduces the
+   amplitude of the JS parallax this replaced, for no JavaScript at all. */
+@keyframes drift {
+  from { transform: translate3d(0,  32px, 0) }
+  to   { transform: translate3d(0, -32px, 0) }
 }
-[data-stagger].is-in > * {
-  opacity: 1;
-  transform: none;
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .drift {
+      animation: drift linear both;
+      animation-timeline: view();
+      animation-range: cover;
+    }
+  }
 }
-[data-stagger].is-in > *:nth-child(1)  { transition-delay: calc(var(--reveal-step) * 0); }
-[data-stagger].is-in > *:nth-child(2)  { transition-delay: calc(var(--reveal-step) * 1); }
-[data-stagger].is-in > *:nth-child(3)  { transition-delay: calc(var(--reveal-step) * 2); }
-[data-stagger].is-in > *:nth-child(4)  { transition-delay: calc(var(--reveal-step) * 3); }
-[data-stagger].is-in > *:nth-child(5)  { transition-delay: calc(var(--reveal-step) * 4); }
-[data-stagger].is-in > *:nth-child(6)  { transition-delay: calc(var(--reveal-step) * 5); }
-[data-stagger].is-in > *:nth-child(7)  { transition-delay: calc(var(--reveal-step) * 6); }
-[data-stagger].is-in > *:nth-child(8)  { transition-delay: calc(var(--reveal-step) * 7); }
-[data-stagger].is-in > *:nth-child(9)  { transition-delay: calc(var(--reveal-step) * 8); }
-[data-stagger].is-in > *:nth-child(n+10) { transition-delay: calc(var(--reveal-step) * 9); }
+
+/* THE NUDGE — the one place on the page where scrolling *plays* something
+   rather than revealing it. The strip is already the page's metronome; the
+   thumb becomes a third hand on the same instrument, running the style names
+   ahead of the beat on the way down and dragging them back on the way up,
+   like a DJ nudging a record. The marquee keeps playing underneath, so it is
+   never a dead scrubber frozen mid-gesture.
+
+   The mask is load-bearing, not decoration: the track is 200% wide and the
+   marquee travels 0 → -50%, so at its extremes it covers the viewport
+   exactly. Any horizontal shift would expose a bare edge; the 8% fade
+   swallows the 4% worst case whatever the admin's style list length. */
+.strip-nudge {
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 8%, #000 92%, transparent 100%);
+          mask-image: linear-gradient(to right, transparent 0, #000 8%, #000 92%, transparent 100%);
+}
+@keyframes stripNudge {
+  from { transform: translate3d(4%, 0, 0) }
+  to   { transform: translate3d(-4%, 0, 0) }
+}
+@supports (animation-timeline: view()) {
+  .strip-nudge {
+    animation: stripNudge linear both;
+    animation-timeline: view();
+    animation-range: cover;
+  }
+  /* Reduced motion keeps this rather than killing it: a scroll-linked
+     translate has zero autonomous motion — it moves only when the user
+     moves — so it is the vestibular-safe form, and it is the replacement for
+     the marquee that reduced motion stops. Quieter, not gone. */
+  @media (prefers-reduced-motion: reduce) {
+    @keyframes stripNudge {
+      from { transform: translate3d(2%, 0, 0) }
+      to   { transform: translate3d(-2%, 0, 0) }
+    }
+  }
+}
+
+/* THE BOOKING PANEL ----------------------------------------------------
+   Reads as a pane of lit glass, but nothing behind it ever shows through.
+   The fill is fully opaque: at any alpha the hero photograph came through
+   the top of the card on the light theme, where ink-900 is plain white,
+   and a booking panel has to look like a solid object resting on the hero
+   rather than a film laid over it.
+
+   So the "glass" is built rather than borrowed — a sheen falling down from
+   the top edge, a 1px lit rim where the light catches, and a long soft
+   shadow to lift it off the photo. No backdrop-filter, which means no
+   per-frame re-blur of a large region over the animating stage lights. */
+.quick-enroll {
+  background-color: rgb(var(--c-ink-900));
+  background-image: linear-gradient(
+    to bottom,
+    rgb(var(--c-cream) / 0.07),
+    rgb(var(--c-cream) / 0.02) 38%,
+    transparent 70%
+  );
+  box-shadow:
+    inset 0 1px 0 rgb(var(--c-cream) / 0.16),
+    0 24px 60px -20px rgb(0 0 0 / 0.55);
+}
+html[data-theme='light'] .quick-enroll {
+  /* On paper a cream sheen would darken the card. Warm the glass instead,
+     and let the rim be white where the light would actually catch. */
+  background-image: linear-gradient(
+    to bottom,
+    rgb(var(--c-ember-500) / 0.06),
+    rgb(var(--c-ember-500) / 0.02) 40%,
+    transparent 72%
+  );
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.9),
+    0 24px 60px -24px rgb(var(--c-ink-500) / 0.5);
+}
+
+/* THE FOLLOW-SPOT ------------------------------------------------------
+   A warm stage light travels the length of the kinetic strip, once every
+   four bars, easing at the turns the way a real followspot operator works
+   the room. The type in that band is 96px, so it genuinely catches the
+   light. Transform-only: no filter, no repaint, no layout.
+
+   Blending is theme-split for the same reason .spotlight is — `screen`
+   brightens letters out of the dark, but on paper it would wash to nothing,
+   so the light theme gets a warm gel tint at plain alpha instead. */
+.strip-light {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 46%;
+  pointer-events: none;
+  background: radial-gradient(
+    60% 130% at 50% 50%,
+    rgb(var(--c-ember-500) / 0.5),
+    rgb(var(--c-gold-500) / 0.16) 46%,
+    transparent 72%
+  );
+}
+html[data-theme='dark'] .strip-light {
+  mix-blend-mode: screen;
+}
+/* On paper the light has to be a single warm gel. The gold/blue stop that
+   makes the dark theme's beam feel dimensional just reads as a grey smudge
+   behind near-black type, so the light theme gets ember alone, softer. */
+html[data-theme='light'] .strip-light {
+  background: radial-gradient(
+    60% 130% at 50% 50%,
+    rgb(var(--c-ember-500) / 0.2),
+    transparent 70%
+  );
+}
+@keyframes stripLight {
+  from { transform: translate3d(-110%, 0, 0) }
+  to   { transform: translate3d(320%, 0, 0) }
+}
 
 /* On-beat pulse for the kinetic strip separators — the marquee stops being
    a slide and starts reading as a count. Locked to the global tempo. */
@@ -311,9 +483,38 @@ html[data-theme='dark'] .hero-vignette {
   0%, 100% { transform: scale(1); opacity: 0.5; }
   40%      { transform: scale(1.4); opacity: 1; }
 }
+/* The separators are 96px type. Scaling text that size either re-rasters
+   every frame or goes visibly soft, so the big glyphs pulse on opacity while
+   the small live dots keep the scale. */
+@keyframes beatGlow {
+  0%, 100% { opacity: 0.45 }
+  40%      { opacity: 1 }
+}
+/* One live idiom, on the count. Replaces Tailwind's stock animate-ping, which
+   ran at its own 1s rate next to on-tempo indicators and was never guarded
+   for reduced motion — including on a position:fixed button. */
+@keyframes beatRing {
+  0%        { transform: scale(1); opacity: 1 }
+  75%, 100% { transform: scale(2); opacity: 0 }
+}
 .beat-dot {
   display: inline-block;
-  animation: beatPulse calc(var(--beat) * 2) ease-in-out infinite;
+}
+
+/* Moved off tailwind.config so they can derive from the tempo engine: a
+   literal 28s marquee happens to be 10 bars today and silently desyncs the
+   moment --bar changes. Declared (with timings) in the motion gate below. */
+@keyframes marquee {
+  0%   { transform: translateX(0) }
+  100% { transform: translateX(-50%) }
+}
+@keyframes kenburns {
+  0%   { transform: scale(1.02) translate(0, 0) }
+  100% { transform: scale(1.12) translate(-2%, -1.5%) }
+}
+@keyframes fadeUp {
+  0%   { opacity: 0; transform: translateY(12px) }
+  100% { opacity: 1; transform: none }
 }
 
 /* THE ROOM ------------------------------------------------------------
@@ -330,14 +531,19 @@ html[data-theme='dark'] .hero-vignette {
     radial-gradient(60vw 50vw at var(--lx, 22%) 18%, rgb(var(--c-ember-500) / 0.16), transparent 60%),
     radial-gradient(55vw 45vw at var(--rx, 82%) 88%, rgb(var(--c-gold-500) / 0.14), transparent 62%),
     radial-gradient(40vw 40vw at 50% 50%, rgb(var(--c-ember-700) / 0.05), transparent 70%);
-  animation:
-    roomDrift 26s ease-in-out infinite alternate,
-    roomBreathe var(--bar) ease-in-out infinite;
+  /* The one place will-change is earned: this layer animates forever.
+     The animation itself is declared in the motion gate at the end of file. */
   will-change: transform, opacity;
 }
+/* The --lx/--rx light-pool positions used to be animated here, but unregistered
+   custom properties cannot interpolate — they flipped discretely at the 50%
+   mark, so the pools teleported once per cycle and every bit of visible drift
+   came from the transform anyway. Registering them with @property would make a
+   full-viewport two-gradient background repaint every frame, turning a free
+   animation into an expensive one. Not worth it: keep the transform. */
 @keyframes roomDrift {
-  0%   { --lx: 18%; --rx: 84%; transform: translate3d(0, 0, 0) scale(1); }
-  100% { --lx: 30%; --rx: 72%; transform: translate3d(0, -1.5%, 0) scale(1.06); }
+  0%   { transform: translate3d(0, 0, 0) scale(1); }
+  100% { transform: translate3d(0, -1.5%, 0) scale(1.06); }
 }
 @keyframes roomBreathe {
   0%, 100% { opacity: 0.78; }
@@ -348,17 +554,27 @@ html[data-theme='dark'] .hero-vignette {
    Every dancer knows it: "5, 6, 7, 8 —" then you move. Four counts tick
    in on tempo above the hero headline, then fade as the words rise on 1. */
 .count-in {
-  display: inline-flex;
+  /* Block-level flex, NOT inline-flex: as an inline box this sat on the same
+     line as the hero pill that follows it, and countOut only collapses height
+     and margin — never inline width — so after the count faded it went on
+     silently indenting the pill by its own width.
+
+     The height is reserved rather than collapsed. countOut used to animate
+     height and margin to 0 at the 2.9s mark, shifting the h1, the CTAs, the
+     booking card and every section below it up ~40px — a layout shift three
+     seconds into the page, well inside the CLS window. Nobody misses 40px of
+     space above the pill; everybody notices the page jumping. */
+  display: flex;
+  width: fit-content;
+  height: 1.25rem;
+  overflow: hidden;
   gap: 0.5rem;
   align-items: center;
-  animation: countOut 0.5s ease-out forwards;
-  animation-delay: calc(var(--beat) * 4 + 0.1s);
 }
 .count-in span {
   display: inline-block;
   opacity: 0;
   transform: translateY(6px);
-  animation: countTick var(--beat) steps(1, end) 1 forwards;
 }
 .count-in span:nth-child(1) { animation-delay: 0s; }
 .count-in span:nth-child(2) { animation-delay: var(--beat); }
@@ -369,8 +585,10 @@ html[data-theme='dark'] .hero-vignette {
   18%      { opacity: 1; transform: translateY(0) scale(1.12); }
   100%     { opacity: 0.5; transform: translateY(0) scale(1); }
 }
+/* Compositor-only: no height/margin, so the count leaves without moving the
+   page. See the height reservation on .count-in above. */
 @keyframes countOut {
-  to { opacity: 0; transform: translateY(-6px); height: 0; margin: 0; }
+  to { opacity: 0; transform: translateY(-6px); }
 }
 
 /* HERO SPOTLIGHT ------------------------------------------------------
@@ -389,48 +607,60 @@ html[data-theme='dark'] .hero-vignette {
     rgb(var(--c-ember-500) / 0.22),
     transparent 70%
   );
-  mix-blend-mode: screen;
 }
-html[data-theme='light'] .spotlight { mix-blend-mode: multiply; }
+/* The follow-light only ever runs on fine pointers (HeroSpotlight bails on
+   coarse ones), so scope the blend mode to match. Left unscoped, a
+   mix-blend-mode element sat inside the hero's stacking context on every
+   phone, forcing group compositing on the ken-burns hero image for an effect
+   those users can never see. */
+@media (pointer: fine) {
+  .spotlight { mix-blend-mode: screen; }
+  html[data-theme='light'] .spotlight { mix-blend-mode: multiply; }
+}
 .spotlight.lit { opacity: 1; }
 
-/* SWAY — a body keeping time. Barely there; you feel it before you see it. */
-@keyframes sway {
-  0%, 100% { transform: translateX(-0.35%); }
-  50%      { transform: translateX(0.35%); }
-}
-.sway { animation: sway calc(var(--bar) * 1.5) ease-in-out infinite; }
+/* (.sway removed — its only consumer was the clave in the kinetic strip,
+   which the travelling followspot replaced.) */
 
-/* Scroll cue — a small step downward, on the beat. */
-@keyframes scrollCue {
-  0%, 100% { transform: translateY(0); opacity: 0.6; }
-  50%      { transform: translateY(5px); opacity: 1; }
+/* MOTION GATE ---------------------------------------------------------
+   Reduced motion is handled as opt-IN, not as a hand-maintained kill list.
+   Every decorative animation is *declared* inside this query, so a new
+   primitive is silent under `reduce` by default instead of silently
+   unguarded — which is how animate-ping ended up pulsing forever in the
+   corner of the screen for users who had asked for stillness.
+
+   Only animation belongs in here. Structural properties (.count-in's box,
+   .cine-w's padding) stay outside, or the layout changes with the setting. */
+@media (prefers-reduced-motion: no-preference) {
+  .animate-marquee { animation: marquee calc(var(--bar) * 10) linear infinite }
+  .animate-kenburns { animation: kenburns calc(var(--bar) * 12) ease-in-out infinite alternate }
+  .animate-fade-up { animation: fadeUp var(--beat) ease-out both }
+  .beat-dot { animation: beatPulse calc(var(--beat) * 2) ease-in-out infinite }
+  .beat-dot--glyph { animation-name: beatGlow }
+  .beat-ring { animation: beatRing calc(var(--beat) * 2) cubic-bezier(0, 0, 0.2, 1) infinite }
+  .strip-light { animation: stripLight calc(var(--bar) * 4) cubic-bezier(0.45, 0, 0.55, 1) infinite }
+  .stage-lights {
+    animation:
+      roomDrift calc(var(--bar) * 9) ease-in-out infinite alternate,
+      roomBreathe var(--bar) ease-in-out infinite;
+  }
+  .cine-i { animation: cineRise calc(var(--beat) * 1.35) cubic-bezier(0.16, 0.8, 0.2, 1) both }
+  .hero-fade { animation: cineFade calc(var(--beat) * 1.2) ease-out both }
+  .count-in { animation: countOut calc(var(--beat) * 0.7) ease-out forwards;
+              animation-delay: calc(var(--beat) * 4 + 0.1s) }
+  .count-in span { animation: countTick var(--beat) steps(1, end) 1 forwards }
 }
-.scroll-cue { animation: scrollCue calc(var(--beat) * 2) ease-in-out infinite; }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-marquee,
-  .animate-fade-up,
-  .animate-kenburns,
-  .cine-i,
-  .hero-fade,
-  .beat-dot,
-  .stage-lights,
-  .sway,
-  .scroll-cue,
-  .count-in,
-  .count-in span {
-    animation: none !important;
-  }
-  /* The room is still warm — it just doesn't drift or breathe. */
-  .stage-lights { opacity: 0.85 !important; }
-  /* Count-in collapses to nothing rather than freezing on screen. */
-  .count-in { display: none !important; }
-  /* No choreography under reduced motion — everything is simply present. */
-  [data-reveal],
-  [data-stagger] > * {
-    opacity: 1 !important;
-    transform: none !important;
-    transition: none !important;
-  }
+  /* The intentional alternatives — all this block should ever hold.
+     The room stays warm, it just stops moving. */
+  .stage-lights { opacity: 0.85 }
+  /* The count collapses rather than freezing mid-count on screen. Its
+     reserved height goes with it, which is fine: nothing else has moved. */
+  .count-in { display: none }
+  /* The followspot parks centre-stage instead of sitting off-screen: the
+     strip keeps its warm pool of light, the light just stops travelling. */
+  .strip-light { left: 27%; transform: none }
+  /* The scrubbed entrance and the strip nudge declare their own reduced-motion
+     forms above — they are replacements, not casualties. */
 }

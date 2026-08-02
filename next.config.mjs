@@ -66,24 +66,92 @@ if (isOnOneDrive && !isVercel && process.platform === 'win32') {
   }
 }
 
+// Content-Security-Policy notes:
+// - Next injects inline bootstrap <script>s, so script-src needs
+//   'unsafe-inline' unless we plumb nonces through middleware on every route
+//   (real CPU cost on the Workers free plan). Everything else is locked down.
+// - frame-src must allow the Google Maps embeds on / and /contact.
+// - googletagmanager/google-analytics cover the GA4 loader (Analytics.tsx).
+// Dev-only allowance so impeccable live mode can load. Guarded by NODE_ENV.
+const __impeccableLiveDev =
+  process.env.NODE_ENV === 'development' ? ' http://localhost:8400' : '';
+// React Fast Refresh compiles modules with eval(). Without this the dev server
+// serves a page whose bundle dies on CSP, so hydration never runs and every
+// <Reveal> stays at opacity:0 — i.e. `next dev` renders a near-blank site.
+// Dev only; the production CSP stays eval-free.
+const __devEval = process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : '';
+const CSP = [
+  "default-src 'self'",
+  "base-uri 'self'",
+  "object-src 'none'",
+  "frame-ancestors 'none'",
+  "form-action 'self'",
+  `script-src 'self' 'unsafe-inline'${__devEval} https://www.googletagmanager.com${__impeccableLiveDev}`,
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob: https:",
+  "font-src 'self' data:",
+  `connect-src 'self' https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com${__impeccableLiveDev}`,
+  "media-src 'self' https:",
+  'frame-src https://www.google.com https://maps.google.com',
+  'upgrade-insecure-requests',
+].join('; ');
+
 const nextConfig = {
   reactStrictMode: true,
+  // Dev server compiles into its own directory so a concurrent
+  // `next build` / `opennextjs-cloudflare build` (which writes production
+  // output to `.next`) can never clobber the running dev server's chunks.
+  distDir: process.env.NODE_ENV === 'development' ? '.next-dev' : '.next',
+  // No image optimizer on the Cloudflare free plan — serve images as-is.
+  // (Remote hero/gallery images are already CDN-optimized; local photos are
+  // pre-sized. The old *.public.blob.vercel-storage.com URLs keep rendering
+  // via plain <img>/unoptimized <Image> until content is re-uploaded.)
+  images: { unoptimized: true },
   ...(isPages
     ? {
         output: 'export',
         basePath: `/${REPO}`,
         assetPrefix: `/${REPO}/`,
-        images: { unoptimized: true },
         trailingSlash: true,
       }
     : {
-        images: {
-          formats: ['image/avif', 'image/webp'],
-          remotePatterns: [
-            { protocol: 'https', hostname: 'images.unsplash.com' },
-            { protocol: 'https', hostname: 'res.cloudinary.com' },
-            { protocol: 'https', hostname: '*.public.blob.vercel-storage.com' },
-          ],
+        // headers() is a no-op under `output: 'export'`; the OpenNext routing
+        // layer applies these on Cloudflare Workers.
+        async headers() {
+          return [
+            {
+              source: '/:path*',
+              headers: [
+                { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
+                { key: 'X-Content-Type-Options', value: 'nosniff' },
+                { key: 'X-Frame-Options', value: 'DENY' },
+                { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+                { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), payment=(), usb=(), browsing-topics=()' },
+                { key: 'X-DNS-Prefetch-Control', value: 'off' },
+                { key: 'Content-Security-Policy', value: CSP },
+              ],
+            },
+            {
+              source: '/admin/:path*',
+              headers: [
+                { key: 'Cache-Control', value: 'no-store, private' },
+                { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
+              ],
+            },
+            {
+              source: '/api/:path*',
+              headers: [
+                { key: 'Cache-Control', value: 'no-store, private' },
+                { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
+              ],
+            },
+            // Served uploads are opaque image bytes — lock them down harder
+            // than the site CSP (later matching rules win per header key).
+            {
+              source: '/uploads/:path*',
+              headers: [{ key: 'Content-Security-Policy', value: "default-src 'none'" }],
+            },
+          ];
         },
       }),
 };

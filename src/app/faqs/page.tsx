@@ -2,7 +2,16 @@ import { getContent } from '@/lib/content';
 import { EnquiryCTA } from '@/components/EnquiryCTA';
 import { JsonLd } from '@/components/JsonLd';
 
-export const metadata = { title: 'FAQs' };
+export async function generateMetadata() {
+  const c = await getContent();
+  return {
+    title: 'FAQs',
+    description:
+      c.pages.faqs.intro.lead ||
+      'Answers to common questions about classes, batches, pricing and getting started at Furor.',
+    alternates: { canonical: '/faqs' },
+  };
+}
 
 // Render per request so admin edits show immediately (export build strips this).
 export const dynamic = 'force-dynamic';
@@ -41,7 +50,7 @@ export default async function FaqsPage() {
       <section className="container-x pb-16 space-y-12">
         {f.sections.map((section, si) => (
           <div key={si}>
-            <p className="display text-sm uppercase tracking-widest text-ember-400/90">{section.section}</p>
+            <h2 className="display text-sm uppercase tracking-widest text-ember-400/90">{section.section}</h2>
             <div className="mt-4 grid gap-3">
               {section.items.map((item, i) => (
                 <details

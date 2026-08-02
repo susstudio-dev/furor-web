@@ -10,7 +10,7 @@ export const CONTENT_KEY = 'site-content.json';
 // taken whole from saved (we never want to splice in seed items behind the
 // admin's back) — only missing top-level/nested object keys fall back to seed.
 // This protects against schema additions making old saves render blank.
-function mergeWithSeed(saved: unknown, seed: unknown): unknown {
+export function mergeWithSeed(saved: unknown, seed: unknown): unknown {
   if (Array.isArray(saved)) return saved;
   if (
     saved === null ||
@@ -23,35 +23,56 @@ function mergeWithSeed(saved: unknown, seed: unknown): unknown {
   }
   const out: Record<string, unknown> = { ...(seed as Record<string, unknown>) };
   for (const [k, v] of Object.entries(saved as Record<string, unknown>)) {
+    // JSON.parse yields __proto__ as an OWN key; assigning it here would
+    // pollute Object.prototype for the whole isolate. This runs BEFORE zod
+    // validation, so the schema's unknown-key stripping can't protect it.
+    if (k === '__proto__' || k === 'constructor' || k === 'prototype') continue;
     out[k] = mergeWithSeed(v, (seed as Record<string, unknown>)[k]);
   }
   return out;
 }
 
-// Reads the live content from storage (filesystem in dev, Vercel Blob in
-// prod). On first run it *tries* to write the seed through so later admin
-// edits persist — but a failed write (e.g. read-only Vercel FS before the
-// Blob store is connected) must NEVER crash the request: we just serve the
-// bundled seed. Wrapped in React cache() => one read per request.
-//
-// Freshness is handled at the route level: public pages export
-// `dynamic = 'force-dynamic'` so they re-read on every request (no stale
-// statically-cached HTML after an admin save). This reader just reads.
+// Cross-request TTL cache (per Worker isolate / per Node process). Public
+// pages render per-request on Cloudflare (see connection() in the root
+// layout), so this bounds R2 reads to ~2/min per isolate while keeping admin
+// edits visible within CACHE_TTL_MS everywhere (and instantly in the isolate
+// that saved — see bustContentCache()).
+const CACHE_TTL_MS = 30_000;
+let cached: { raw: string | null; at: number } | null = null;
+
+export function bustContentCache(): void {
+  cached = null;
+}
+
+async function readContentRaw(): Promise<string | null> {
+  if (process.env.NODE_ENV === 'production' && cached && Date.now() - cached.at < CACHE_TTL_MS) {
+    return cached.raw;
+  }
+  const raw = await readText(CONTENT_KEY);
+  cached = { raw, at: Date.now() };
+  return raw;
+}
+
+// Reads the live content from storage (filesystem in dev, R2 in prod).
+// A failed read must NEVER crash the request: we just serve the bundled
+// seed. Wrapped in React cache() => one read per request.
 export const getContent = cache(async (): Promise<SiteContent> => {
   let raw: string | null = null;
   let readErr: unknown;
   // Retry a throwing read a few times with short backoff before giving up. A
-  // single Blob/network blip must not surface the seed: combined with dynamic
+  // single R2/network blip must not surface the seed: combined with per-request
   // rendering this means a momentary hiccup almost never reaches the user, and
-  // when it does it affects one request and self-heals (it is never cached).
+  // when it does it affects one request and self-heals — a throw never
+  // populates the TTL cache, so the next request re-reads for real.
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      raw = await readText(CONTENT_KEY);
+      raw = await readContentRaw();
       readErr = undefined;
       break;
     } catch (err) {
       readErr = err;
-      await new Promise((resolve) => setTimeout(resolve, 150 * (attempt + 1)));
+      // No backoff after the final attempt — it would only delay the seed.
+      if (attempt < 2) await new Promise((resolve) => setTimeout(resolve, 150 * (attempt + 1)));
     }
   }
   if (readErr !== undefined) {

@@ -4,7 +4,16 @@ import { EnquiryCTA } from '@/components/EnquiryCTA';
 import { JsonLd } from '@/components/JsonLd';
 import { PhotoCarousel } from '@/components/PhotoCarousel';
 
-export const metadata = { title: 'About' };
+export async function generateMetadata() {
+  const c = await getContent();
+  return {
+    title: 'About',
+    description:
+      c.pages.about.introParagraphs[0] ||
+      'The story of Furor — Hyderabad’s home for Salsa, Bachata and West Coast Swing.',
+    alternates: { canonical: '/about' },
+  };
+}
 
 // Render per request so admin edits show immediately (export build strips this).
 export const dynamic = 'force-dynamic';

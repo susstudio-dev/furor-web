@@ -1,0 +1,31 @@
+name: Quality checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      # NB: no lint step — the repo has no ESLint config installed and
+      # `next lint` is interactive/deprecated. Typecheck + build is the gate.
+      - name: Build (server)
+        run: npm run build

@@ -1,5 +1,28 @@
 import Link from 'next/link';
 import { getContent, nextBatchPerStyle, formatBatchDate, formatInr, batchStyleLabel } from '@/lib/content';
+import { truncateAtWord } from '@/lib/seo';
+
+export async function generateMetadata() {
+  const c = await getContent();
+  const styleNames = c.danceStyles
+    .slice()
+    .sort((a, b) => a.displayOrder - b.displayOrder)
+    .map((s) => s.name);
+  const classes =
+    styleNames.length > 1
+      ? `${styleNames.slice(0, -1).join(', ')} & ${styleNames[styleNames.length - 1]}`
+      : styleNames[0] || 'Dance';
+  return {
+    // The layout default title is brand-only; the homepage must also say what
+    // we sell ("… Classes") for queries like "dance classes in Hyderabad".
+    // `absolute` opts out of the layout's "%s · brand" template.
+    title: { absolute: `${c.site.title} | ${classes} Classes` },
+    // The hero sub-headline carries the service+city phrasing ("Learn Salsa,
+    // Bachata… Jubilee Hills, Hyderabad") — the highest-value local query.
+    description: truncateAtWord(c.hero.subHeadline || c.site.tagline),
+    alternates: { canonical: '/' },
+  };
+}
 import { Hero } from '@/components/Hero';
 import { KineticStrip } from '@/components/KineticStrip';
 import { TrialBanner } from '@/components/TrialBanner';
@@ -10,7 +33,6 @@ import { RhythmSignature } from '@/components/RhythmSignature';
 import { Img } from '@/components/Img';
 import { Accentuate } from '@/components/Accentuate';
 import { Reveal } from '@/components/Reveal';
-import { Parallax } from '@/components/Parallax';
 import { QuickEnroll } from '@/components/QuickEnroll';
 import { BatchActions } from '@/components/BatchActions';
 
@@ -38,17 +60,25 @@ export default async function HomePage() {
       <TrialBanner content={content} />
 
       {/* What we teach */}
-      <section className="container-x py-12 sm:py-16 relative overflow-hidden">
-        {/* Parallax depth: a giant faint count drifts behind the grid as you
-            scroll — the room has layers, not a flat page. */}
-        <Parallax
-          speed={0.32}
-          className="pointer-events-none absolute -right-10 -top-6 -z-10 hidden select-none sm:block"
+      {/* `isolate` is load-bearing: without a stacking context the -z-10 child
+          below escapes to the root negative layer and paints *underneath*
+          .stage-lights, which is why this count was invisible. */}
+      {/* overflow-CLIP, not hidden: `hidden` is still a scroll container, and
+          the drifting "8" below hangs 40px past the right edge — so any
+          scrollIntoView or keyboard focus in this section scrolled it 40px
+          left and left every heading and card permanently misaligned. `clip`
+          cannot be scrolled. */}
+      <section className="container-x py-12 sm:py-16 relative isolate overflow-clip">
+        {/* Depth: a giant faint count drifts behind the grid as you scroll —
+            the room has layers, not a flat page. Scroll-driven CSS, no JS. */}
+        <div
+          aria-hidden
+          className="drift pointer-events-none absolute -right-10 -top-6 -z-10 hidden select-none sm:block"
         >
-          <span className="display block text-[16rem] font-extrabold leading-none text-cream/[0.035]">
+          <span className="display block text-[16rem] font-extrabold leading-none text-cream/[0.05]">
             8
           </span>
-        </Parallax>
+        </div>
         <Reveal>
           <div className="flex items-end justify-between gap-6 flex-wrap">
             <div>
@@ -65,8 +95,7 @@ export default async function HomePage() {
             </Link>
           </div>
         </Reveal>
-        <Parallax speed={0.05} className="mt-10">
-          <Reveal stagger step={110} className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <Reveal stagger className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {sortedStyles.map((s) => (
             <Link
               key={s.slug}
@@ -98,7 +127,6 @@ export default async function HomePage() {
             </Link>
           ))}
           </Reveal>
-        </Parallax>
       </section>
 
       {/* Next batches strip */}
@@ -119,7 +147,7 @@ export default async function HomePage() {
             </Link>
           </div>
         </Reveal>
-        <Reveal stagger step={80} className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <Reveal stagger className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {sortedStyles.map((s) => {
             const b = nextPerStyle.get(s.slug);
             const branch = b ? content.studios.find((st) => st.slug === b.branchSlug) : undefined;
@@ -192,7 +220,7 @@ export default async function HomePage() {
               {content.whyFuror.headline}
             </h2>
           </Reveal>
-          <Reveal stagger step={120} className="mt-12 grid gap-8 md:grid-cols-3">
+          <Reveal stagger className="mt-12 grid gap-8 md:grid-cols-3">
             {content.whyFuror.points.map((p, i) => (
               <div key={i} className="rounded-2xl border border-cream/10 bg-ink-900/30 p-6">
                 <p className="display text-2xl font-bold text-ember-400">0{i + 1}</p>
@@ -212,7 +240,7 @@ export default async function HomePage() {
               {h.howItWorks.headline}
             </h2>
           </Reveal>
-          <Reveal stagger step={130} className="mt-12 grid gap-6 md:grid-cols-3">
+          <Reveal stagger className="mt-12 grid gap-6 md:grid-cols-3">
             {h.howItWorks.steps.map((s, i, arr) => (
               <div key={i} className="relative rounded-2xl border border-cream/10 bg-ink-900/30 p-6">
                 <p className="display text-2xl font-bold text-ember-400">
@@ -236,12 +264,12 @@ export default async function HomePage() {
 
       {/* Closing CTA */}
       <section className="container-x py-14 sm:py-20">
-        <Reveal className="on-accent rounded-3xl bg-gradient-to-br from-ember-700 via-ember-600 to-ember-500 p-10 sm:p-16 text-ink-950">
+        <Reveal className="on-accent accent-panel rounded-3xl p-10 sm:p-16">
           <h2 className="display text-4xl font-extrabold sm:text-6xl tracking-tight max-w-3xl">
             <Accentuate text={h.closingCta.headline} />
           </h2>
           {h.closingCta.body ? (
-            <p className="mt-3 text-ink-950/80 max-w-xl text-lg">{h.closingCta.body}</p>
+            <p className="mt-3 text-on-ember max-w-xl text-lg">{h.closingCta.body}</p>
           ) : null}
           <div className="mt-8 flex flex-wrap gap-3">
             <EnquiryCTA
@@ -258,7 +286,7 @@ export default async function HomePage() {
               channel="instagram"
               variant="secondary"
               label="DM on Instagram"
-              className="!border-ink-950/40 !text-ink-950 hover:!border-ink-950 magnetic"
+              className="!border-on-ember/45 !text-on-ember hover:!border-on-ember magnetic"
             />
           </div>
         </Reveal>
@@ -290,30 +318,30 @@ export default async function HomePage() {
               const tel = s.telephone.replace(/\s/g, '');
               return (
                 <div key={s.id}>
-                  <Reveal from="up" delay={80} className="grid gap-6 md:grid-cols-2 items-stretch">
+                  <Reveal className="grid gap-6 md:grid-cols-2 items-stretch">
                     <div className="rounded-3xl border border-cream/10 bg-ink-900/40 p-8 sm:p-10 flex flex-col">
-                      <p className="display text-2xl sm:text-3xl font-bold">{s.name}</p>
+                      <h3 className="display text-2xl sm:text-3xl font-bold">{s.name}</h3>
                       <p className="mt-1 text-xs uppercase tracking-widest text-ember-400/80">
                         {content.site.title}
                       </p>
                       <div className="mt-6 space-y-4 text-cream/85">
                         <div>
-                          <p className="text-xs uppercase tracking-widest text-cream/50">Address</p>
+                          <p className="text-xs uppercase tracking-widest text-cream/70">Address</p>
                           <p className="mt-1 leading-relaxed">{s.address}</p>
                         </div>
                         <div>
-                          <p className="text-xs uppercase tracking-widest text-cream/50">Hours</p>
+                          <p className="text-xs uppercase tracking-widest text-cream/70">Hours</p>
                           <p className="mt-1">{s.hours}</p>
                         </div>
                         {s.parkingNotes ? (
                           <div>
-                            <p className="text-xs uppercase tracking-widest text-cream/50">Parking</p>
+                            <p className="text-xs uppercase tracking-widest text-cream/70">Parking</p>
                             <p className="mt-1 text-cream/80">{s.parkingNotes}</p>
                           </div>
                         ) : null}
                         {styleNames.length > 0 ? (
                           <div>
-                            <p className="text-xs uppercase tracking-widest text-cream/50">What we teach here</p>
+                            <p className="text-xs uppercase tracking-widest text-cream/70">What we teach here</p>
                             <div className="mt-2 flex flex-wrap gap-2">
                               {styleNames.map((n) => (
                                 <span key={n} className="pill bg-cream/5 text-cream/80">{n}</span>
@@ -341,7 +369,7 @@ export default async function HomePage() {
                     </div>
                   </Reveal>
                   {s.photos.length > 0 ? (
-                    <Reveal stagger step={90} className="mt-6 grid gap-3 sm:gap-4 grid-cols-2 md:grid-cols-3">
+                    <Reveal stagger className="mt-6 grid gap-3 sm:gap-4 grid-cols-2 md:grid-cols-3">
                       {s.photos.slice(0, 3).map((p, i) => (
                         <div
                           key={`${p}-${i}`}

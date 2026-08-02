@@ -71,7 +71,7 @@ function BlockView({ block }: { block: CustomBlock }) {
             className="w-full rounded-2xl border border-cream/10"
           />
           {block.caption ? (
-            <figcaption className="mt-2 text-sm text-cream/55">{block.caption}</figcaption>
+            <figcaption className="mt-2 text-sm text-cream/70">{block.caption}</figcaption>
           ) : null}
         </figure>
       ) : null;

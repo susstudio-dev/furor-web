@@ -2,8 +2,6 @@ import Link from 'next/link';
 import type { SiteContent } from '@/lib/content-schema';
 import { visibleBatches, formatBatchDate, formatInr, batchStyleLabel } from '@/lib/content';
 import { EnquiryCTA } from './EnquiryCTA';
-import { Reveal } from './Reveal';
-import { RhythmSignature } from './RhythmSignature';
 
 // The fast lane, styled like the lineup board outside a club: it overlaps
 // the hero so its glowing top edge peeks above the fold and pulls you in.
@@ -20,28 +18,44 @@ export function QuickEnroll({ content }: { content: SiteContent }) {
       id="start-this-week"
       className="container-x relative z-20 mt-6 scroll-mt-24 pb-10 sm:mt-10 sm:pb-14"
     >
-      <Reveal className="quick-enroll relative overflow-hidden rounded-[28px] border border-cream/12 bg-ink-900/80 shadow-2xl shadow-ember-700/10 backdrop-blur-2xl">
-        {/* Glowing marquee top edge — this is what peeks over the fold. */}
-        <div className="h-1.5 w-full bg-gradient-to-r from-ember-600 via-gold-500 to-ember-600" />
+      {/* Deliberately NOT a <Reveal>. This is the conversion card and its whole
+          design intent is that its lit edge peeks above the fold — it must
+          never wait on an entrance to become visible. Dropping the entrance
+          also removes a backdrop-filter that was re-blurring a ~350×1400px
+          region on every frame of a translate, over a layer that animates
+          opacity forever.
+
+          The glass look is faked on an opaque fill — see .quick-enroll in
+          globals.css. At any alpha the hero photograph showed through the top
+          of the card on the light theme, where ink-900 is plain white. */}
+      <div className="quick-enroll relative overflow-hidden rounded-[28px] border border-cream/12">
+        {/* A single lit hairline along the top edge. One hue only: pairing
+            ember with gold-500 reads as a red-to-blue rainbow in dark theme,
+            where that token is the brand's royal blue. Fades out at both ends
+            so it doesn't butt into the corner radius. */}
+        <div
+          aria-hidden
+          className="h-0.5 w-full bg-gradient-to-r from-transparent via-ember-500 to-transparent"
+        />
 
         <div className="p-6 sm:p-8">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              {/* Live "booking open" indicator */}
-              <span className="inline-flex items-center gap-2 rounded-full border border-ember-500/30 bg-ember-500/10 px-3 py-1">
-                <span className="beat-dot inline-block h-2 w-2 rounded-full bg-ember-500" />
-                <span className="display text-[11px] font-bold uppercase tracking-[0.25em] text-ember-400">
+              {/* Solid badge, not a tint. A 10%-alpha ember pill with ember
+                  text washed out to near-nothing on the light theme's white
+                  card — a live status has to read as live in both themes, so
+                  it sits on solid ember with the fixed on-ember foreground. */}
+              <span className="inline-flex items-center gap-2 rounded-full bg-ember-600 px-3 py-1.5 shadow-sm shadow-ember-700/30">
+                <span className="relative flex h-2 w-2">
+                  <span className="beat-ring absolute inset-0 rounded-full bg-on-ember/60" />
+                  <span className="relative inline-block h-2 w-2 rounded-full bg-on-ember" />
+                </span>
+                <span className="display text-[11px] font-bold uppercase tracking-[0.25em] text-on-ember">
                   Booking open
                 </span>
               </span>
-              <RhythmSignature
-                style={batches[0]?.styleSlugs[0] ?? 'salsa'}
-                loop
-                width={90}
-                className="hidden text-ember-500/60 sm:inline-block"
-              />
             </div>
-            <p className="text-sm text-cream/55">
+            <p className="text-sm text-cream/70">
               Reserve your seat in ~30s · secure checkout via Razorpay
             </p>
           </div>
@@ -65,15 +79,14 @@ export function QuickEnroll({ content }: { content: SiteContent }) {
                       key={b.id}
                       className="enroll-ticket group relative flex flex-col rounded-2xl border border-cream/12 bg-gradient-to-b from-ink-800/80 to-ink-900/60 p-5 transition duration-300 hover:-translate-y-1 hover:border-ember-500/60 hover:shadow-xl hover:shadow-ember-700/15"
                     >
-                      {/* Perforated pass edge */}
-                      <span
-                        aria-hidden
-                        className="pointer-events-none absolute left-0 top-1/2 h-full w-[2px] -translate-y-1/2 [background:repeating-linear-gradient(to_bottom,rgb(var(--c-cream)/0.25)_0_5px,transparent_5px_11px)]"
-                      />
+                      {/* No perforated stub edge here any more: a 2px dashed
+                          rule floating just inside the rounded corner didn't
+                          read as a ticket, it read as a rendering artefact.
+                          The ticket idea now lives in the card's own shape. */}
                       <div className="flex items-start justify-between gap-2">
                         <div>
                           <p className="display text-xl font-bold leading-tight">{sName}</p>
-                          <p className="mt-0.5 text-xs uppercase tracking-wider text-cream/55">
+                          <p className="mt-0.5 text-xs uppercase tracking-wider text-cream/70">
                             {b.level}
                           </p>
                         </div>
@@ -108,7 +121,7 @@ export function QuickEnroll({ content }: { content: SiteContent }) {
                             href={b.razorpayLink}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-ember-500 px-4 py-2 text-sm font-semibold text-cream transition hover:bg-ember-600 magnetic"
+                            className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-full bg-ember-600 px-4 py-2 text-sm font-semibold text-on-ember transition hover:bg-ember-700 magnetic"
                           >
                             Reserve my seat · {formatInr(b.reservationInr)}
                           </a>
@@ -136,7 +149,7 @@ export function QuickEnroll({ content }: { content: SiteContent }) {
               <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-cream/10 pt-5">
                 <Link
                   href="#style-finder"
-                  className="group inline-flex items-center gap-2 text-sm text-cream/75 transition hover:text-cream"
+                  className="group inline-flex min-h-[44px] items-center gap-2 py-2 text-sm text-cream/75 transition hover:text-cream"
                 >
                   <span className="grid h-7 w-7 place-items-center rounded-full border border-cream/20 text-ember-400 transition group-hover:border-ember-500/60">
                     ?
@@ -170,7 +183,7 @@ export function QuickEnroll({ content }: { content: SiteContent }) {
             </div>
           )}
         </div>
-      </Reveal>
+      </div>
     </section>
   );
 }

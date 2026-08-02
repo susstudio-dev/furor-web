@@ -1,15 +1,41 @@
 import { notFound } from 'next/navigation';
+import type { Metadata } from 'next';
 import { getContent } from '@/lib/content';
+import { JsonLd } from '@/components/JsonLd';
+import { articleLd, breadcrumbLd } from '@/lib/seo';
 
-// force-dynamic (below) makes this render fresh per request on Vercel.
-// generateStaticParams is still used by the GitHub Pages static export to
-// enumerate every slug (the deploy workflow strips the force-dynamic line so
-// `output: export` can emit them all as static files).
-export const dynamic = 'force-dynamic';
-
-export async function generateStaticParams() {
+// On the static GH Pages export every story must be prerendered
+// (`output: export` requires generateStaticParams on dynamic routes). On
+// Cloudflare Workers the export must be ABSENT: with it present, unlisted
+// params render in static-generation mode where the layout's connection()
+// call throws — and prerendered HTML would freeze admin edits anyway.
+async function staticParamsForExport() {
   const c = await getContent();
   return c.stories.map((s) => ({ slug: s.slug }));
+}
+export const generateStaticParams =
+  process.env.GH_PAGES === 'true' ? staticParamsForExport : undefined;
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const c = await getContent();
+  const story = c.stories.find((s) => s.slug === slug);
+  if (!story) return {};
+  const description = story.excerpt || story.body.slice(0, 155);
+  return {
+    title: story.title,
+    description,
+    alternates: { canonical: `/stories/${story.slug}` },
+    openGraph: {
+      type: 'article',
+      title: story.title,
+      description,
+      publishedTime: story.publishedAt,
+      // A page-level openGraph replaces the layout's wholesale — keep the
+      // brand card as fallback or stories without a hero lose og:image.
+      images: [story.heroImage || '/og.png'],
+    },
+  };
 }
 
 export default async function StoryPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -20,7 +46,15 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
 
   return (
     <article className="container-x pt-20 pb-24 prose prose-invert max-w-3xl">
-      <p className="text-cream/50 text-xs uppercase tracking-widest">
+      <JsonLd data={articleLd(story, content)} />
+      <JsonLd
+        data={breadcrumbLd([
+          { name: 'Home', path: '/' },
+          { name: 'Stories', path: '/stories' },
+          { name: story.title, path: `/stories/${story.slug}` },
+        ])}
+      />
+      <p className="text-cream/70 text-xs uppercase tracking-widest">
         {new Date(story.publishedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
       </p>
       <h1 className="display text-4xl font-extrabold sm:text-5xl tracking-tight">{story.title}</h1>

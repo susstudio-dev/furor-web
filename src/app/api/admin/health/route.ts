@@ -1,37 +1,33 @@
 import { NextResponse } from 'next/server';
-import { isProdStorage } from '@/lib/storage';
+import { isRemoteStorage, readText } from '@/lib/storage';
+import { CONTENT_KEY } from '@/lib/content';
 
-// Public, no SECRETS. Definitively answers "is Blob wired correctly".
-// Vercel Blob token format: vercel_blob_rw_<STOREID>_<SECRET>
-//  - <STOREID> is NOT secret (it's shown in the Vercel dashboard) -> safe to show
-//  - <SECRET> is never returned
+export const dynamic = 'force-dynamic';
+
+// Public, no SECRETS. Definitively answers "is storage wired correctly".
+// The probe is a single cheap read (1 R2 class-B op) — never a bucket list,
+// which an anonymous caller could loop to burn the free-plan quota. Raw
+// error detail goes to the server log only.
 export async function GET() {
-  const token = process.env.BLOB_READ_WRITE_TOKEN || '';
-  // Parse just the store-id segment (e.g. "store_abc123") for comparison.
-  let tokenStoreId: string | null = null;
-  const m = token.match(/^vercel_blob_rw_([^_]+)_/);
-  if (m) tokenStoreId = m[1];
+  const remote = await isRemoteStorage();
 
-  let blobProbe: string = 'skipped (no token)';
-  if (token) {
+  let storageProbe = 'skipped (filesystem)';
+  if (remote) {
     try {
-      const { list } = await import('@vercel/blob');
-      const res = await list({ limit: 1 });
-      blobProbe = `ok (${res.blobs.length} blob(s) visible)`;
+      const raw = await readText(CONTENT_KEY);
+      storageProbe = raw == null ? 'ok (empty store, serving seed)' : 'ok (content present)';
     } catch (err) {
-      blobProbe = `FAILED: ${err instanceof Error ? err.message : String(err)}`;
+      console.error('health storage probe failed:', err);
+      storageProbe = 'FAILED (see server logs)';
     }
   }
 
   return NextResponse.json({
     ok: true,
-    storage: isProdStorage ? 'blob' : 'filesystem',
-    onVercel: !!process.env.VERCEL,
-    vercelEnv: process.env.VERCEL_ENV || null, // production | preview | development
-    tokenPresent: !!token,
-    tokenStoreId, // compare this to the store ID in your Vercel dashboard
-    blobProbe, // 'ok ...' = working;  'FAILED: ...' = the real error
-    node: process.version,
-    build: 'storage-diag-2',
+    storage: remote ? 'r2' : 'filesystem',
+    storageProbe,
+    jwtSecretConfigured: !!process.env.JWT_SECRET && process.env.JWT_SECRET.length >= 32,
+    ownerEmailConfigured: !!process.env.ADMIN_OWNER_EMAIL,
+    build: 'storage-diag-3-cloudflare',
   });
 }

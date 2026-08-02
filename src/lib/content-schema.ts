@@ -1,5 +1,14 @@
 import { z } from 'zod';
 
+// zod's .url() only checks `new URL()` parseability, so javascript:, data: and
+// vbscript: URIs pass it — and several of these fields are rendered as raw
+// <a href> / <source src> on every public page. Restrict admin-editable link
+// fields to http(s) absolute URLs or root-relative paths.
+const isSafeUrl = (v: string) =>
+  v === '' || v.startsWith('/') || /^https?:\/\//i.test(v);
+const safeUrl = (message = 'Must be an http(s) URL or a /relative path') =>
+  z.string().refine(isSafeUrl, { message });
+
 export const SiteSettingsSchema = z.object({
   title: z.string().min(1),
   tagline: z.string().min(1),
@@ -8,9 +17,9 @@ export const SiteSettingsSchema = z.object({
   email: z.string().email().optional().or(z.literal('')),
   socials: z
     .object({
-      instagram: z.string().url().optional().or(z.literal('')),
-      facebook: z.string().url().optional().or(z.literal('')),
-      youtube: z.string().url().optional().or(z.literal('')),
+      instagram: safeUrl().optional().or(z.literal('')),
+      facebook: safeUrl().optional().or(z.literal('')),
+      youtube: safeUrl().optional().or(z.literal('')),
     })
     .partial(),
   footerCopy: z.string().optional().default(''),
@@ -26,8 +35,8 @@ export const SiteSettingsSchema = z.object({
 export const HeroSchema = z.object({
   headline: z.string().min(1),
   subHeadline: z.string().min(1),
-  videoMp4Url: z.string().url().optional().or(z.literal('')),
-  videoWebmUrl: z.string().url().optional().or(z.literal('')),
+  videoMp4Url: safeUrl().optional().or(z.literal('')),
+  videoWebmUrl: safeUrl().optional().or(z.literal('')),
   posterImage: z.string().default(''),
 });
 
@@ -148,7 +157,7 @@ export const BatchSchema = z.preprocess(
     reservationInr: z.number().int().nonnegative().default(500),
     seatsLeft: z.number().int().nonnegative().nullable().optional(),
     status: z.enum(['Open', 'Filling Fast', 'Closed']),
-    razorpayLink: z.string().url().nullable().optional(),
+    razorpayLink: safeUrl().nullable().optional(),
   }),
 );
 
@@ -162,7 +171,7 @@ export const InstructorSchema = z.object({
   styleSlugs: z.array(z.string()).default([]),
   social: z
     .object({
-      instagram: z.string().url().optional().or(z.literal('')),
+      instagram: safeUrl().optional().or(z.literal('')),
     })
     .partial()
     .default({}),
@@ -378,14 +387,14 @@ export const CustomBlockSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('text'), body: z.string().default('') }),
   z.object({
     type: z.literal('image'),
-    url: z.string().default(''),
+    url: safeUrl().default(''),
     alt: z.string().default(''),
     caption: z.string().default(''),
   }),
   z.object({
     type: z.literal('button'),
     label: z.string().default(''),
-    href: z.string().default(''),
+    href: safeUrl().default(''),
     variant: z.enum(['primary', 'secondary']).default('primary'),
   }),
 ]);
@@ -404,6 +413,8 @@ export const CustomPageSchema = z.object({
   showInFooter: z.boolean().default(true),
   showInNav: z.boolean().default(false),
   published: z.boolean().default(true),
+  // Thin pages (payment confirmations etc.) must not be indexed or sitemapped.
+  noindex: z.boolean().default(false),
   intro: PageIntroSchema.default({ eyebrow: '', headline: '', lead: '' }),
   sections: z.array(LegalSectionSchema).default([]),
   blocks: z.array(CustomBlockSchema).default([]),

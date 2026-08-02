@@ -85,7 +85,7 @@ export function EnquiryCTA({
       ? 'btn-primary'
       : variant === 'secondary'
       ? 'btn-secondary'
-      : 'inline-flex items-center gap-2 rounded-full bg-ember-500/15 px-3.5 py-1.5 text-sm font-medium text-ember-400 transition hover:bg-ember-500/25';
+      : 'inline-flex min-h-[44px] items-center gap-2 rounded-full bg-ember-500/15 px-4 py-2 text-sm font-medium text-ember-400 transition hover:bg-ember-500/25';
 
   const text =
     label ??

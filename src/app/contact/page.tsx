@@ -1,43 +1,26 @@
 import { getContent } from '@/lib/content';
 import { EnquiryCTA } from '@/components/EnquiryCTA';
-import { JsonLd } from '@/components/JsonLd';
 
 export const metadata = {
   title: 'Contact',
   description: 'Get in touch with Furor Dance Hyderabad — WhatsApp, Instagram, email or visit the Jubilee Hills studio.',
+  alternates: { canonical: '/contact' },
 };
 
-// Render per request so admin edits show immediately (export build strips this).
-export const dynamic = 'force-dynamic';
-
+// The DanceSchool/LocalBusiness JSON-LD is emitted site-wide from the root
+// layout (one node per studio, with geo + sameAs) — no page-local copy here.
 export default async function ContactPage() {
   const content = await getContent();
   const p = content.pages.contact;
   const studios = content.studios.slice().sort((a, b) => a.displayOrder - b.displayOrder);
-
-  const ld = studios[0]
-    ? {
-        '@context': 'https://schema.org',
-        '@type': 'LocalBusiness',
-        name: 'Furor Dance Hyderabad',
-        address: {
-          '@type': 'PostalAddress',
-          streetAddress: studios[0].address,
-          addressLocality: 'Hyderabad',
-          addressRegion: 'Telangana',
-          postalCode: '500033',
-          addressCountry: 'IN',
-        },
-        telephone: studios[0].telephone,
-        email: content.site.email,
-        openingHours: studios[0].hours,
-        url: 'https://www.dancehyderabad.com',
-      }
-    : undefined;
+  // Long addresses have to wrap somewhere. Offer the break at the "@" so it
+  // reads as two halves of an address instead of "…dancehyderabad." / "com",
+  // which is what break-all produced.
+  const [emailLocal, ...emailRest] = (content.site.email ?? '').split('@');
+  const emailDomain = emailRest.join('@');
 
   return (
     <>
-      {ld ? <JsonLd data={ld} /> : null}
       <section className="container-x pt-20 pb-12">
         {p.intro.eyebrow ? (
           <p className="display text-sm uppercase tracking-widest text-ember-400">{p.intro.eyebrow}</p>
@@ -52,45 +35,68 @@ export default async function ContactPage() {
         ) : null}
       </section>
 
-      <section className="container-x pb-12 grid gap-6 md:grid-cols-3">
+      {/* Each tile is a flex column so the "go" link is pushed to the bottom
+          with mt-auto. Without it the links follow the body text, and the
+          email's two-line address dropped its link ~40px below the others. */}
+      {/* 2-up before 3-up: at 768px a three-column grid leaves each tile 161px
+          of content, and "+918886072572" needs 175px — it silently overflowed
+          its own padding. The third tile orphaning onto row 2 between 640 and
+          1023px is the cheaper trade. */}
+      <section className="container-x pb-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         <a
           href={`https://wa.me/${content.site.whatsappNumber}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="group rounded-3xl border border-cream/10 bg-ink-900/40 p-7 transition-colors hover:border-ember-400/50"
+          className="group flex flex-col rounded-3xl border border-cream/10 bg-ink-900/40 p-7 transition-colors hover:border-ember-400/50"
         >
-          <p className="text-xs uppercase tracking-widest text-cream/50">{p.tiles.whatsappLabel}</p>
-          <p className="mt-3 display text-2xl font-bold text-cream">+{content.site.whatsappNumber}</p>
-          <p className="mt-3 text-sm text-cream/70 leading-relaxed">{p.tiles.whatsappBody}</p>
-          <p className="mt-5 text-ember-400 text-sm group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
-            Start a chat →
+          <p className="text-xs uppercase tracking-widest text-cream/70">{p.tiles.whatsappLabel}</p>
+          <p className="mt-3 display text-lg md:text-xl font-bold text-cream">
+            +{content.site.whatsappNumber}
           </p>
+          <p className="mt-3 text-sm text-cream/70 leading-relaxed">{p.tiles.whatsappBody}</p>
+          <span className="mt-auto pt-5 self-start text-ember-400 text-sm inline-flex items-center gap-1">
+            Start a chat
+            <span aria-hidden className="transition-transform group-hover:translate-x-1">→</span>
+          </span>
         </a>
 
         <a
           href={`mailto:${content.site.email}`}
-          className="group rounded-3xl border border-cream/10 bg-ink-900/40 p-7 transition-colors hover:border-ember-400/50"
+          className="group flex flex-col rounded-3xl border border-cream/10 bg-ink-900/40 p-7 transition-colors hover:border-ember-400/50"
         >
-          <p className="text-xs uppercase tracking-widest text-cream/50">{p.tiles.emailLabel}</p>
-          <p className="mt-3 display text-2xl font-bold text-cream break-all">{content.site.email}</p>
-          <p className="mt-3 text-sm text-cream/70 leading-relaxed">{p.tiles.emailBody}</p>
-          <p className="mt-5 text-ember-400 text-sm inline-flex items-center gap-1">
-            Send an email →
+          <p className="text-xs uppercase tracking-widest text-cream/70">{p.tiles.emailLabel}</p>
+          {/* `anywhere`, not `break-word`: only `anywhere` and `break-all`
+              reduce an element's min-content contribution, and the unbreakable
+              "@dancehyderabad.com" atom was forcing 26px of horizontal page
+              scroll at 320px. The <wbr/> keeps the *preferred* break at the @;
+              `anywhere` only engages if even the domain half can't fit. */}
+          <p className="mt-3 display text-lg md:text-xl font-bold text-cream [overflow-wrap:anywhere]">
+            {emailLocal}
+            <wbr />
+            {emailDomain ? `@${emailDomain}` : ''}
           </p>
+          <p className="mt-3 text-sm text-cream/70 leading-relaxed">{p.tiles.emailBody}</p>
+          <span className="mt-auto pt-5 self-start text-ember-400 text-sm inline-flex items-center gap-1">
+            Send an email
+            <span aria-hidden className="transition-transform group-hover:translate-x-1">→</span>
+          </span>
         </a>
 
         <a
           href={`https://instagram.com/${content.site.instagramHandle}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="group rounded-3xl border border-cream/10 bg-ink-900/40 p-7 transition-colors hover:border-ember-400/50"
+          className="group flex flex-col rounded-3xl border border-cream/10 bg-ink-900/40 p-7 transition-colors hover:border-ember-400/50"
         >
-          <p className="text-xs uppercase tracking-widest text-cream/50">{p.tiles.instagramLabel}</p>
-          <p className="mt-3 display text-2xl font-bold text-cream">@{content.site.instagramHandle}</p>
-          <p className="mt-3 text-sm text-cream/70 leading-relaxed">{p.tiles.instagramBody}</p>
-          <p className="mt-5 text-ember-400 text-sm inline-flex items-center gap-1">
-            DM us →
+          <p className="text-xs uppercase tracking-widest text-cream/70">{p.tiles.instagramLabel}</p>
+          <p className="mt-3 display text-lg md:text-xl font-bold text-cream">
+            @{content.site.instagramHandle}
           </p>
+          <p className="mt-3 text-sm text-cream/70 leading-relaxed">{p.tiles.instagramBody}</p>
+          <span className="mt-auto pt-5 self-start text-ember-400 text-sm inline-flex items-center gap-1">
+            DM us
+            <span aria-hidden className="transition-transform group-hover:translate-x-1">→</span>
+          </span>
         </a>
       </section>
 
@@ -106,23 +112,25 @@ export default async function ContactPage() {
             return (
               <div key={studio.id} className="grid gap-6 md:grid-cols-2 items-stretch">
                 <div className="rounded-3xl border border-cream/10 bg-ink-900/40 p-8 sm:p-10 flex flex-col">
-                  <p className="display text-3xl font-bold">{studio.name}</p>
+                  {/* An <h2>, not a <p>: these are the second-largest type on
+                      the page and were leaving the outline as h1 → nothing. */}
+                  <h2 className="display text-3xl font-bold">{studio.name}</h2>
                   <div className="mt-6 space-y-4 text-cream/85">
                     <div>
-                      <p className="text-xs uppercase tracking-widest text-cream/50">Address</p>
+                      <p className="text-xs uppercase tracking-widest text-cream/70">Address</p>
                       <p className="mt-1 leading-relaxed">{studio.address}</p>
                     </div>
                     <div>
-                      <p className="text-xs uppercase tracking-widest text-cream/50">Hours</p>
+                      <p className="text-xs uppercase tracking-widest text-cream/70">Hours</p>
                       <p className="mt-1">{studio.hours}</p>
                     </div>
                     <div>
-                      <p className="text-xs uppercase tracking-widest text-cream/50">Phone</p>
+                      <p className="text-xs uppercase tracking-widest text-cream/70">Phone</p>
                       <p className="mt-1">{studio.telephone}</p>
                     </div>
                     {studio.parkingNotes ? (
                       <div>
-                        <p className="text-xs uppercase tracking-widest text-cream/50">Parking</p>
+                        <p className="text-xs uppercase tracking-widest text-cream/70">Parking</p>
                         <p className="mt-1 text-cream/80">{studio.parkingNotes}</p>
                       </div>
                     ) : null}
@@ -152,12 +160,12 @@ export default async function ContactPage() {
 
       {p.closingCta.headline ? (
       <section className="container-x py-16">
-        <div className="rounded-3xl bg-gradient-to-br from-ember-700 via-ember-600 to-ember-500 p-10 sm:p-14 text-ink-950">
+        <div className="on-accent accent-panel rounded-3xl p-10 sm:p-14">
           <h2 className="display text-3xl sm:text-5xl font-extrabold tracking-tight max-w-2xl">
             {p.closingCta.headline}
           </h2>
           {p.closingCta.body ? (
-            <p className="mt-3 text-ink-950/80 max-w-xl">{p.closingCta.body}</p>
+            <p className="mt-3 text-on-ember max-w-xl">{p.closingCta.body}</p>
           ) : null}
           <div className="mt-6 flex flex-wrap gap-3">
             <EnquiryCTA
@@ -174,7 +182,7 @@ export default async function ContactPage() {
               channel="instagram"
               variant="secondary"
               label="DM on Instagram"
-              className="!border-ink-950/40 !text-ink-950 hover:!border-ink-950"
+              className="!border-on-ember/45 !text-on-ember hover:!border-on-ember"
             />
           </div>
         </div>

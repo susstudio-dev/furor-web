@@ -62,7 +62,13 @@ export function Hero({ content }: { content: SiteContent }) {
           like a moving stage light. Fine pointers only; never hides the
           cursor. The .lit class + position are set by HeroSpotlight. */}
       <div ref={spotRef} className="spotlight" aria-hidden />
-      <div className="container-x pt-14 pb-16 sm:py-16 lg:py-20 relative z-10 max-w-[44rem] sm:max-w-none">
+      {/* NB: no max-w override here. Whatever width container-x defines IS the
+          site grid — the header, the QuickEnroll card and every section below
+          sit on it, so the headline has to as well or the hero reads as a
+          different page.
+          Bottom padding must exceed QuickEnroll's negative top margin (-mt-20 /
+          sm:-mt-28) so the card overlaps empty space, not the scroll cue. */}
+      <div className="container-x relative z-10 pt-14 pb-32 sm:pt-16 sm:pb-40 lg:pt-20 lg:pb-40">
         {/* The count-in every dancer knows — 5, 6, 7, 8 — then the words move
             on 1. Pure CSS, on tempo; collapses to nothing on reduced motion. */}
         <p
@@ -102,16 +108,10 @@ export function Hero({ content }: { content: SiteContent }) {
             See batches
           </Link>
         </div>
-        {/* Pulls the eye down to the live batches peeking just below. */}
-        <a
-          href="#start-this-week"
-          className="hero-fade group mt-10 inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.25em] text-cream/55 transition hover:text-ember-400"
-          style={{ animationDelay: '1.35s' }}
-        >
-          <span className="beat-dot inline-block h-2 w-2 rounded-full bg-ember-500" />
-          The floor&apos;s open below
-          <span className="scroll-cue inline-block">↓</span>
-        </a>
+        {/* No scroll cue here: the QuickEnroll card overlaps this space and its
+            lit top edge + "Booking open" pulse already pull the eye down. A
+            text link pointing at the card that covers it was two cues fighting
+            for the same job — and the card won by sitting on top of it. */}
       </div>
       {/* Magnetic CTA: enabled by ScriptOnFinePointer mounted in app layout via children */}
       <MagneticInit />

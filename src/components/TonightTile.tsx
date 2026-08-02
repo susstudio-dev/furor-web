@@ -7,7 +7,7 @@ export function TonightTile({ content }: { content: SiteContent }) {
 
   return (
     <section className="container-x py-12 sm:py-16">
-      <div className="relative overflow-hidden rounded-3xl border border-ember-500/40 bg-gradient-to-br from-ember-700/20 via-ink-900/60 to-ink-900 p-8 sm:p-12">
+      <div className="relative overflow-clip rounded-3xl border border-ember-500/40 bg-gradient-to-br from-ember-700/20 via-ink-900/60 to-ink-900 p-8 sm:p-12">
         <div className="pointer-events-none absolute -top-24 -right-24 h-64 w-64 rounded-full bg-ember-500/30 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-gold-500/20 blur-3xl" />
 
@@ -15,7 +15,7 @@ export function TonightTile({ content }: { content: SiteContent }) {
           <div>
             <p className="pill bg-ember-500/20 text-ember-400">
               <span className="relative flex h-2 w-2">
-                <span className="absolute inset-0 animate-ping rounded-full bg-ember-500/70" />
+                <span className="beat-ring absolute inset-0 rounded-full bg-ember-500/70" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-ember-500" />
               </span>
               Live · {t.when}

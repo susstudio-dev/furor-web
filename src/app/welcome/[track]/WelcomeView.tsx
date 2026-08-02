@@ -109,10 +109,15 @@ export function WelcomeView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [track]);
 
-  // Optimistic: unknown (no params / before the effect runs) is treated as
-  // confirmed, so the common success case renders immediately and SSR matches
-  // the first client render. A genuinely failed payment flips after mount.
-  const confirmed = !payment || !payment.status || payment.status.toLowerCase() === 'paid';
+  // Before the effect runs (SSR + first client render) stay optimistic so the
+  // common Razorpay-redirect case doesn't flash. After mount, confirmation
+  // requires actual redirect params: status=paid, or a payment id when the
+  // link omits status. A bare /welcome/<track> visit (no params) is NOT
+  // treated as a confirmed payment — anyone can type that URL.
+  const confirmed =
+    payment === null ||
+    payment.status?.toLowerCase() === 'paid' ||
+    (!payment.status && !!payment.paymentId);
   const paymentId = payment?.paymentId ?? null;
 
   const { intakeDate, whenDays, whenTime, arriveBy, venue, mapUrl, gcalUrl, icsHref } = bundle;
@@ -182,7 +187,7 @@ export function WelcomeView({
           </p>
           <p className="mt-4 mx-auto max-w-2xl text-cream/70">{copy.thankYouBody}</p>
           {paymentId ? (
-            <p className="mt-5 inline-block rounded-full border border-cream/10 bg-ink-900/50 px-4 py-1.5 text-xs text-cream/55">
+            <p className="mt-5 inline-block rounded-full border border-cream/10 bg-ink-900/50 px-4 py-1.5 text-xs text-cream/70">
               Payment reference: <span className="text-cream/80">{paymentId}</span>
             </p>
           ) : null}
@@ -194,7 +199,7 @@ export function WelcomeView({
         <Reveal stagger className="grid gap-5 md:grid-cols-2">
           {/* Step 1 — save number */}
           <div className="rounded-3xl border border-cream/10 bg-ink-900/40 p-7">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-ember-500 display text-lg font-bold text-ink-950">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-ember-600 display text-lg font-bold text-on-ember">
               1
             </div>
             <p className="mt-4 display text-xl font-bold">{copy.step1Title}</p>
@@ -218,7 +223,7 @@ export function WelcomeView({
 
           {/* Step 2 — add to calendar / show up */}
           <div className="rounded-3xl border border-cream/10 bg-ink-900/40 p-7">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-ember-500 display text-lg font-bold text-ink-950">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-ember-600 display text-lg font-bold text-on-ember">
               2
             </div>
             <p className="mt-4 display text-xl font-bold">{copy.step2Title}</p>
@@ -244,7 +249,7 @@ export function WelcomeView({
                 ) : null}
               </div>
             ) : (
-              <p className="mt-5 text-sm text-cream/55">
+              <p className="mt-5 text-sm text-cream/70">
                 We’ll confirm the exact date on WhatsApp and send you a reminder.
               </p>
             )}
@@ -258,7 +263,7 @@ export function WelcomeView({
           <p className="display text-sm uppercase tracking-widest text-ember-400">{copy.intakeHeading}</p>
           <div className="mt-6 grid gap-8 md:grid-cols-3">
             <div>
-              <p className="text-xs uppercase tracking-widest text-cream/50">Where</p>
+              <p className="text-xs uppercase tracking-widest text-cream/70">Where</p>
               <p className="mt-2 leading-relaxed text-cream/85">
                 {venue || 'We’ll share the exact address on WhatsApp.'}
               </p>
@@ -274,7 +279,7 @@ export function WelcomeView({
               ) : null}
             </div>
             <div>
-              <p className="text-xs uppercase tracking-widest text-cream/50">When</p>
+              <p className="text-xs uppercase tracking-widest text-cream/70">When</p>
               <p className="mt-2 leading-relaxed text-cream/85">
                 Every <span className="font-semibold text-cream">{whenDays}</span>
                 <br />
@@ -285,7 +290,7 @@ export function WelcomeView({
               </p>
             </div>
             <div>
-              <p className="text-xs uppercase tracking-widest text-cream/50">{copy.whatToBringHeading}</p>
+              <p className="text-xs uppercase tracking-widest text-cream/70">{copy.whatToBringHeading}</p>
               <ul className="mt-2 space-y-1.5 leading-relaxed text-cream/85">
                 {copy.whatToBring.map((item, i) => (
                   <li key={i}>• {item}</li>
@@ -298,11 +303,11 @@ export function WelcomeView({
 
       {/* Sign-off */}
       <section className="container-x pb-24">
-        <Reveal className="rounded-3xl bg-gradient-to-br from-ember-700 via-ember-600 to-ember-500 p-10 text-ink-950 sm:p-14">
+        <Reveal className="on-accent accent-panel rounded-3xl p-10 sm:p-14">
           <p className="display text-3xl font-extrabold tracking-tight sm:text-4xl">
             {copy.signoffHeadline}
           </p>
-          <p className="mt-4 max-w-xl text-ink-950/80">{copy.signoffBody}</p>
+          <p className="mt-4 max-w-xl text-on-ember">{copy.signoffBody}</p>
           <div className="mt-6">
             <a
               href={waText(confirmMsg)}
@@ -313,8 +318,8 @@ export function WelcomeView({
               Chat on WhatsApp
             </a>
           </div>
-          <p className="mt-8 font-semibold text-ink-950/90">{copy.signoffName}</p>
-          <p className="text-sm text-ink-950/70">{copy.signoffTagline}</p>
+          <p className="mt-8 font-semibold text-on-ember">{copy.signoffName}</p>
+          <p className="text-sm text-on-ember">{copy.signoffTagline}</p>
         </Reveal>
       </section>
     </>
