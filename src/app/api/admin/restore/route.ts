@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { getSession } from '@/lib/auth';
 import { audit } from '@/lib/audit';
+import { bustContentCache } from '@/lib/content';
 import { restoreVersion } from '@/lib/content-write';
 
 export async function POST(req: Request) {
@@ -11,8 +12,13 @@ export async function POST(req: Request) {
   if (!body?.filename) return NextResponse.json({ error: 'filename required' }, { status: 400 });
   try {
     await restoreVersion(body.filename, session.email);
+    bustContentCache();
     await audit({ actor: session.email, action: 'restore_version', detail: body.filename });
-    revalidatePath('/', 'layout');
+    try {
+      revalidatePath('/', 'layout');
+    } catch (err) {
+      console.warn('revalidatePath failed (non-fatal):', err);
+    }
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error(err);

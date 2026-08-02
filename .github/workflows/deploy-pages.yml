@@ -40,6 +40,7 @@ jobs:
           rm -rf src/app/api
           rm -rf src/app/p
           rm -rf src/app/welcome
+          rm -rf src/app/uploads
           rm -f src/middleware.ts
           rm -f src/app/icon.tsx
           rm -f src/app/opengraph-image.tsx

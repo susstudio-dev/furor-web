@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import { connection } from 'next/server';
 import { Bricolage_Grotesque, Fraunces, Inter } from 'next/font/google';
 import './globals.css';
 import { Header } from '@/components/Header';
@@ -48,6 +49,11 @@ export const viewport: Viewport = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // On Cloudflare Workers every page renders per-request so admin edits are
+  // always fresh (there is no ISR tag-cache machinery on the free plan). The
+  // GitHub Pages mirror build (GH_PAGES=true, inlined at build time) skips
+  // this and stays fully static-exportable.
+  if (process.env.GH_PAGES !== 'true') await connection();
   const content = await getContent();
   return (
     <html lang="en" className={`${display.variable} ${serif.variable} ${sans.variable}`} suppressHydrationWarning>

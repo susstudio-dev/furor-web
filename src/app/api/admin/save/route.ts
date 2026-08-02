@@ -3,6 +3,7 @@ import { revalidatePath } from 'next/cache';
 import { getSession } from '@/lib/auth';
 import { audit } from '@/lib/audit';
 import { ContentValidationError, saveContent } from '@/lib/content-write';
+import { bustContentCache } from '@/lib/content';
 import { StorageUnavailableError } from '@/lib/storage';
 
 export async function POST(req: Request) {
@@ -16,30 +17,35 @@ export async function POST(req: Request) {
   }
   try {
     const saved = await saveContent(body, session.email);
+    bustContentCache();
     await audit({ actor: session.email, action: 'save_content', detail: `version ${saved.version}` });
-    // Layout-level revalidate is supposed to cascade to every static page
-    // under the root layout, but we've seen cases where the edge holds a
-    // stale HTML response after an admin save. Explicit per-page calls
-    // alongside the layout call guarantee each public route is marked stale.
-    revalidatePath('/', 'layout');
-    for (const p of [
-      '/',
-      '/about',
-      '/faqs',
-      '/contact',
-      '/instructors',
-      '/stories',
-      '/dance-styles',
-      '/batches',
-      '/privacy',
-      '/terms',
-      '/sitemap.xml',
-    ]) {
-      revalidatePath(p);
+    // Public pages render per-request on Cloudflare (see connection() in the
+    // root layout), so freshness doesn't depend on revalidation there. The
+    // calls are kept for dev/other hosts and wrapped so a runtime without
+    // tag-cache machinery can never turn a successful save into a 500.
+    try {
+      revalidatePath('/', 'layout');
+      for (const p of [
+        '/',
+        '/about',
+        '/faqs',
+        '/contact',
+        '/instructors',
+        '/stories',
+        '/dance-styles',
+        '/batches',
+        '/privacy',
+        '/terms',
+        '/sitemap.xml',
+      ]) {
+        revalidatePath(p);
+      }
+      for (const s of saved.danceStyles) revalidatePath(`/dance-styles/${s.slug}`);
+      for (const s of saved.stories) revalidatePath(`/stories/${s.slug}`);
+      for (const p of saved.customPages) revalidatePath(`/p/${p.slug}`);
+    } catch (err) {
+      console.warn('revalidatePath failed (non-fatal):', err);
     }
-    for (const s of saved.danceStyles) revalidatePath(`/dance-styles/${s.slug}`);
-    for (const s of saved.stories) revalidatePath(`/stories/${s.slug}`);
-    for (const p of saved.customPages) revalidatePath(`/p/${p.slug}`);
     return NextResponse.json({ ok: true });
   } catch (err: unknown) {
     if (err instanceof ContentValidationError) {

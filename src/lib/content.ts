@@ -28,15 +28,34 @@ function mergeWithSeed(saved: unknown, seed: unknown): unknown {
   return out;
 }
 
-// Reads the live content from storage (filesystem in dev, Vercel Blob in
-// prod). On first run it *tries* to write the seed through so later admin
-// edits persist — but a failed write (e.g. read-only Vercel FS before the
-// Blob store is connected) must NEVER crash the request: we just serve the
-// bundled seed. Wrapped in React cache() => one read per request.
+// Cross-request TTL cache (per Worker isolate / per Node process). Public
+// pages render per-request on Cloudflare (see connection() in the root
+// layout), so this bounds R2 reads to ~2/min per isolate while keeping admin
+// edits visible within CACHE_TTL_MS everywhere (and instantly in the isolate
+// that saved — see bustContentCache()).
+const CACHE_TTL_MS = 30_000;
+let cached: { raw: string | null; at: number } | null = null;
+
+export function bustContentCache(): void {
+  cached = null;
+}
+
+async function readContentRaw(): Promise<string | null> {
+  if (process.env.NODE_ENV === 'production' && cached && Date.now() - cached.at < CACHE_TTL_MS) {
+    return cached.raw;
+  }
+  const raw = await readText(CONTENT_KEY);
+  cached = { raw, at: Date.now() };
+  return raw;
+}
+
+// Reads the live content from storage (filesystem in dev, R2 in prod).
+// A failed read must NEVER crash the request: we just serve the bundled
+// seed. Wrapped in React cache() => one read per request.
 export const getContent = cache(async (): Promise<SiteContent> => {
   let raw: string | null = null;
   try {
-    raw = await readText(CONTENT_KEY);
+    raw = await readContentRaw();
   } catch {
     // Transient read error (network/Blob hiccup). Serve the in-memory seed for
     // THIS request only — never persist it. A temporary read failure must not
