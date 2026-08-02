@@ -1,12 +1,13 @@
 import Link from 'next/link';
 import { getContent, nextBatchPerStyle, formatBatchDate, formatInr, batchStyleLabel } from '@/lib/content';
+import { truncateAtWord } from '@/lib/seo';
 
 export async function generateMetadata() {
   const c = await getContent();
   return {
     // The hero sub-headline carries the service+city phrasing ("Learn Salsa,
     // Bachata… Jubilee Hills, Hyderabad") — the highest-value local query.
-    description: c.hero.subHeadline || c.site.tagline,
+    description: truncateAtWord(c.hero.subHeadline || c.site.tagline),
     alternates: { canonical: '/' },
   };
 }

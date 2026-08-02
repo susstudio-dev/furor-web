@@ -5,7 +5,7 @@ import { EnquiryCTA } from '@/components/EnquiryCTA';
 import { BatchActions } from '@/components/BatchActions';
 import { JsonLd } from '@/components/JsonLd';
 import { Img } from '@/components/Img';
-import { breadcrumbLd, courseLd } from '@/lib/seo';
+import { breadcrumbLd, courseLd, truncateAtWord } from '@/lib/seo';
 
 // On the static GH Pages export every style page must be prerendered
 // (`output: export` requires generateStaticParams on dynamic routes). On
@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!s) return {};
   return {
     title: `${s.name} Classes in Hyderabad`,
-    description: `${s.tagline} ${s.description}`.slice(0, 160),
+    description: truncateAtWord(`${s.tagline} ${s.description}`),
     alternates: { canonical: `/dance-styles/${s.slug}` },
     openGraph: {
       title: `${s.name} Classes in Hyderabad`,

@@ -156,6 +156,16 @@ export function breadcrumbLd(items: { name: string; path: string }[]) {
   };
 }
 
+// Meta descriptions: Google displays ~160 chars. Cut on a word boundary —
+// a mid-word cut ("Puerto R…") reads broken in the SERP snippet.
+export function truncateAtWord(text: string, max = 160): string {
+  const clean = text.replace(/\s+/g, ' ').trim();
+  if (clean.length <= max) return clean;
+  const cut = clean.slice(0, max);
+  const lastSpace = cut.lastIndexOf(' ');
+  return `${(lastSpace > 0 ? cut.slice(0, lastSpace) : cut).trimEnd()}…`;
+}
+
 export function absoluteUrl(path: string): string {
   if (/^https?:\/\//i.test(path)) return path;
   return `${SITE_URL}${path.startsWith('/') ? '' : '/'}${path}`;
