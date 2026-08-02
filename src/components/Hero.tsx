@@ -68,12 +68,16 @@ export function Hero({ content }: { content: SiteContent }) {
           different page.
           Bottom padding must exceed QuickEnroll's negative top margin (-mt-20 /
           sm:-mt-28) so the card overlaps empty space, not the scroll cue. */}
-      <div className="container-x relative z-10 pt-14 pb-32 sm:pt-16 sm:pb-40 lg:pt-20 lg:pb-40">
+      {/* Top padding is deliberately shallow: every pixel here pushes the
+          booking card further under the fold. The card's peek is the hero's
+          real call to action, so the content block sits high and the reserved
+          bottom padding (which the card overlaps) stays generous. */}
+      <div className="container-x relative z-10 pt-8 pb-32 sm:pt-10 sm:pb-40 lg:pt-12 lg:pb-40">
         {/* The count-in every dancer knows — 5, 6, 7, 8 — then the words move
             on 1. Pure CSS, on tempo; collapses to nothing on reduced motion. */}
         <p
           aria-hidden
-          className="count-in display text-sm font-bold uppercase tracking-[0.4em] text-ember-400 mb-5"
+          className="count-in display text-sm font-bold uppercase tracking-[0.4em] text-ember-400 mb-3"
         >
           <span>5</span>
           <span>6</span>
@@ -93,7 +97,7 @@ export function Hero({ content }: { content: SiteContent }) {
           {content.hero.subHeadline}
         </p>
         <div
-          className="mt-10 flex flex-wrap items-center gap-3 hero-fade"
+          className="mt-8 flex flex-wrap items-center gap-3 hero-fade"
           style={{ animationDelay: '1.15s' }}
         >
           <EnquiryCTA
