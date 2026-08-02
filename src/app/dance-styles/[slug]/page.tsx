@@ -31,7 +31,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     openGraph: {
       title: `${s.name} Classes in Hyderabad`,
       description: s.tagline,
-      ...(s.heroImage ? { images: [s.heroImage] } : {}),
+      // A page-level openGraph replaces the layout's wholesale — keep the
+      // brand card as fallback or styles without a hero lose og:image.
+      images: [s.heroImage || '/og.png'],
     },
   };
 }

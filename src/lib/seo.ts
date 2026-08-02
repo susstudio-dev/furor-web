@@ -1,4 +1,5 @@
 import type { SiteContent } from './content-schema';
+import { batchesForStyle } from './content-helpers';
 
 // JSON-LD builders. Rendered via <JsonLd data={...} /> — see the layout for
 // the site-wide Organization / WebSite / DanceSchool nodes; pages add their
@@ -75,9 +76,9 @@ export function courseLd(
   content: SiteContent,
   style: SiteContent['danceStyles'][number],
 ) {
-  const batches = content.batches.filter(
-    (b) => b.styleSlugs.includes(style.slug) && b.status !== 'Closed',
-  );
+  // Same visibility rules as the page (startDate >= today, not Closed) —
+  // markup must never advertise batches the visitor cannot see.
+  const batches = batchesForStyle(content, style.slug);
   return {
     '@context': 'https://schema.org',
     '@type': 'Course',
@@ -89,6 +90,7 @@ export function courseLd(
       batches.length > 0
         ? batches.map((b) => ({
             '@type': 'Offer',
+            category: 'Paid',
             price: b.priceInr,
             priceCurrency: 'INR',
             availability:
@@ -97,25 +99,29 @@ export function courseLd(
                 : 'https://schema.org/InStock',
           }))
         : undefined,
-    hasCourseInstance: batches.map((b) => {
-      const studio = content.studios.find((s) => s.slug === b.branchSlug);
-      return {
-        '@type': 'CourseInstance',
-        courseMode: 'Onsite',
-        startDate: b.startDate,
-        courseSchedule: {
-          '@type': 'Schedule',
-          byDay: b.daysOfWeek.map((d) => `https://schema.org/${expandDay(d)}`),
-        },
-        location: studio
-          ? {
-              '@type': 'Place',
-              name: studio.name,
-              address: studio.address,
-            }
-          : undefined,
-      };
-    }),
+    hasCourseInstance:
+      batches.length > 0
+        ? batches.map((b) => {
+            const studio = content.studios.find((s) => s.slug === b.branchSlug);
+            return {
+              '@type': 'CourseInstance',
+              courseMode: 'Onsite',
+              startDate: b.startDate,
+              courseSchedule: {
+                '@type': 'Schedule',
+                repeatFrequency: 'Weekly',
+                byDay: b.daysOfWeek.map((d) => `https://schema.org/${expandDay(d)}`),
+              },
+              location: studio
+                ? {
+                    '@type': 'Place',
+                    name: studio.name,
+                    address: studio.address,
+                  }
+                : undefined,
+            };
+          })
+        : undefined,
   };
 }
 

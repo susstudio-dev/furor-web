@@ -31,7 +31,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       title: story.title,
       description,
       publishedTime: story.publishedAt,
-      ...(story.heroImage ? { images: [story.heroImage] } : {}),
+      // A page-level openGraph replaces the layout's wholesale — keep the
+      // brand card as fallback or stories without a hero lose og:image.
+      images: [story.heroImage || '/og.png'],
     },
   };
 }

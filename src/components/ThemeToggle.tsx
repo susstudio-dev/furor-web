@@ -33,6 +33,10 @@ export function ThemeToggle({ className }: { className?: string }) {
     }
     setMode(stored);
     setMounted(true);
+    // Sync the theme-color metas with the stored choice on every page load —
+    // the media-query pair in the layout only tracks the OS preference, so a
+    // user who picked the opposite theme would get mismatched browser chrome.
+    applyTheme(stored);
 
     // When in system mode, follow OS changes live.
     const mq = window.matchMedia('(prefers-color-scheme: dark)');

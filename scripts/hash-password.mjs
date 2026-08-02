@@ -11,9 +11,11 @@ import { pbkdf2Sync, randomBytes } from 'node:crypto';
 
 const args = process.argv.slice(2);
 const iterFlag = args.indexOf('--iterations');
-// 100k is workerd's PBKDF2 cap. If login ever hits the free plan's CPU limit,
-// regenerate with --iterations 50000.
-let iterations = 100_000;
+// Default 50k: comfortably inside the Workers free plan's 10ms CPU budget.
+// (workerd caps PBKDF2 at 100k, but at the cap a login can brush the CPU
+// limit and 500 — an unreliable login is worse than the marginal stretching,
+// especially since this hash lives only in the Worker secret store.)
+let iterations = 50_000;
 if (iterFlag !== -1) {
   iterations = Number(args[iterFlag + 1]);
   args.splice(iterFlag, 2);
@@ -33,4 +35,9 @@ const salt = randomBytes(16);
 const hash = pbkdf2Sync(password, salt, iterations, 32, 'sha256');
 console.log(
   `pbkdf2$sha256$${iterations}$${salt.toString('base64')}$${hash.toString('base64')}`,
+);
+console.error(
+  '\nUse with:  wrangler secret put ADMIN_OWNER_PASSWORD_HASH  (paste the line above)\n' +
+    'NOT for dotenv files: dotenv expands $VAR references and silently corrupts the\n' +
+    'hash — in .env.local escape each $ as \\$, or use ADMIN_OWNER_INITIAL_PASSWORD.',
 );

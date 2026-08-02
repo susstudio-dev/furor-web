@@ -120,7 +120,6 @@ npm run preview                  # OpenNext build + local Workers preview (wrang
 npm run deploy                   # OpenNext build + deploy to Cloudflare Workers
 npm run hash-password -- '<pw>'  # PBKDF2 hash for ADMIN_OWNER_PASSWORD_HASH
 npm run typecheck                # tsc --noEmit
-npm run lint                     # next lint
 npm run sync-seed                # copy data/site-content.json → src/data/site-content.seed.json
 npm run sync-seed -- --check     # exit non-zero if seed and local content diverge
 ```

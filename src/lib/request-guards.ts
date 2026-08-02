@@ -18,10 +18,13 @@ export function sameOrigin(req: Request): boolean {
   }
 }
 
-/** 413-guard: reject bodies over `maxBytes` before buffering them. */
+/** 413-guard: reject bodies over `maxBytes` BEFORE buffering them. A body
+ * with no Content-Length (chunked / stripped) is rejected too — every
+ * legitimate admin-UI request carries one, and accepting unknown-length
+ * bodies would let a request buffer up to the platform cap into memory. */
 export function contentLengthWithin(req: Request, maxBytes: number): boolean {
   const len = req.headers.get('content-length');
-  if (len == null) return true; // let the runtime's own limits apply
+  if (len == null) return false;
   const n = Number(len);
   return Number.isFinite(n) && n <= maxBytes;
 }

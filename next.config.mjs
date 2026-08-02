@@ -137,6 +137,12 @@ const nextConfig = {
                 { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
               ],
             },
+            // Served uploads are opaque image bytes — lock them down harder
+            // than the site CSP (later matching rules win per header key).
+            {
+              source: '/uploads/:path*',
+              headers: [{ key: 'Content-Security-Policy', value: "default-src 'none'" }],
+            },
           ];
         },
       }),

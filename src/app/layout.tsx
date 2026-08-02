@@ -48,7 +48,9 @@ export async function generateMetadata(): Promise<Metadata> {
       description: content.site.tagline,
       type: 'website',
       siteName: content.site.title,
-      url: 'https://www.dancehyderabad.com',
+      // NB: no `url` here — layout openGraph is inherited wholesale by pages
+      // without their own, and a fixed og:url would mark every inner page as
+      // a share of the homepage.
       locale: 'en_IN',
       images: ['/og.png'],
     },

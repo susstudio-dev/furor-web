@@ -51,6 +51,7 @@ export default async function BatchesPage() {
       provider: { '@type': 'Organization', name: content.site.title, url: 'https://www.dancehyderabad.com' },
       offers: {
         '@type': 'Offer',
+        category: 'Paid',
         price: b.priceInr,
         priceCurrency: 'INR',
         availability:

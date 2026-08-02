@@ -11,6 +11,7 @@ data/versions/
 data/users.json
 data/audit.log
 data/audit.json
+data/audit-auth.json
 public/uploads/
 *.log
 .DS_Store
