@@ -460,27 +460,33 @@ touch (no Cmd key on a phone).
 
 ### 6.4 Preview
 
-**Decision required — see §11.** Two viable shapes:
+**Both ship** (§11, decision 1), in this order:
 
 - **(A) New tab.** `POST /api/admin/preview` sets a signed, httpOnly, ≤15-minute `furor_preview`
   cookie and returns a URL; the public site renders the draft. Zero header changes, zero framing
-  risk.
-- **(B) Split view.** Requires a `next.config.mjs` rule *after* `/:path*`, gated
+  risk. This is also the fallback whenever framing is blocked.
+- **(B) Split view**, layered on (A). Requires a `next.config.mjs` rule *after* `/:path*`, gated
   `has: [{ type:'cookie', key:'furor_preview' }]`, emitting `X-Frame-Options: SAMEORIGIN` and
-  `frame-ancestors 'self'`. Because the gate is a cookie only our own authenticated preview
-  endpoint can set, an attacker page cannot make the site frameable. Residual risk: while a
-  preview session is live, that admin's browser could be induced to frame the public site
-  (clickjacking against one admin, not the public).
+  `frame-ancestors 'self'`. The gate is a cookie only our own authenticated preview endpoint can
+  set, so an attacker page cannot make the site frameable. Residual accepted risk: while a
+  preview session is live, that one admin's browser could be induced to frame the public site.
+  The ≤15-minute TTL bounds that window, and the cookie is cleared when preview is closed.
+
+  Two OpenNext specifics this depends on: next.config headers **beat** anything middleware or a
+  route handler sets (`middlewareHeadersOverrideNextConfigHeaders` defaults false), so
+  next.config is the only lever; and later matching rules overwrite earlier ones per header key,
+  so the preview rule must come after the `/:path*` rule that sets `DENY`.
 
 Either way: **explicit "Update preview" button plus a ≥3 s idle threshold — never a per-keystroke
 debounce.**
 
 Preview correctness rules (all mandatory):
 
-- `getContent()` itself becomes preview-aware behind **one** `GH_PAGES !== 'true'` guard, rather
-  than editing 54 call sites — a missed site would render published content mid-preview with no
-  error, and each added `cookies()` call is an independent CI-only export landmine. `sitemap.ts`
-  uses a new `getPublishedContent()`.
+- `getContent()` itself becomes preview-aware, rather than editing 54 call sites — a missed site
+  would render published content mid-preview with no error. `sitemap.ts` uses a new
+  `getPublishedContent()`. Because the GH Pages mirror is retired first (§11, decision 3), the
+  `cookies()` call needs no `GH_PAGES` guard; if that retirement is ever reverted, **every**
+  `cookies()` call in the public tree needs one, and the omission fails only in CI.
 - Draft bytes are read via `readDraft()` **directly** — never through `readContentRaw()`, and
   `bustContentCache()` is never called on a draft write. Otherwise the isolate's shared 30 s slot
   serves unpublished content to anonymous visitors.
@@ -627,18 +633,26 @@ untested, deliberately.
 
 ---
 
-## 11. Decisions needed from the user
+## 11. Decisions taken (user, 2026-08-02)
 
-1. **Live preview shape** — §6.4 (A) new tab, zero risk, or (B) split view behind a
-   preview-cookie-gated framing rule. Recommendation: build (A) first since (B) is purely
-   additive on top of it.
-2. **Custom role authoring** — deferred per §2, item 5 (six roles in code, assignment of roles
-   and sections in the Users screen). Confirm, or add the role editor back with its policy
-   store, its own authorization, and ~5 screens.
-3. **The GitHub Pages mirror** — it is noindexed, robots-disallowed, always stale (schedules and
-   theme freeze at CI build time), and it is the *only* reason this design needs a `GH_PAGES`
-   guard on every `cookies()` call. Recommendation: retire it. If it stays, the guards stay and
-   the export becomes a CI-only failure mode we accept.
+1. **Live preview — both shapes.** New-tab preview ships first; split view is layered on top of
+   it, which requires the `next.config.mjs` framing rule of §6.4(B), gated on the
+   `furor_preview` cookie only. The gate matters: it is a cookie no one but our own
+   authenticated preview endpoint can set, so the public site is never frameable for an ordinary
+   visitor — only for a browser that currently holds a live preview session.
+2. **Custom role authoring — deferred.** Six roles as a frozen constant in `src/lib/roles.ts`;
+   the Users screen assigns roles and section keys. No `policies.json`, no rules UI.
+3. **The GitHub Pages mirror — retired.** The workflow, the strip step, and the `GH_PAGES`
+   conditionals come out. This removes the *only* reason the design needs a guard on every
+   `cookies()` call in the public tree, and with it an entire class of build failures that
+   surface only in CI. Sequencing matters: **retirement lands before the preview work**, so the
+   preview cookie is never written behind a guard that is about to be deleted.
+
+   Affected by the retirement: `.github/workflows/deploy-pages.yml`, the `GH_PAGES` branches in
+   `src/app/layout.tsx` (`connection()` and the noindex/robots switch) and `src/app/sitemap.ts`,
+   `src/lib/base-path.ts` + `withBase()`, and the `basePath`/`output: 'export'` machinery in
+   `next.config.mjs`. `robots.ts` and `manifest.ts` keep their `force-static` exports — those
+   are unrelated to the mirror.
 
 ---
 
