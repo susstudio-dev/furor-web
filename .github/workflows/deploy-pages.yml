@@ -42,6 +42,9 @@ jobs:
           rm -rf src/app/welcome
           rm -rf src/app/uploads
           rm -f src/middleware.ts
+          # `output: export` requires force-static on the sitemap route; on
+          # Workers the same file must stay dynamic, so it's appended here.
+          printf "\nexport const dynamic = 'force-static';\n" >> src/app/sitemap.ts
 
       - name: Build static export
         env:
