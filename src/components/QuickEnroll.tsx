@@ -14,9 +14,15 @@ export function QuickEnroll({ content }: { content: SiteContent }) {
   const branchOf = (slug: string) => content.studios.find((s) => s.slug === slug);
 
   return (
+    // The negative margin is the whole trick: it pulls the card up over the
+    // hero's reserved bottom padding so the lit edge and the "Booking open"
+    // badge sit inside the FIRST viewport — the visitor sees there's a live
+    // booking board before they ever scroll. With a plain positive margin the
+    // card starts below the fold and the hero reads as a dead end. The hero's
+    // pb-32/pb-40 exists precisely to absorb this overlap.
     <section
       id="start-this-week"
-      className="container-x relative z-20 mt-6 scroll-mt-24 pb-10 sm:mt-10 sm:pb-14"
+      className="container-x relative z-20 -mt-24 scroll-mt-24 pb-10 sm:-mt-32 lg:-mt-36 sm:pb-14"
     >
       {/* Deliberately NOT a <Reveal>. This is the conversion card and its whole
           design intent is that its lit edge peeks above the fold — it must
