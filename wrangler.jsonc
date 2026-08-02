@@ -1,0 +1,38 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "furor-web",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-07-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "furor-web"
+    }
+  ],
+  // One physical bucket serves both bindings: OpenNext's incremental cache
+  // writes under its own key prefix, app content lives at the root.
+  "r2_buckets": [
+    {
+      "binding": "NEXT_INC_CACHE_R2_BUCKET",
+      "bucket_name": "furor-content"
+    },
+    {
+      "binding": "CONTENT_BUCKET",
+      "bucket_name": "furor-content"
+    }
+  ],
+  // Secrets (set via `wrangler secret put <NAME>` — never in this file):
+  //   JWT_SECRET, ADMIN_OWNER_EMAIL, ADMIN_OWNER_PASSWORD_HASH
+  //   (or ADMIN_OWNER_INITIAL_PASSWORD)
+  "vars": {
+    // Public, non-secret build-time-style vars can go here if ever needed.
+  },
+  "observability": {
+    "enabled": true
+  }
+}

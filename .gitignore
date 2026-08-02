@@ -16,3 +16,13 @@ public/uploads/
 .vercel
 next-env.d.ts
 *.tsbuildinfo
+
+# Cloudflare / OpenNext
+.open-next/
+.wrangler/
+.dev.vars
+cloudflare-env.d.ts
+
+# Local tooling artifacts
+.playwright-mcp/
+furor-home.png
