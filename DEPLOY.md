@@ -53,8 +53,8 @@ Prereqs: a Cloudflare account (free) and `npx wrangler login` once locally.
    `src/data/site-content.seed.json`; the first admin save writes the live
    document into R2.
 
-4. **Domain**: in the Cloudflare dashboard → Workers & Pages → furor-web →
-   Settings → Domains & Routes → add `www.dancehyderabad.com` (the zone must
+4. **Domain**: in the Cloudflare dashboard → Workers & Pages → dancehyderabad
+   → Settings → Domains & Routes → add `www.dancehyderabad.com` (the zone must
    be on Cloudflare DNS). Then add a **Redirect Rule** (Rules → Redirect
    Rules, free): `dancehyderabad.com/*` → 301 →
    `https://www.dancehyderabad.com/$1` so the apex never serves duplicate
@@ -76,7 +76,7 @@ repo works around in `next.config.mjs`.
 ### Cloudflare Workers Builds (the dashboard-connected build)
 
 If the Worker is also connected to a git repo in the Cloudflare dashboard
-(Workers & Pages → furor-web → Settings → Build), that build runs *in addition*
+(Workers & Pages → dancehyderabad → Settings → Build), that build runs *in addition*
 to the GitHub Actions workflow above. Its defaults are a build command of
 `npm run build` and a deploy command of `npx wrangler versions upload`.
 
