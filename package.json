@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "sync-seed": "node scripts/sync-seed.mjs",
     "hash-password": "node scripts/hash-password.mjs",
+    "migrate-to-r2": "node scripts/migrate-to-r2.mjs",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",

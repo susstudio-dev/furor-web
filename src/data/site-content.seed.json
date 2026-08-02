@@ -9,7 +9,7 @@
     "socials": {
       "instagram": "https://instagram.com/furorhyd",
       "facebook": "https://facebook.com/furorhyd",
-      "youtube": "https://youtube.com/@furor"
+      "youtube": "https://youtube.com/furorhyd"
     },
     "footerCopy": "Furor Dance Hyderabad — Dance for life. Our home is in Jubilee Hills.",
     "notice": "",
@@ -19,18 +19,18 @@
   },
   "hero": {
     "headline": "The night was made for *dancing*.",
-    "subHeadline": "Learn Salsa, Bachata and West Coast Swing with India's most loved Latin dance school. Our home is in Jubilee Hills, Hyderabad. Beginner-friendly. Whisper a yes — we'll take it from there on WhatsApp.",
+    "subHeadline": "Learn Salsa, Bachata and West Coast Swing with India's most loved Latin dance school. Our home is in Jubilee Hills, Hyderabad. Beginner-friendly.  Register with a small token, try a class and then dive in for the full program. Whisper a yes — we'll take it from there on WhatsApp.",
     "videoMp4Url": "",
     "videoWebmUrl": "",
     "posterImage": "/photos/DSC_0166.jpg"
   },
   "tonight": {
-    "enabled": false,
+    "enabled": true,
     "headline": "La Rumba · Latin Social",
-    "body": "Hyderabad's weekly Latin social. All levels welcome. Free for current students; ₹300 for guests.",
-    "when": "Tonight · 8 PM at Jubilee Hills",
+    "body": "Hyderabad's weekly Latin social. All levels welcome. Entry at the Venue.",
+    "when": "Every Saturday · 7 PM onwards at Over the Moon Brew Co, Gachibowli ",
     "ctaLabel": "WhatsApp to RSVP",
-    "ctaContext": "the La Rumba Latin social tonight at Jubilee Hills"
+    "ctaContext": "the La Rumba Latin social Saturday at Gachibowli"
   },
   "trial": {
     "enabled": true,
@@ -67,12 +67,12 @@
       "slug": "salsa",
       "name": "Salsa",
       "tagline": "The original Latin classic — fast, playful, infinitely connecting.",
-      "description": "Salsa is the heartbeat of Latin dance — a partner dance born of Cuban son, mambo and Puerto Rican rhythms. We teach the New York and Cuban styles, building from the ground up so leading and following feel natural rather than memorised.",
+      "description": "Salsa is the heartbeat of Latin dance — a partner dance born of Cuban Son, Mambo and Puerto Rican rhythms. We teach foundation On1 style as well as the New York On2, in addition to Afro Rumba, Cha-Cha, Boogaloo, Son/Palladium/Classic On2, and Pachanga, building from the ground up so leading and following feel natural rather than memorised.",
       "whoItsFor": "If you've never partner-danced before and want one dance that opens every social floor in the world — this is it.",
       "heroImage": "/photos/DSC09730.jpg",
       "heroVideo": "",
       "levelOutcomes": {
-        "foundation": "After 8 weeks you can lead or follow basic salsa for a full song with any partner.",
+        "foundation": "After 8-10 weeks you can lead or follow basic salsa for a full song with any partner.",
         "intermediate": "Cross-body lead variations, shines, and musicality. You start choosing what to dance, not just remembering steps.",
         "advanced": "Body movement, layering and full social fluency. You're the partner everyone wants to dance with."
       },
@@ -83,7 +83,7 @@
         },
         {
           "q": "What should I wear?",
-          "a": "Anything you can move in. Smooth-soled shoes if you have them — we don't sell anything."
+          "a": "Anything you can move in for attire. Smooth-soled shoes if you have them for the social floor — we don't sell anything. In the classroom, in-studio, we recommend fresh socks for beginners to start out with."
         },
         {
           "q": "How fit do I need to be?",
@@ -97,14 +97,14 @@
       "slug": "bachata",
       "name": "Bachata",
       "tagline": "Slower, closer, deeply musical. The dance that teaches you to listen.",
-      "description": "Bachata comes from the Dominican Republic and is the most popular Latin partner dance in the world right now. We teach Sensual and Modern, with a foundation in the Dominican original. Slower than Salsa — and harder to forget.",
+      "description": "Bachata comes from the Dominican Republic and is the most popular Latin partner dance in the world right now. We teach Modern Bachata - Moderna, with a foundation in the Dominican original. Slower than Salsa — and harder to forget.",
       "whoItsFor": "If you want a dance that feels like a conversation, not a performance — start here.",
       "heroImage": "/photos/DSC09698.jpg",
       "heroVideo": "",
       "levelOutcomes": {
-        "foundation": "Basic step, side basic, simple turns and the iconic Bachata body roll. Enough to dance every song at the social.",
-        "intermediate": "Modern combinations, Sensual lead/follow techniques, partner connection drills.",
-        "advanced": "Musicality, dips, body waves, and the freedom to interpret a song as you hear it."
+        "foundation": "Basic step, side basic, simple turns and the iconic Bachata booty vibe. Enough to dance every song at the social.",
+        "intermediate": "Modern combinations, More complex lead/follow techniques, partner connection drills.",
+        "advanced": "Musicality, different kinds of turns, body movement and isolations, and the freedom to interpret a song as you hear it."
       },
       "faqs": [
         {
@@ -143,6 +143,27 @@
   ],
   "studios": [
     {
+      "id": "studio-g2e0ls",
+      "slug": "pup-unleash-huda-colony",
+      "name": "PUP Unleash - HUDA Colony",
+      "neighborhood": "Jubilee Hills",
+      "address": "PUP - Paws, Unleash, Play\nHUDA Enclave, Jubilee Hills, Hyderabad, Telangana 500110",
+      "geo": {
+        "lat": 17.385,
+        "lng": 78.4867
+      },
+      "hours": "Mon–Fri 9 AM–6 PM · Sat–Sun 12:00 PM–6:00 PM",
+      "telephone": "+91 88860 72572",
+      "photos": [],
+      "parkingNotes": "Free - Valet parking",
+      "styleSlugs": [
+        "salsa",
+        "bachata",
+        "west-coast-swing"
+      ],
+      "displayOrder": 2
+    },
+    {
       "id": "studio-jubilee-hills",
       "slug": "jubilee-hills",
       "name": "Jubilee Hills",
@@ -170,8 +191,49 @@
   ],
   "batches": [
     {
+      "id": "batch-rp8nn4",
+      "styleSlugs": [
+        "salsa"
+      ],
+      "level": "Foundation",
+      "branchSlug": "pup-unleash-huda-colony",
+      "daysOfWeek": [
+        "Sat",
+        "Sun"
+      ],
+      "time": "9:30–10:30 AM",
+      "startDate": "2026-07-25",
+      "priceInr": 6900,
+      "reservationInr": 500,
+      "seatsLeft": 20,
+      "status": "Open",
+      "razorpayLink": "https://pages.razorpay.com/LatinL1July2026"
+    },
+    {
+      "id": "batch-ua7f9x",
+      "styleSlugs": [
+        "west-coast-swing"
+      ],
+      "level": "Foundation",
+      "branchSlug": "pup-unleash-huda-colony",
+      "daysOfWeek": [
+        "Sat",
+        "Sun"
+      ],
+      "time": "5:00–6:00 PM",
+      "startDate": "2026-08-29",
+      "priceInr": 6900,
+      "reservationInr": 500,
+      "seatsLeft": 20,
+      "status": "Open",
+      "razorpayLink": "https://rzp.io/rzp/WCSBeginnerAug2026"
+    },
+    {
       "id": "batch-001",
-      "styleSlugs": ["salsa", "bachata"],
+      "styleSlugs": [
+        "salsa",
+        "bachata"
+      ],
       "level": "Foundation",
       "branchSlug": "jubilee-hills",
       "daysOfWeek": [
@@ -179,58 +241,69 @@
         "Sun"
       ],
       "time": "9:30–10:30 AM",
-      "startDate": "2026-05-18",
-      "priceInr": 6500,
-      "seatsLeft": 4,
+      "startDate": "2026-06-20",
+      "priceInr": 6900,
+      "reservationInr": 500,
+      "seatsLeft": 20,
       "status": "Filling Fast",
-      "razorpayLink": null
+      "razorpayLink": "https://pages.razorpay.com/LatinL1June2026"
     },
     {
       "id": "batch-002",
-      "styleSlugs": ["salsa", "bachata"],
-      "level": "Foundation",
-      "branchSlug": "jubilee-hills",
-      "daysOfWeek": [
-        "Tue",
-        "Thu"
+      "styleSlugs": [
+        "west-coast-swing"
       ],
-      "time": "7:30–8:30 PM",
-      "startDate": "2026-05-26",
-      "priceInr": 6500,
-      "seatsLeft": 8,
-      "status": "Open",
-      "razorpayLink": null
-    },
-    {
-      "id": "batch-004",
-      "styleSlugs": ["salsa", "bachata"],
-      "level": "Intermediate",
-      "branchSlug": "jubilee-hills",
+      "level": "Foundation",
+      "branchSlug": "pup-unleash-huda-colony",
       "daysOfWeek": [
         "Sat",
         "Sun"
       ],
-      "time": "12:00–1:00 PM",
-      "startDate": "2026-05-25",
-      "priceInr": 7500,
-      "seatsLeft": 6,
+      "time": "5:00–6:00 PM",
+      "startDate": "2026-07-04",
+      "priceInr": 6900,
+      "reservationInr": 500,
+      "seatsLeft": 20,
       "status": "Open",
-      "razorpayLink": null
+      "razorpayLink": "https://pages.razorpay.com/WCSBeginnerJune2026"
+    },
+    {
+      "id": "batch-004",
+      "styleSlugs": [
+        "salsa"
+      ],
+      "level": "Intermediate",
+      "branchSlug": "pup-unleash-huda-colony",
+      "daysOfWeek": [
+        "Sat",
+        "Sun"
+      ],
+      "time": "12:00–2:00 PM",
+      "startDate": "2026-07-04",
+      "priceInr": 4700,
+      "reservationInr": 500,
+      "seatsLeft": 20,
+      "status": "Open",
+      "razorpayLink": "https://forms.gle/FD9Ds1jsRKPPxx5G7"
     },
     {
       "id": "batch-005",
-      "styleSlugs": ["west-coast-swing"],
-      "level": "Foundation",
-      "branchSlug": "jubilee-hills",
-      "daysOfWeek": [
-        "Wed"
+      "styleSlugs": [
+        "bachata"
       ],
-      "time": "8:00–9:00 PM",
-      "startDate": "2026-06-03",
-      "priceInr": 6500,
-      "seatsLeft": 10,
+      "level": "Advanced",
+      "branchSlug": "pup-unleash-huda-colony",
+      "daysOfWeek": [
+        "Sat",
+        "Sun"
+      ],
+      "time": "2:00–3:00 PM",
+      "startDate": "2026-07-18",
+      "priceInr": 6900,
+      "reservationInr": 500,
+      "seatsLeft": 18,
       "status": "Open",
-      "razorpayLink": null
+      "razorpayLink": "https://pages.razorpay.com/BachataL2July2026"
     }
   ],
   "instructors": [
@@ -239,8 +312,64 @@
       "name": "Rishikesh Chhabra",
       "photo": "/photos/rishikesh.png",
       "role": "Regional Head & Promoter — Hyderabad",
-      "shortBio": "Rish is first and foremost a Salsa promoter. He took up Ballroom dancing in college while reading Engineering at Assumption University, Thailand — studying under Ajarn Boonbunjong Uratanamanee and Ajarn Thanawat — and was introduced to the languages of the Rumba, Waltz, Tango, Foxtrot and other International Ballroom and Latin styles.\n\nAfter relocating to Bangalore, a chance encounter with Salsa at a winter workshop at Alliance Francaise sparked a love affair that continues today. There he studied Rueda and Cuban Style under Cyrille Ngalle. Looking to learn LA Style, he found Alex Diaz teaching at a Bangalore club — and from there, there has been no looking back. He joined Furor as a dancer in 2008 and trained as an instructor.\n\nHe has taken workshops with Edie ‘Salsa Freak’, Eddie Torres, Dave Paris, Zoe Klein, Junior & Emily, Ricardo Murillo, Viviana Vargas, Juan Matos, Candy Mena, Alex Lee, Kimberly Nodora, and Terry & Cécile — each adding something unique to his journey.\n\nAfter relocating to Hyderabad, Rish took on the responsibility of promoting Furor's unique blend of Salsa — laying the groundwork for its formal entry by jump-starting weekly Salsa Socials in the city. A technologist in a consulting firm by day, he brings experience in business, event management and IT to Furor, and manages its online presence alongside his role as Promoter. A poet, writer, musician and dancer, he balances his interests across the arts and sciences.",
+      "shortBio": "Rish is first and foremost a Salsa promoter. He took up Ballroom dancing in college while reading Engineering at Assumption University, Thailand — studying under Ajarn Boonbunjong Uratanamanee and Ajarn Thanawat — and was introduced to the languages of the Rumba, Waltz, Tango, Foxtrot and other International Ballroom and Latin styles.\n\nAfter relocating to Bangalore, a chance encounter with Salsa at a winter workshop at Alliance Francaise sparked a love affair that continues today. There he studied Rueda and Cuban Style under Cyrille Ngalle. Looking to learn LA Style, he found Alex Diaz teaching at a Bangalore club — and from there, there has been no looking back. He joined Furor as a dancer in 2008 and trained as an instructor.\n\nHe has taken workshops with Edie ‘Salsa Freak’, Eddie Torres, Dave Paris, Zoe Klein, Junior & Emily, Ricardo Murillo, Viviana Vargas, Juan Matos, Candy Mena, Alex Lee, Kimberly Nodora, and Terry & Cécile — each adding something unique to his journey.\n\nAfter relocating to Hyderabad, Rish took on the responsibility of promoting Furor's unique blend of Salsa — laying the groundwork for its formal entry by jump-starting weekly Salsa Socials in the city. He brings experience in business, event management and IT to Furor, and manages its online presence alongside his role as Promoter. A poet, writer, musician and dancer, he balances his interests across the arts and sciences. When he's not dancing, he runs PlantDeck - a Landscape Design Build firm he built a decade ago along with his better half.",
       "branchSlugs": [
+        "jubilee-hills",
+        "pup-unleash-huda-colony"
+      ],
+      "styleSlugs": [
+        "salsa",
+        "bachata",
+        "west-coast-swing"
+      ],
+      "social": {
+        "instagram": "https://instagram.com/rishchhabra"
+      }
+    },
+    {
+      "id": "inst-u67h89",
+      "name": "Mitali Sharma",
+      "photo": "/uploads/38ceffc6-7c00-42e0-bec4-ae90c32497c1.png",
+      "role": "Resident Instructor — Hyderabad",
+      "shortBio": "Mitali Sharma was a Corporate Senior Manager who transitioned into a full-time career in dance. During her corporate career, she led and trained teams across global markets, developing strong expertise in leadership, structured training, and team building. This foundation naturally translates into her dance instruction, where she emphasizes discipline, clarity, progression, and a supportive learning environment.\n\nShe is currently a full-time dancer and instructor at Furor Hyderabad, the oldest and one of the most respected Latin dance schools in Hyderabad and in India. Her Latin dance journey began with Furor and later expanded into seven years of intensive training in the United States.\n\nShe trained full-time under internationally acclaimed instructors including Rishikesh Chhabra, Alex Diaz, David Princess, Mariela, Sara Sandoval, and Camilo Forero. I have also been a member of their advanced competition teams, achieving placements at prestigious events such as the Las Vegas Super Congress, Battle of the Next Gen (Miami), Pune International Dance Congress (PIDC), and India International Dance Congress (IIDC).\n\nWith over 13 years of comprehensive Latin dance training and competitive experience, she brings both technical depth and performance excellence to her work with students and the team. Over the years, she has earned multiple titles and recognitions. Her goal is to continue contributing meaningfully to the Latin dance community by developing stronger, more confident and technically refined dancers. \n\nIn addition to her role with Furor, Mitali is the creative force and owner behind Fae Dance Studio - a dance and fitness studio in Sainikpuri, Hyderabad.",
+      "branchSlugs": [
+        "jubilee-hills",
+        "pup-unleash-huda-colony"
+      ],
+      "styleSlugs": [
+        "salsa",
+        "bachata"
+      ],
+      "social": {
+        "instagram": "https://www.instagram.com/mitali.dances/"
+      }
+    },
+    {
+      "id": "inst-dyr6b9",
+      "name": "Swathi Anil",
+      "photo": "/uploads/89b71cb1-a73b-4d37-9f1f-3503dd9224cd.jpg",
+      "role": "Instructor — Hyderabad",
+      "shortBio": "A part of the Furor family since 2017, Swathi stepped into teaching four years ago and has been bringing energy, precision, and personality to the dance floor ever since. Her classes are known for thoughtful technique breakdowns, engaging drills, and high-energy Afro Cuban warm-ups that challenge both the mind and body.\n\nPassionate about helping students grow with confidence, she creates a space where learning feels rewarding, empowering, and fun. She continues to train under master teachers Rishikesh Chhabra and Alex Diaz, constantly evolving her craft and artistry. Alongside Latin dance, Swathi is also a dedicated Oriental Bellydance practitioner, bringing musicality, expression, and movement depth into her teaching style.\n\nBeyond teaching, she also supports Furor Hyd’s social media presence and creative content for classes and socials, while occasionally stepping behind the console as an aspiring open-floor DJ at La Rumba Latin Party.\n\nOff the dance floor, she works as a Software Manager specialising in strategy and solutioning for packaged applications, blending structure, creativity, and passion in everything she does.",
+      "branchSlugs": [
+        "jubilee-hills",
+        "pup-unleash-huda-colony"
+      ],
+      "styleSlugs": [
+        "salsa",
+        "bachata"
+      ],
+      "social": {
+        "instagram": "https://www.instagram.com/swathicavil"
+      }
+    },
+    {
+      "id": "inst-rdis9x",
+      "name": "Preetham Medanki",
+      "photo": "/uploads/0f7ca130-b5e9-4ff2-9ba3-997ea34dd11d.png",
+      "role": "Trainee Instructor — Hyderabad",
+      "shortBio": "Preetham Medanki is a Software Engineer by profession and a passionate dancer at heart, whose journey with dance began in childhood. From an early age, he developed a deep love for performing arts, which eventually grew into a lifelong passion and career alongside technology.\n\nWith over a decade of experience in the dance industry since 2008, he has performed in numerous television shows, stage productions, and live events, building a strong presence as both a performer and instructor.\n\nAs a part-time dance instructor, Preetham specializes in Bollywood, Western, and South Indian Folk dance styles, inspiring students with his energy, creativity, and stage experience. Over the years, he has also trained in multiple dance forms including Bharatanatyam and Hip-Hop, constantly expanding his artistic versatility and love for movement.\n\nRecently, he stepped into the world of Latin dance, beginning his Salsa and Latin dance journey a year ago — adding a fresh new dimension to his evolving dance career.\n\nBalancing the worlds of technology and art, Preetham continues to pursue his passion for dance while thriving in the software industry, proving that creativity and professionalism can go hand in hand.",
+      "branchSlugs": [
+        "pup-unleash-huda-colony",
         "jubilee-hills"
       ],
       "styleSlugs": [
@@ -248,20 +377,88 @@
         "bachata"
       ],
       "social": {
-        "instagram": "https://instagram.com/rishchhabra"
+        "instagram": "https://www.instagram.com/official.preetham/"
+      }
+    },
+    {
+      "id": "inst-8th5ax",
+      "name": "Surbhi Jain",
+      "photo": "/uploads/fa3b45fa-3aef-4eb0-ba30-27e1325845b4.jpg",
+      "role": "Team — Hyderabad",
+      "shortBio": "Surbhi is a finance professional who has always had a love for dance. Three years ago, she finally stepped into Latin partner dancing at Furor Hyd, where Salsa became her entry point into a world she had long wanted to explore — and it remains her first love to this day.\n\nTraining under Rish, she found a teacher whose approach goes beyond just the steps — grounding his students in the history and culture of Latin partner dancing, and making the learning process both structured and meaningful. His guidance over the years has been central to her growth as a dancer, helping her develop a strong foundation and a deeper appreciation for the art form.\n\nShe soon went on to learn West Coast Swing as well, and as her confidence in it grew, she began assisting Rish in teaching WCS at Furor Hyd — a natural extension of a journey that has been as much about giving back to the community as it has been about her own growth.\n\nThree years in, Furor remains a space she genuinely values — for the dancing, the learning, and the friendships that have come along the way.",
+      "branchSlugs": [
+        "pup-unleash-huda-colony"
+      ],
+      "styleSlugs": [
+        "west-coast-swing",
+        "salsa",
+        "bachata"
+      ],
+      "social": {
+        "instagram": "https://www.instagram.com/surbhiijainn/"
+      }
+    },
+    {
+      "id": "inst-ah0ig6",
+      "name": "Sudhadhara Panda",
+      "photo": "/uploads/37ed623f-5b1a-437d-969b-b21927c4a54e.png",
+      "role": "Team — Hyderabad",
+      "shortBio": "A free spirit, balancing a manager's life by day with a dancers soul by night chasing rhythms, spins, and just the right amount of chaos..The journey from accidental hiphop freestyler 20 years ago to Argentine Tango in 2018, meeting Rish, to training under him for 3 years and performing with team in Mambo and Bachata has been full blown adventure. Along the way, she found a great coach, lifelong friends, and a second family.  \n\nAnd just when she thought she’d found her groove, she fell head over heels for West Coast Swing recently—a dance that perfectly matches her personality: creative, playful, expressive, and never boring. Because what is life without a little drama?",
+      "branchSlugs": [
+        "pup-unleash-huda-colony"
+      ],
+      "styleSlugs": [
+        "west-coast-swing"
+      ],
+      "social": {
+        "instagram": "https://www.instagram.com/scintillatingsudha/"
+      }
+    },
+    {
+      "id": "inst-dzh909",
+      "name": "Venkat K",
+      "photo": "/uploads/5c036ae5-d9c2-48e0-9001-4c8e5f00945f.jpg",
+      "role": "Team — Hyderabad",
+      "shortBio": "Salsa, Bachata, and West Coast Swing Enthusiast. Software Engineer and Yoga Practitioner. Exploring balance through movement, rhythm, and awareness.\n\nIn his own words \"I began his salsa journey at Furor in late 2022 and have been fortunate to learn under the guidance of Rish, whose passion for Latin dance and emphasis on strong foundations and technique have greatly influenced my growth as a dancer. I am excited to be part of Team Hyderabad, continuing my journey of learning, sharing, and inspiring others through dance.\"",
+      "branchSlugs": [
+        "pup-unleash-huda-colony"
+      ],
+      "styleSlugs": [
+        "salsa",
+        "bachata",
+        "west-coast-swing"
+      ],
+      "social": {
+        "instagram": "https://www.instagram.com/venkatanarayanakandula/"
+      }
+    },
+    {
+      "id": "inst-kwbbns",
+      "name": "DJ Ravi Kiran",
+      "photo": "/uploads/3484ba1a-f1dc-482f-bc49-9d1c648f017d.jpg",
+      "role": "Resident DJ — Hyderabad",
+      "shortBio": "DJ Ravi | International DJ (Asia)\nWinner – War of DJs, All India DJ Competition 2025\nWith over 8 years of experience, DJ Ravi has established himself as one of Asia's premier Latin DJs, specializing in Salsa, Bachata, and Kizomba. His deep command of each genre — and the sub-genres within them — allows him to craft seamless, immersive sets that keep dancers moving from the first beat to the last.\nWhat sets DJ Ravi apart is his consistency. Whether headlining weekly socials, guest DJing across India, Vietnam, and Thailand, or commanding the stage at festivals and congresses, he delivers the same hallmark experience: impeccable song selection, masterful transitions, and a dance floor energy that's impossible to ignore.\nHis credentials speak for themselves — crowned winner at the prestigious War of DJs, an all-India competition held in Goa that brought together the country's top talent.",
+      "branchSlugs": [],
+      "styleSlugs": [
+        "salsa",
+        "bachata"
+      ],
+      "social": {
+        "instagram": "https://www.instagram.com/idjravi/"
       }
     },
     {
       "id": "inst-aditya",
       "name": "DJ Aditya",
       "photo": "/photos/aditya.jpg",
-      "role": "Resident Salsa DJ — Hyderabad",
-      "shortBio": "\"If dancing salsa is my meditation, DJing salsa is my nirvana.\" This is the philosophy that drives DJ Aditya to be the best in the business. He discovered his love for Salsa quite by accident while studying in the USA — being there brought him into direct contact with the Latin population and he came to see their music as a reflection of their culture.\n\nWhile having the privilege to dance in Indianapolis, Chicago and New York, he realised how varied Salsa music can be — and just how much of a challenge that poses while DJing. \"Spinning at socials is a matter of feel. The challenge is getting the crowd to connect to the music. The dancers can be of varied levels and the song has to have something for all of them.\"\n\nWhile DJing he impresses on the importance of smoothness in transition and moods in the music. \"If asked what the greatest compliment can be to my DJing — I hope dancers feel that my style has flow. I like to think of it as taking the dancers on a journey, with each song beating a new path.\"",
+      "role": "Roving Salsa DJ — Hyderabad",
+      "shortBio": "\"If dancing salsa is my meditation, DJing salsa is my nirvana.\" This is the philosophy that drives DJ Aditya to be the best in the business. He discovered his love for Salsa quite by accident while studying in the USA — being there brought him into direct contact with the Latin population and he came to see their music as a reflection of their culture.\n\nWhile having the privilege to dance in Indianapolis, Chicago and New York, he realised how varied Salsa music can be — and just how much of a challenge that poses while DJing. \"Spinning at socials is a matter of feel. The challenge is getting the crowd to connect to the music. The dancers can be of varied levels and the song has to have something for all of them.\"\n\nWhile DJing he impresses on the importance of smoothness in transition and moods in the music. \"If asked what the greatest compliment can be to my DJing — I hope dancers feel that my style has flow. I like to think of it as taking the dancers on a journey, with each song beating a new path.\"\n\nAdi started his DJ journey with Furor Hyderabad in its heydays and once in a while spins whenever he is in town. He's an adjunct faculty member at MICA and spends his time between the two cities Ahmedabad, and Hyderabad.",
       "branchSlugs": [
         "jubilee-hills"
       ],
       "styleSlugs": [
-        "salsa"
+        "salsa",
+        "bachata"
       ],
       "social": {
         "instagram": ""
@@ -392,7 +589,7 @@
         "steps": [
           {
             "title": "Pick a style",
-            "body": "Beginner Latin covers Salsa or Bachata. Tell us what catches your ear — morning or evening batches both run."
+            "body": "Beginner Latin covers Salsa or Bachata. West Coast Swing for the latest Pop hits. Tell us what catches your ear — morning or evening batches both run."
           },
           {
             "title": "Register on WhatsApp",
@@ -400,7 +597,7 @@
           },
           {
             "title": "Show up and dance",
-            "body": "Classes plus the weekly social. Miss one? Use our flexible make-up policy — no extra cost."
+            "body": "Classes plus the weekly social. Miss a class? Use our flexible make-up policy — no extra cost."
           }
         ]
       },
@@ -420,7 +617,7 @@
         "lead": ""
       },
       "introParagraphs": [
-        "Furor began in 2009 in Bangalore with a single Salsa class. Today we're India's largest Latin dance school — across Bangalore, Hyderabad, Pune, Ahmedabad and Gurgaon — but we've never lost the thing that started it: a room, a song, two people learning to listen.",
+        "Furor began in 2009 in Bangalore with a single Salsa class. Today we're India's largest Latin dance school — across Bangalore, Hyderabad, Pune, Ahmedabad and Gurgaon — but we've never lost the thing that started it: a room, a song, two people learning to listen, and a social community that emerged from it.",
         "In Hyderabad our home is the Jubilee Hills studio, and our weekly Latin social — La Rumba — is where students stop being students and start being dancers."
       ],
       "moments": {
@@ -564,7 +761,7 @@
             },
             {
               "q": "What should I wear to class?",
-              "a": "Anything comfortable that lets you move. Smooth-soled shoes help (you turn easier) but they are not required for your first class. Avoid sticky rubber soles if you can."
+              "a": "Anything comfortable that lets you move. For the parties Smooth-soled shoes help (you turn easier) but they are not required for your first class - for the studio we recommend fresh socks. Avoid sticky rubber soles if you can."
             },
             {
               "q": "How fit do I need to be?",
@@ -581,7 +778,7 @@
             },
             {
               "q": "What does it cost?",
-              "a": "Foundation Salsa and Bachata are ₹6,500 for the full 2-month batch. Intermediate courses are ₹7,500. Pricing is per person, not per couple."
+              "a": "Foundation Salsa and Bachata are ₹6,900 for the full 2-month batch (20 hours). Intermediate courses are ₹4,700 - monthly (16 hours). Pricing is per person, not per couple."
             },
             {
               "q": "What if I miss a class?",
@@ -589,7 +786,7 @@
             },
             {
               "q": "Where are batches held?",
-              "a": "All Furor Hyderabad batches are at our Jubilee Hills studio — 2nd Floor, Alcazar Mall, Road No. 36, Jubilee Hills, Hyderabad 500033."
+              "a": "All Furor Hyderabad Latin beginner batches are at our Jubilee Hills studio — 2nd Floor, Alcazar Mall, Road No. 36, Jubilee Hills, Hyderabad 500033. West Coast Swing beginners are at PUP - also in Jubilee Hills."
             }
           ]
         },
@@ -602,7 +799,7 @@
             },
             {
               "q": "What is La Rumba?",
-              "a": "La Rumba is our weekly Latin social — Hyderabad's longest-running Salsa and Bachata night. Free for current students, ₹300 for guests. It is where students stop being students and start being dancers."
+              "a": "La Rumba is our weekly Latin social — Hyderabad's longest-running Salsa and Bachata night. Entry is directly at the Venue - no pre-booking needed. It is where students stop being students and start being dancers."
             },
             {
               "q": "Do you do corporate workshops or events?",
@@ -713,7 +910,7 @@
       "intro": {
         "eyebrow": "Legal",
         "headline": "Terms & Services",
-        "lead": ""
+        "lead": "Furor in Hyderabad is managed by VASISHTHA ENTERPRISES "
       },
       "lastUpdated": "14 May 2026",
       "sections": [
@@ -752,5 +949,129 @@
       ]
     }
   },
-  "customPages": []
+  "customPages": [
+    {
+      "id": "page-4lt8gx",
+      "slug": "latinl1july2026",
+      "title": "You are in - Latin L1 July 2026",
+      "navLabel": "",
+      "seoDescription": "Payment Confirmation and Next Steps for Latin Beginners",
+      "showInFooter": false,
+      "showInNav": false,
+      "published": true,
+      "intro": {
+        "eyebrow": "Registration confirmed",
+        "headline": "You’re in. 🎉",
+        "lead": "Reminder: your Salsa and Bachata beginner class intake is on 25th July 2026.\n\nThank you for registering — this is the first step in your dance journey. Here are a couple of things to do right away."
+      },
+      "sections": [],
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "Save our WhatsApp number"
+        },
+        {
+          "type": "text",
+          "body": "Save +91 88860 72572 as “Furor Hyderabad” — so you get timely reminders for your class and can reach us anytime."
+        },
+        {
+          "type": "heading",
+          "text": "Add it to your calendar"
+        },
+        {
+          "type": "text",
+          "body": "Come early by 9:15 AM to sort out your registration. Add a reminder so the date doesn’t slip.\n\n"
+        },
+        {
+          "type": "heading",
+          "text": "Your intake details"
+        },
+        {
+          "type": "text",
+          "body": "Where\nAlcazar Mall 2nd Floor (Nicy Studio)\nFuror Entertainment\n2nd Floor, Alcazar Mall, 498, Road No. 36, Venkatagiri, Jubilee Hills"
+        },
+        {
+          "type": "button",
+          "label": "Open Map -->",
+          "href": "https://maps.app.goo.gl/fevboRQ19pPC8gx36",
+          "variant": "primary"
+        },
+        {
+          "type": "text",
+          "body": "When\n\nEvery \nSaturday & Sunday 9:30–10:30 AM\n\nPlease arrive by 4:15 PM for registration for your first trial session on Saturday.\n"
+        },
+        {
+          "type": "text",
+          "body": "What to wear & bring\n\n• Smart comfort wear — tees / tracks\n• Fresh socks (for footwear)\n• A personal water bottle / sipper — refill at the studio\n"
+        },
+        {
+          "type": "heading",
+          "text": "See you all in class! 💃🕺"
+        },
+        {
+          "type": "text",
+          "body": "Any questions before then? Just message us on WhatsApp — we reply fast.\n"
+        },
+        {
+          "type": "button",
+          "label": "Chat on Whatsapp",
+          "href": "https://wa.me/918886072572?text=Hi%20Furor!%20I%20just%20registered%20for%20the%20Latin%20beginner%20class.%20Could%20you%20please%20confirm%20my%20spot%20and%20start%20date%3F",
+          "variant": "primary"
+        }
+      ],
+      "displayOrder": 0
+    }
+  ],
+  "welcome": {
+    "confirmedBadge": "Registration confirmed",
+    "confirmedHeadline": "You’re in. 🎉",
+    "reminderWithDate": "Reminder: your {trackLabel} intake is on {date}.",
+    "reminderNoDate": "Reminder: your {trackLabel} intake is this coming weekend — we’ll confirm the exact date on WhatsApp.",
+    "thankYouBody": "Thank you for registering — this is the first step in your dance journey. Here are a couple of things to do right away.",
+    "step1Title": "Save our WhatsApp number",
+    "step1Body": "Save {number} as “Furor Hyderabad” — so you get timely reminders for your class and can reach us anytime.",
+    "step2Title": "Add it to your calendar",
+    "step2Body": "Come early by {arriveBy} to sort out your registration. Add a reminder so the date doesn’t slip.",
+    "intakeHeading": "Your intake details",
+    "whatToBringHeading": "What to wear & bring",
+    "whatToBring": [
+      "Smart comfort wear — tees / tracks",
+      "Fresh socks (for footwear)",
+      "A personal water bottle / sipper — refill at the studio"
+    ],
+    "signoffHeadline": "See you all in class! 💃🕺",
+    "signoffBody": "Any questions before then? Just message us on WhatsApp — we reply fast.",
+    "signoffName": "Cheers, Rish",
+    "signoffTagline": "Furor Hyderabad · Dance for Life",
+    "unconfirmedBadge": "Payment not confirmed",
+    "unconfirmedHeadline": "We couldn’t confirm your payment yet",
+    "unconfirmedBody": "It looks like the payment for your {trackLabel} didn’t complete. If any money was deducted, don’t worry — message us and we’ll sort it out right away.",
+    "tracks": [
+      {
+        "key": "latin",
+        "trackLabel": "Latin beginner class",
+        "styleSlugs": [
+          "salsa",
+          "bachata"
+        ],
+        "weekendTod": "AM",
+        "whenDays": "Saturday & Sunday",
+        "whenTime": "9:30 AM – 10:30 AM",
+        "arriveBy": "9:15 AM",
+        "metaDesc": "Your Latin beginner intake details and next steps."
+      },
+      {
+        "key": "wcs",
+        "trackLabel": "West Coast Swing beginner class",
+        "styleSlugs": [
+          "west-coast-swing"
+        ],
+        "weekendTod": "PM",
+        "whenDays": "Saturday & Sunday",
+        "whenTime": "5:00 PM – 6:00 PM",
+        "arriveBy": "4:15 PM",
+        "metaDesc": "Your West Coast Swing beginner intake details and next steps."
+      }
+    ]
+  }
 }

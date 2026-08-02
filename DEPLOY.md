@@ -88,12 +88,18 @@ repo works around in `next.config.mjs`.
 
 1. Deploy to Cloudflare and smoke-test on the workers.dev URL (`/`, `/admin`
    login, a save, an image upload, `/api/admin/health`).
-2. In the deployed admin, re-create any content that only lived in Vercel
-   Blob (the seed in git is the fallback): open `/admin`, paste/save the
-   latest content, and **re-upload images** whose URLs still point at
-   `*.public.blob.vercel-storage.com` — those URLs die when the Blob store
-   is deleted. (The site renders branded placeholder art for broken images,
-   so check the content JSON, not just the pages.)
+2. **Push the restored Vercel data into R2** (already staged locally on
+   2026-08-02: `data/site-content.json` + `data/versions/` + images in
+   `public/uploads/`, with all Blob URLs rewritten to `/uploads/…`):
+
+   ```bash
+   npm run migrate-to-r2 -- --dry-run   # review the list
+   npm run migrate-to-r2                # upload (needs `npx wrangler login`)
+   ```
+
+   The same content is also baked into the git seed, so even an empty bucket
+   serves the right site — the upload just makes it the live, editable copy
+   and restores version history.
 3. Point DNS at the Worker (step 4 above), verify, then delete the Vercel
    project + Blob store. The old `*.vercel.app` URL should be gone or
    redirected — don't leave it serving a copy.

@@ -12,6 +12,7 @@ data/users.json
 data/audit.log
 data/audit.json
 data/audit-auth.json
+data/payment-events.json
 public/uploads/
 *.log
 .DS_Store
