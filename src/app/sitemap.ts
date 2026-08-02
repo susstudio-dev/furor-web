@@ -34,7 +34,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.4,
   }));
   const custom: MetadataRoute.Sitemap = c.customPages
-    .filter((p) => p.published)
+    .filter((p) => p.published && !p.noindex)
     .map((p) => ({ url: `${BASE}/p/${p.slug}`, changeFrequency: 'monthly', priority: 0.5 }));
   return [...fixed, ...styles, ...stories, ...custom];
 }

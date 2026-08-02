@@ -413,6 +413,8 @@ export const CustomPageSchema = z.object({
   showInFooter: z.boolean().default(true),
   showInNav: z.boolean().default(false),
   published: z.boolean().default(true),
+  // Thin pages (payment confirmations etc.) must not be indexed or sitemapped.
+  noindex: z.boolean().default(false),
   intro: PageIntroSchema.default({ eyebrow: '', headline: '', lead: '' }),
   sections: z.array(LegalSectionSchema).default([]),
   blocks: z.array(CustomBlockSchema).default([]),

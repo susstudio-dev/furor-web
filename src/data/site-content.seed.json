@@ -959,6 +959,7 @@
       "showInFooter": false,
       "showInNav": false,
       "published": true,
+      "noindex": true,
       "intro": {
         "eyebrow": "Registration confirmed",
         "headline": "You’re in. 🎉",

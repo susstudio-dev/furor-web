@@ -47,6 +47,7 @@ function newPage(): CustomPage {
     showInFooter: true,
     showInNav: false,
     published: true,
+    noindex: false,
     intro: { eyebrow: '', headline: 'New page', lead: '' },
     sections: [],
     blocks: [],
