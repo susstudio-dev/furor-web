@@ -23,8 +23,12 @@ export function QuickEnroll({ content }: { content: SiteContent }) {
           never wait on an entrance to become visible. Dropping the entrance
           also removes a backdrop-filter that was re-blurring a ~350×1400px
           region on every frame of a translate, over a layer that animates
-          opacity forever. bg at 92% carries the same look for free. */}
-      <div className="quick-enroll relative overflow-hidden rounded-[28px] border border-cream/12 bg-ink-900/92 shadow-2xl shadow-ember-700/10">
+          opacity forever.
+
+          The glass look is faked on an opaque fill — see .quick-enroll in
+          globals.css. At any alpha the hero photograph showed through the top
+          of the card on the light theme, where ink-900 is plain white. */}
+      <div className="quick-enroll relative overflow-hidden rounded-[28px] border border-cream/12">
         {/* A single lit hairline along the top edge. One hue only: pairing
             ember with gold-500 reads as a red-to-blue rainbow in dark theme,
             where that token is the brand's royal blue. Fades out at both ends
@@ -75,11 +79,10 @@ export function QuickEnroll({ content }: { content: SiteContent }) {
                       key={b.id}
                       className="enroll-ticket group relative flex flex-col rounded-2xl border border-cream/12 bg-gradient-to-b from-ink-800/80 to-ink-900/60 p-5 transition duration-300 hover:-translate-y-1 hover:border-ember-500/60 hover:shadow-xl hover:shadow-ember-700/15"
                     >
-                      {/* Perforated pass edge */}
-                      <span
-                        aria-hidden
-                        className="pointer-events-none absolute left-0 top-1/2 h-full w-[2px] -translate-y-1/2 [background:repeating-linear-gradient(to_bottom,rgb(var(--c-cream)/0.25)_0_5px,transparent_5px_11px)]"
-                      />
+                      {/* No perforated stub edge here any more: a 2px dashed
+                          rule floating just inside the rounded corner didn't
+                          read as a ticket, it read as a rendering artefact.
+                          The ticket idea now lives in the card's own shape. */}
                       <div className="flex items-start justify-between gap-2">
                         <div>
                           <p className="display text-xl font-bold leading-tight">{sName}</p>

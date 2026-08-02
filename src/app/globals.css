@@ -393,6 +393,43 @@ html[data-theme='dark'] .hero-vignette {
   }
 }
 
+/* THE BOOKING PANEL ----------------------------------------------------
+   Reads as a pane of lit glass, but nothing behind it ever shows through.
+   The fill is fully opaque: at any alpha the hero photograph came through
+   the top of the card on the light theme, where ink-900 is plain white,
+   and a booking panel has to look like a solid object resting on the hero
+   rather than a film laid over it.
+
+   So the "glass" is built rather than borrowed — a sheen falling down from
+   the top edge, a 1px lit rim where the light catches, and a long soft
+   shadow to lift it off the photo. No backdrop-filter, which means no
+   per-frame re-blur of a large region over the animating stage lights. */
+.quick-enroll {
+  background-color: rgb(var(--c-ink-900));
+  background-image: linear-gradient(
+    to bottom,
+    rgb(var(--c-cream) / 0.07),
+    rgb(var(--c-cream) / 0.02) 38%,
+    transparent 70%
+  );
+  box-shadow:
+    inset 0 1px 0 rgb(var(--c-cream) / 0.16),
+    0 24px 60px -20px rgb(0 0 0 / 0.55);
+}
+html[data-theme='light'] .quick-enroll {
+  /* On paper a cream sheen would darken the card. Warm the glass instead,
+     and let the rim be white where the light would actually catch. */
+  background-image: linear-gradient(
+    to bottom,
+    rgb(var(--c-ember-500) / 0.06),
+    rgb(var(--c-ember-500) / 0.02) 40%,
+    transparent 72%
+  );
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.9),
+    0 24px 60px -24px rgb(var(--c-ink-500) / 0.5);
+}
+
 /* THE FOLLOW-SPOT ------------------------------------------------------
    A warm stage light travels the length of the kinetic strip, once every
    four bars, easing at the turns the way a real followspot operator works
