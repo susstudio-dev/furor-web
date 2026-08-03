@@ -29,8 +29,6 @@ const sans = Inter({
   display: 'swap',
 });
 
-const isMirror = process.env.GH_PAGES === 'true';
-
 export async function generateMetadata(): Promise<Metadata> {
   const content = await getContent();
   return {
@@ -40,8 +38,6 @@ export async function generateMetadata(): Promise<Metadata> {
     // NB: no alternates.canonical here — layout metadata is inherited, and a
     // site-wide '/' canonical would point every page at the home page. Each
     // page declares its own.
-    // The GH Pages mirror is a duplicate of the real site — never index it.
-    ...(isMirror ? { robots: { index: false, follow: false } } : {}),
     formatDetection: { telephone: false },
     openGraph: {
       title: content.site.title,
@@ -74,10 +70,8 @@ export const viewport: Viewport = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   // On Cloudflare Workers every page renders per-request so admin edits are
-  // always fresh (there is no ISR tag-cache machinery on the free plan). The
-  // GitHub Pages mirror build (GH_PAGES=true, inlined at build time) skips
-  // this and stays fully static-exportable.
-  if (process.env.GH_PAGES !== 'true') await connection();
+  // always fresh (there is no ISR tag-cache machinery on the free plan).
+  await connection();
   const content = await getContent();
   return (
     // data-scroll-behavior tells Next to neutralise smooth scrolling on route

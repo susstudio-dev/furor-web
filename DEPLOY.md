@@ -80,11 +80,11 @@ If the Worker is also connected to a git repo in the Cloudflare dashboard
 to the GitHub Actions workflow above. Its defaults are a build command of
 `npm run build` and a deploy command of `npx wrangler versions upload`.
 
-`npm run build` is plain `next build` on purpose — the GitHub Pages export and
-the quality gate both need it — and it does **not** emit
-`.open-next/worker.js`, which `wrangler.jsonc` points `main` at. `wrangler
-deploy` papers over that by detecting an OpenNext project and delegating to the
-OpenNext CLI, but `wrangler versions upload` does not, so it would fail with:
+`npm run build` is plain `next build` on purpose — the quality gate needs it —
+and it does **not** emit `.open-next/worker.js`, which `wrangler.jsonc` points
+`main` at. `wrangler deploy` papers over that by detecting an OpenNext project
+and delegating to the OpenNext CLI, but `wrangler versions upload` does not, so
+it would fail with:
 
 ```
 ✘ [ERROR] The entry-point file at ".open-next/worker.js" was not found.
@@ -158,9 +158,6 @@ Two things worth knowing about this build:
   5-per-10-min window). Combined with the KDF and the 300 ms response floor
   this is proportionate for a single-admin site; a KV-backed limiter is the
   upgrade path if it ever matters.
-- GitHub Pages mirror stays static & read-only (no `/admin`) and is
-  **noindexed** — it builds from the git seed, so it lags prod edits until
-  `npm run sync-seed` + push. The real site is the Cloudflare one.
 - Dev is unchanged: no bucket → filesystem (`data/`, `public/uploads/`),
   `data/users.json` owner seeded from env on first run.
 - Local `npm run preview` (Windows): if the OpenNext build misbehaves on

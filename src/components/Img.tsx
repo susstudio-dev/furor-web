@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { PlaceholderArt } from './PlaceholderArt';
-import { withBase } from '@/lib/base-path';
 
 interface Props {
   src?: string | null;
@@ -42,7 +41,7 @@ export function Img({
   if (hasReal) {
     return (
       <Image
-        src={withBase(src!)}
+        src={src!}
         alt={alt}
         fill={fill}
         sizes={sizes}

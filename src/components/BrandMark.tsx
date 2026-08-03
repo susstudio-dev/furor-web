@@ -1,5 +1,4 @@
 import Image from 'next/image';
-import { withBase } from '@/lib/base-path';
 
 interface Props {
   size?: number;
@@ -22,7 +21,7 @@ export function BrandMark({
   return (
     <span className={`brand-plate inline-flex items-center ${className ?? ''}`} aria-label={ariaLabel}>
       <Image
-        src={withBase('/logo-mark.png')}
+        src="/logo-mark.png"
         alt={ariaLabel}
         width={width}
         height={height}

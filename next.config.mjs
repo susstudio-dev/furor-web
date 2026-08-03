@@ -4,14 +4,6 @@ import { existsSync, lstatSync, mkdirSync, rmSync, symlinkSync } from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 
-// When GH_PAGES=true (CI only) we build a static export of the PUBLIC site for
-// GitHub Pages. Admin panel / API / middleware are stripped by the workflow
-// before this runs, since they need a server runtime.
-const isPages = process.env.GH_PAGES === 'true';
-
-// Project page is served from https://<user>.github.io/furor-web/
-const REPO = 'furor-web';
-
 // Windows + OneDrive workaround.
 // OneDrive intercepts readlink() on files it has synced and returns EINVAL,
 // which crashes `next dev` and `next build` when they touch `.next/...`.
@@ -107,53 +99,43 @@ const nextConfig = {
   // pre-sized. The old *.public.blob.vercel-storage.com URLs keep rendering
   // via plain <img>/unoptimized <Image> until content is re-uploaded.)
   images: { unoptimized: true },
-  ...(isPages
-    ? {
-        output: 'export',
-        basePath: `/${REPO}`,
-        assetPrefix: `/${REPO}/`,
-        trailingSlash: true,
-      }
-    : {
-        // headers() is a no-op under `output: 'export'`; the OpenNext routing
-        // layer applies these on Cloudflare Workers.
-        async headers() {
-          return [
-            {
-              source: '/:path*',
-              headers: [
-                { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
-                { key: 'X-Content-Type-Options', value: 'nosniff' },
-                { key: 'X-Frame-Options', value: 'DENY' },
-                { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-                { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), payment=(), usb=(), browsing-topics=()' },
-                { key: 'X-DNS-Prefetch-Control', value: 'off' },
-                { key: 'Content-Security-Policy', value: CSP },
-              ],
-            },
-            {
-              source: '/admin/:path*',
-              headers: [
-                { key: 'Cache-Control', value: 'no-store, private' },
-                { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
-              ],
-            },
-            {
-              source: '/api/:path*',
-              headers: [
-                { key: 'Cache-Control', value: 'no-store, private' },
-                { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
-              ],
-            },
-            // Served uploads are opaque image bytes — lock them down harder
-            // than the site CSP (later matching rules win per header key).
-            {
-              source: '/uploads/:path*',
-              headers: [{ key: 'Content-Security-Policy', value: "default-src 'none'" }],
-            },
-          ];
-        },
-      }),
+  // The OpenNext routing layer applies these on Cloudflare Workers.
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), payment=(), usb=(), browsing-topics=()' },
+          { key: 'X-DNS-Prefetch-Control', value: 'off' },
+          { key: 'Content-Security-Policy', value: CSP },
+        ],
+      },
+      {
+        source: '/admin/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'no-store, private' },
+          { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
+        ],
+      },
+      {
+        source: '/api/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'no-store, private' },
+          { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
+        ],
+      },
+      // Served uploads are opaque image bytes — lock them down harder
+      // than the site CSP (later matching rules win per header key).
+      {
+        source: '/uploads/:path*',
+        headers: [{ key: 'Content-Security-Policy', value: "default-src 'none'" }],
+      },
+    ];
+  },
 };
 
 export default nextConfig;
