@@ -59,6 +59,13 @@
   "vars": {
     // Public, non-secret build-time-style vars can go here if ever needed.
   },
+  // Without this, every deploy (local wrangler AND Workers Builds) REPLACES
+  // the Worker's runtime vars with the block above — silently deleting any
+  // plaintext "Variable" added in the dashboard UI. Secrets are unaffected
+  // either way, but a var added in the dashboard vanishing on the next push
+  // is indistinguishable from "I set it and it doesn't work" (it 401'd every
+  // admin login once already). Keep dashboard-added vars alive:
+  "keep_vars": true,
   "observability": {
     "enabled": true
   }

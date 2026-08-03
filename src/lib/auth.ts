@@ -14,7 +14,15 @@ import { isRemoteStorage } from './storage';
 //   3. ADMIN_OWNER_INITIAL_PASSWORD = plaintext (compared timing-safely via
 //      SHA-256 digests; acceptable because the reference value itself lives
 //      in the same secret store an attacker would have to compromise anyway)
-const ENV_OWNER_EMAIL = (process.env.ADMIN_OWNER_EMAIL || '').toLowerCase();
+// Read at call time, never module scope: on Cloudflare Workers the OpenNext
+// shim copies the Worker env into process.env only once the first request
+// arrives, so a module-scope capture can permanently see '' depending on
+// bundle import order. Trimmed because pasting a secret into the dashboard
+// or piping it into `wrangler secret put` easily smuggles in a trailing
+// newline — which would 401 every login with no diagnostic anywhere.
+function envOwnerEmail(): string {
+  return (process.env.ADMIN_OWNER_EMAIL || '').trim().toLowerCase();
+}
 
 const COOKIE_NAME = 'furor_admin';
 const ATTEMPT_WINDOW_MS = 10 * 60 * 1000;
@@ -171,19 +179,22 @@ export async function verifyCredentials(
   email: string,
   password: string,
 ): Promise<User | null> {
-  const lower = email.toLowerCase();
+  // Trim the typed email too — mobile keyboards append a space on
+  // autocomplete. (The password is NOT trimmed: whitespace there is legal.)
+  const lower = email.trim().toLowerCase();
 
   // Env-based owner is the primary path — works in prod and dev alike.
-  if (ENV_OWNER_EMAIL && lower === ENV_OWNER_EMAIL) {
-    const hash = process.env.ADMIN_OWNER_PASSWORD_HASH;
+  const ownerEmail = envOwnerEmail();
+  if (ownerEmail && lower === ownerEmail) {
+    const hash = (process.env.ADMIN_OWNER_PASSWORD_HASH || '').trim();
     if (hash) {
       const ok = await verifyAgainstStoredHash(password, hash);
-      return ok ? { email: ENV_OWNER_EMAIL, passwordHash: '', role: 'owner', createdAt: '' } : null;
+      return ok ? { email: ownerEmail, passwordHash: '', role: 'owner', createdAt: '' } : null;
     }
-    const plain = process.env.ADMIN_OWNER_INITIAL_PASSWORD;
+    const plain = (process.env.ADMIN_OWNER_INITIAL_PASSWORD || '').trim();
     if (plain) {
       const ok = await timingSafeStringEqual(password, plain);
-      return ok ? { email: ENV_OWNER_EMAIL, passwordHash: '', role: 'owner', createdAt: '' } : null;
+      return ok ? { email: ownerEmail, passwordHash: '', role: 'owner', createdAt: '' } : null;
     }
     return null;
   }
@@ -249,8 +260,9 @@ export async function getSession(): Promise<{ email: string; role: Role } | null
 
 export async function listUsers(): Promise<User[]> {
   if (await isRemoteStorage()) {
-    return ENV_OWNER_EMAIL
-      ? [{ email: ENV_OWNER_EMAIL, passwordHash: '', role: 'owner', createdAt: '' }]
+    const ownerEmail = envOwnerEmail();
+    return ownerEmail
+      ? [{ email: ownerEmail, passwordHash: '', role: 'owner', createdAt: '' }]
       : [];
   }
   const { users } = await readUsers();
