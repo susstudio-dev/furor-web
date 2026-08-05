@@ -81,8 +81,9 @@ describe('expandOps', () => {
       { op: 'set', path: 'batches[id=b_5].razorpayLink', value: 'https://pay.attacker.example' },
     ]);
     expect(change).toMatchObject({ collection: 'batches', id: 'b_5' });
-    expect((change as { record: { before: { branchSlug: string } } }).record.before.branchSlug).toBe('gachibowli');
-    expect((change as { record: { after: { branchSlug: string } } }).record.after.branchSlug).toBe('jubilee-hills');
+    if (change.kind !== 'update' || !change.record) throw new Error('expected an update carrying record context');
+    expect((change.record.before as { branchSlug: string }).branchSlug).toBe('gachibowli');
+    expect((change.record.after as { branchSlug: string }).branchSlug).toBe('jubilee-hills');
   });
 
   it('is insensitive to key order when deciding what changed', () => {
