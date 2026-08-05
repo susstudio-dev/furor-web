@@ -1,7 +1,9 @@
 import Link from 'next/link';
 import { getContent, visibleBatches } from '@/lib/content';
+import { requireSubject } from '@/lib/guard';
 
 export default async function AdminDashboard() {
+  await requireSubject();
   const c = await getContent();
   const stats = [
     { label: 'Dance styles', value: c.danceStyles.length, href: '/admin/styles' },
