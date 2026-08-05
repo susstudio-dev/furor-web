@@ -41,7 +41,9 @@ export function StudiosEditor({ initial }: { initial: SiteContent }) {
   function move(idx: number, dir: -1 | 1) {
     const target = idx + dir;
     if (target < 0 || target >= c.studios.length) return;
-    const next = c.studios.slice();
+    // Shallow copy + in-place renumbering would mutate the loaded document's
+    // own objects, so a diff against that base would drop the reorder.
+    const next = c.studios.map((s) => ({ ...s }));
     [next[idx], next[target]] = [next[target], next[idx]];
     next.forEach((s, i) => (s.displayOrder = i + 1));
     setC((prev) => ({ ...prev, studios: next }));

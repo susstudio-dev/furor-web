@@ -108,7 +108,9 @@ export function CustomPagesEditor({ initial }: { initial: SiteContent }) {
     const i = pages.findIndex((p) => p.id === id);
     const j = i + dir;
     if (i < 0 || j < 0 || j >= pages.length) return;
-    const next = pages.slice();
+    // Shallow copy + in-place renumbering would mutate the loaded document's
+    // own objects, so a diff against that base would drop the reorder.
+    const next = pages.map((p) => ({ ...p }));
     [next[i], next[j]] = [next[j], next[i]];
     next.forEach((p, idx) => (p.displayOrder = idx));
     patchList(next);
