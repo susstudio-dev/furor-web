@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export function SaveBar({
   onSave,
@@ -11,6 +12,7 @@ export function SaveBar({
 }) {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  const router = useRouter();
 
   async function go() {
     setBusy(true);
@@ -18,6 +20,11 @@ export function SaveBar({
     try {
       await onSave();
       setMsg('Saved ✓ Live now — refresh the public page to see it.');
+      // Invalidate the Router Cache. Without this, another admin route visited
+      // earlier stays cached with ITS old document while the shared version
+      // token has moved on — going Back to it and saving would pair stale
+      // content with a current token and silently revert this save.
+      router.refresh();
     } catch (err: unknown) {
       setMsg((err as Error)?.message || 'Save failed');
     } finally {

@@ -63,16 +63,36 @@ describe('applyAndAuthorize', () => {
     expect(({} as Record<string, unknown>).x).toBeUndefined();
   });
 
-  it('reports mayPublish false for a role whose saves need approval', () => {
+  it('lets a section-scoped editor save the sections they hold', () => {
     const editor: Subject = {
       id: 'u_3',
       email: 'e@x.com',
       roleIds: ['editor'],
       attrs: { sections: ['site'] },
     };
-    const r = applyAndAuthorize(doc(), editor, [{ op: 'set', path: 'site.tagline', value: 'draft me' }]);
+    const r = applyAndAuthorize(doc(), editor, [{ op: 'set', path: 'site.tagline', value: 'edited' }]);
     expect(r.status).toBe('ok');
-    if (r.status === 'ok') expect(r.mayPublish).toBe(false);
+    if (r.status === 'ok') expect(r.mayPublish).toBe(true);
+  });
+
+  // The /admin/site screen writes trial, tonight and whyFuror alongside site,
+  // and one denied leaf fails the whole envelope — so a section that does not
+  // cover them makes that screen unsavable rather than partially restricted.
+  it('lets the site section cover everything the site screen writes', () => {
+    const editor: Subject = {
+      id: 'u_4',
+      email: 'e2@x.com',
+      roleIds: ['editor'],
+      attrs: { sections: ['site'] },
+    };
+    const d = doc();
+    const r = applyAndAuthorize(d, editor, [
+      { op: 'set', path: 'site', value: { ...d.site, tagline: 'x' } },
+      { op: 'set', path: 'whyFuror', value: { ...d.whyFuror, headline: 'y' } },
+      { op: 'set', path: 'trial', value: { ...d.trial, eyebrow: 'z' } },
+      { op: 'set', path: 'tonight', value: { ...d.tonight, headline: 'w' } },
+    ]);
+    expect(r.status).toBe('ok');
   });
 
   it('emits no changes for a no-op save', () => {

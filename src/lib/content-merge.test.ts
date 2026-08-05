@@ -47,6 +47,25 @@ describe('mergeWithSeed', () => {
     expect(merged.theme).toEqual({ preset: 'p' });
   });
 
+  // null means "cleared on purpose"; only undefined falls back to the seed.
+  it('does not resurrect a field that was explicitly cleared to null', () => {
+    expect(mergeWithSeed({ site: { email: null } }, { site: { email: 'seed@x.com' } })).toEqual({
+      site: { email: null },
+    });
+  });
+
+  it('still fills a genuinely absent field from the seed', () => {
+    expect(mergeWithSeed({ site: {} }, { site: { email: 'seed@x.com' } })).toEqual({
+      site: { email: 'seed@x.com' },
+    });
+  });
+
+  it('refuses prototype keys on the seed side too', () => {
+    const seed = JSON.parse('{"__proto__":{"seedPolluted":true},"site":{}}');
+    mergeWithSeed({ site: {} }, seed);
+    expect(({} as Record<string, unknown>).seedPolluted).toBeUndefined();
+  });
+
   it('refuses prototype keys', () => {
     const merged = mergeWithSeed(JSON.parse('{"__proto__":{"polluted":true}}'), {}) as Record<string, unknown>;
     expect(({} as Record<string, unknown>).polluted).toBeUndefined();

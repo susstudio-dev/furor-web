@@ -60,11 +60,17 @@ describe('authorize', () => {
     );
   });
 
-  it('routes an approval-required role to a draft rather than a publish', () => {
+  // No built-in role sets requiresApproval yet (roles.test.ts pins that), and
+  // the save route REFUSES anything flagged for approval rather than publishing
+  // it — so the flag turns on together with the draft pipeline, not before.
+  it('lets a section-scoped editor publish while no role requires approval', () => {
     const editor = sub({ roleIds: ['editor'], attrs: { sections: ['batches'] } });
-    const result = authorize(editor, expandOps(doc(), [{ op: 'set', path: 'batches[id=b_1].razorpayLink', value: null }]));
+    const result = authorize(
+      editor,
+      expandOps(doc(), [{ op: 'set', path: 'batches[id=b_1].razorpayLink', value: null }]),
+    );
     expect(result.ok).toBe(true);
-    expect(result.mayPublish).toBe(false);
+    expect(result.mayPublish).toBe(true);
   });
 
   it('scopes an instructor to their own record', () => {

@@ -41,6 +41,22 @@ export async function POST(req: Request) {
   const submitted = envelope?.document ?? body;
   const baseVersion = typeof envelope?.baseVersion === 'string' ? envelope.baseVersion : null;
 
+  // A missing token is "I do not know what I edited", not "no opinion". Treating
+  // it as no-opinion fails OPEN: the compare-and-swap below swaps against the
+  // etag this request just read, never against anything the client saw, so it
+  // always succeeds and silently reverts whoever saved in between. It is also
+  // how a seed-fallback render (no token emitted) would write the bundled seed
+  // over the whole site on the next click of Save.
+  if (baseVersion === null) {
+    return NextResponse.json(
+      {
+        error:
+          'This page could not confirm which version it loaded. Reload the admin and try again.',
+      },
+      { status: 400 },
+    );
+  }
+
   try {
     // Two attempts: one retry for when someone else's write lands between our
     // read and our conditional write.
@@ -78,6 +94,23 @@ export async function POST(req: Request) {
         });
         return NextResponse.json({ error: 'Not permitted', denied: result.denied }, { status: 403 });
       }
+      // The conflict answer comes BEFORE validation. A stale base often makes
+      // the merged document fail integrity — B's studios array omits the studio
+      // A just added, which A's new batch references — and a 400 naming records
+      // B never touched is a far worse answer than "someone else saved, reload".
+      // (The denial above still comes first: a subject with no write grants must
+      // not be able to poll 409s as a change-feed oracle.)
+      const token = versionToken(current.version);
+      if (baseVersion !== token) {
+        return NextResponse.json(
+          {
+            error: 'Someone else saved while you were editing. Reload to get their changes.',
+            currentVersion: token,
+          },
+          { status: 409 },
+        );
+      }
+
       if (result.status === 'invalid') {
         return NextResponse.json(
           { error: 'Validation failed', issues: result.issues },
@@ -85,14 +118,13 @@ export async function POST(req: Request) {
         );
       }
 
-      const token = versionToken(current.version);
-      if (baseVersion !== null && baseVersion !== token) {
+      // Fail closed on a role whose saves are meant to need approval. The draft
+      // pipeline does not exist yet, so the only safe reading of "may not
+      // publish" is "refuse", never "publish anyway".
+      if (!result.mayPublish) {
         return NextResponse.json(
-          {
-            error: 'Someone else saved while you were editing. Reload to get their changes.',
-            currentVersion: token,
-          },
-          { status: 409 },
+          { error: 'This account’s changes need approval, which is not available yet.' },
+          { status: 403 },
         );
       }
 

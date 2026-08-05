@@ -1,6 +1,6 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, describe, expect, it } from 'vitest';
 import { readDocWithVersion, writeDocIfMatch } from './storage';
 
 // Integration test against the real filesystem backend (NODE_ENV is not
@@ -16,7 +16,11 @@ async function cleanup() {
   await fs.rm(path.join(DATA_DIR, '.meta', `${KEY}.json`), { force: true });
 }
 
+// Storage resolves to the repo's data/ directory, so the scratch document is
+// removed after every test AND once more at the end, in case a run is
+// interrupted between them.
 afterEach(cleanup);
+afterAll(cleanup);
 
 describe('compare-and-swap against the filesystem backend', () => {
   it('returns null for a document that does not exist', async () => {

@@ -39,8 +39,15 @@ export interface Role {
 
 // Section keys are what the Users screen exposes. Mapping them to globs here
 // is what makes a glob-authoring UI unnecessary.
+//
+// Every writable top-level key of the content document must appear under
+// exactly one section, or a screen that edits it silently 403s for every
+// section-scoped account. `/admin/site` writes trial/tonight/whyFuror
+// alongside site, and one denied leaf fails the whole envelope — so omitting
+// them made that screen unsavable rather than partially restricted.
+// `roles.test.ts` pins this against the schema so a new key cannot repeat it.
 export const SECTION_PATHS: Record<string, string[]> = {
-  site: ['site'],
+  site: ['site', 'trial', 'tonight', 'whyFuror'],
   hero: ['hero'],
   batches: ['batches'],
   styles: ['danceStyles'],
@@ -50,7 +57,7 @@ export const SECTION_PATHS: Record<string, string[]> = {
   stories: ['stories'],
   pages: ['pages'],
   customPages: ['customPages'],
-  campaigns: ['campaigns'],
+  welcome: ['welcome'],
 };
 
 // Ids are immutable once created — changing one silently re-points every
@@ -87,7 +94,10 @@ export const ROLES: Role[] = [
     rules: [DENY_IDS],
     capabilities: [],
     sectionScoped: true,
-    requiresApproval: true,
+    // requiresApproval stays OFF until the draft pipeline exists. The save
+    // route refuses (rather than silently publishes) anything flagged for
+    // approval, so turning it on now would simply lock editors out; turning it
+    // on lands together with the draft write.
   },
   {
     id: 'author',

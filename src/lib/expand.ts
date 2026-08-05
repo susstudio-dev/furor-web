@@ -60,8 +60,12 @@ function diffCollection(
   collection: string,
   field: string,
 ): LeafChange[] {
-  const beforeArr = (readAt(beforeDoc, segments) as unknown[]) ?? [];
-  const afterArr = (readAt(afterDoc, segments) as unknown[]) ?? [];
+  // A non-array at a collection path (a pasted `"danceStyles": {}` in the raw
+  // JSON editor) must read as "no records", not blow up mid-diff.
+  const beforeRaw = readAt(beforeDoc, segments);
+  const afterRaw = readAt(afterDoc, segments);
+  const beforeArr = Array.isArray(beforeRaw) ? beforeRaw : [];
+  const afterArr = Array.isArray(afterRaw) ? afterRaw : [];
 
   const beforeById = new Map(beforeArr.map((r) => [String((r as Obj)?.[field]), r] as const));
   const afterById = new Map(afterArr.map((r) => [String((r as Obj)?.[field]), r] as const));
@@ -74,15 +78,27 @@ function diffCollection(
     if (before === undefined) {
       changes.push({ kind: 'create', path, collection, id, after: after as Json });
     } else if (!deepEqual(before, after)) {
-      changes.push({
-        kind: 'update',
-        path,
-        collection,
-        id,
-        before: before as Json,
-        after: after as Json,
-        record: { before: before as Json, after: after as Json },
-      });
+      // One leaf PER CHANGED FIELD, not one per record. A record-granularity
+      // leaf can only ever be matched by a rule naming the collection, so every
+      // field-level rule (`deny *.id`, `deny site.whatsappNumber`, "may edit
+      // stories.body but not stories.slug") would silently never fire on the
+      // only path a client can actually produce.
+      const b = (before ?? {}) as Obj;
+      const a = (after ?? {}) as Obj;
+      for (const field of new Set([...Object.keys(b), ...Object.keys(a)])) {
+        if (deepEqual(b[field], a[field])) continue;
+        changes.push({
+          kind: 'update',
+          path: `${path}.${field}`,
+          collection,
+          id,
+          before: (b[field] ?? null) as Json,
+          after: (a[field] ?? null) as Json,
+          // The binding stays the whole record, so ownership and branch
+          // conditions still have something to read.
+          record: { before: before as Json, after: after as Json },
+        });
+      }
     }
   }
   for (const [id, before] of beforeById) {

@@ -21,7 +21,12 @@ export function mergeWithSeed(saved: unknown, seed: unknown, depth = 0): unknown
     typeof seed !== 'object' ||
     seed === null
   ) {
-    return saved ?? seed;
+    // `undefined` means "absent, fall back to the seed"; `null` means "cleared
+    // on purpose". Collapsing the two resurrected every field the seed supplies
+    // the moment someone cleared it — and because the save path diffs against
+    // the seed-merged document, the seed value then got baked into stored bytes
+    // on the next save by anyone.
+    return saved === undefined ? seed : saved;
   }
 
   const out: Record<string, unknown> = {};
@@ -29,6 +34,9 @@ export function mergeWithSeed(saved: unknown, seed: unknown, depth = 0): unknown
     // NEVER_SEED applies at the top level only — a nested key that happens to
     // share the name is unrelated.
     if (depth === 0 && NEVER_SEED.has(k)) continue;
+    // The seed is not a hand-audited constant: `npm run sync-seed` bakes live
+    // content into it, so it gets the same prototype-key skip as saved data.
+    if (k === '__proto__' || k === 'constructor' || k === 'prototype') continue;
     out[k] = v;
   }
 

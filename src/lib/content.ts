@@ -35,25 +35,34 @@ async function readContentRaw(): Promise<string | null> {
 }
 
 /**
- * The version token for the content an admin page is CURRENTLY rendering.
+ * One read, one result: the content AND the version token that describes it.
  *
- * It deliberately comes from the same cached read as `getContent()`, not from
- * a fresh store read. A fresher token paired with older content is the exact
- * shape of a silent clobber: the conflict check would pass while the editor's
- * base was stale. A *stale* token can only ever produce a false 409 — "reload
- * to get their changes" — which is safe.
+ * These must never be derived from separate calls. `cached` is module-level
+ * (shared across requests) while React `cache()` memoises per request, so a
+ * concurrent save that busts and repopulates the module slot can hand a later
+ * `getContentVersionToken()` a NEWER version than the content this request
+ * already memoised — a newer token paired with older content is precisely the
+ * silent clobber the conflict check exists to prevent.
  *
- * Returns null before any read has happened or when the document is absent.
+ * `fromSeed` marks the fallbacks (read failure, corrupt bytes, empty store).
+ * Those requests have no honest base version, so they expose NO token, and the
+ * save route refuses a submission that carries none. Otherwise an R2 blip would
+ * render every editor from the bundled seed and the next Save would write the
+ * seed over the real site.
  */
-export async function getContentVersionToken(): Promise<string | null> {
-  await getContent(); // ensure the cache slot is populated for this request
-  return cached?.version ? versionToken(cached.version) : null;
+interface LoadedContent {
+  content: SiteContent;
+  version: DocVersion | null;
+  fromSeed: boolean;
 }
 
-// Reads the live content from storage (filesystem in dev, R2 in prod).
-// A failed read must NEVER crash the request: we just serve the bundled
-// seed. Wrapped in React cache() => one read per request.
-export const getContent = cache(async (): Promise<SiteContent> => {
+const loadContent = cache(async (): Promise<LoadedContent> => {
+  const seedResult = (): LoadedContent => ({
+    content: SiteContentSchema.parse(seedContent),
+    version: null,
+    fromSeed: true,
+  });
+
   let raw: string | null = null;
   let readErr: unknown;
   // Retry a throwing read a few times with short backoff before giving up. A
@@ -72,30 +81,53 @@ export const getContent = cache(async (): Promise<SiteContent> => {
       if (attempt < 2) await new Promise((resolve) => setTimeout(resolve, 150 * (attempt + 1)));
     }
   }
+  // Captured in the same tick as the raw bytes above.
+  const version = cached?.version ?? null;
+
   if (readErr !== undefined) {
     // Sustained read failure (not a one-off blip). Serve the in-memory seed for
     // THIS request only — never persist it. A temporary read failure must not
     // be allowed to clobber real stored content with the default.
-    return SiteContentSchema.parse(seedContent);
+    return seedResult();
   }
   if (raw != null) {
     try {
       // Strip BOM if present — Windows PowerShell / some editors add U+FEFF.
       const cleaned = raw.charCodeAt(0) === 0xfeff ? raw.slice(1) : raw;
       const parsed = JSON.parse(cleaned);
-      return SiteContentSchema.parse(mergeWithSeed(parsed, seedContent));
+      return {
+        content: SiteContentSchema.parse(mergeWithSeed(parsed, seedContent)),
+        version,
+        fromSeed: false,
+      };
     } catch {
       // Stored doc is corrupt/unparseable. Serve the seed in-memory but DO NOT
       // overwrite the stored bytes — the real content stays recoverable.
-      return SiteContentSchema.parse(seedContent);
+      return seedResult();
     }
   }
   // Genuinely empty store (first run, before any admin save). Serve the seed.
   // We deliberately do NOT write it back: the first real save creates the doc,
   // and writing the seed here is exactly what used to let a spurious "empty"
   // read replace a real save with the default.
-  return SiteContentSchema.parse(seedContent);
+  return seedResult();
 });
+
+// Reads the live content from storage (filesystem in dev, R2 in prod).
+// A failed read must NEVER crash the request: we just serve the bundled seed.
+export async function getContent(): Promise<SiteContent> {
+  return (await loadContent()).content;
+}
+
+/**
+ * The version token for the content this request is rendering, or null when
+ * there is no honest one (seed fallback, or a document that does not exist).
+ * A null token makes the save route refuse the save rather than fail open.
+ */
+export async function getContentVersionToken(): Promise<string | null> {
+  const loaded = await loadContent();
+  return loaded.fromSeed || !loaded.version ? null : versionToken(loaded.version);
+}
 
 // Re-exports so existing call sites don't break.
 export {

@@ -1,4 +1,5 @@
 import { authorize, type Subject } from './authz';
+import { collectionIdField } from './collections';
 import { SiteContentSchema, type SiteContent } from './content-schema';
 import { expandOps, type LeafChange } from './expand';
 import { integrityIssues, type IntegrityIssue } from './integrity';
@@ -12,14 +13,36 @@ export type PipelineResult =
   | { status: 'denied'; denied: { path: string; reason: string }[] }
   | { status: 'invalid'; issues: IntegrityIssue[] };
 
-function issueKey(i: IntegrityIssue): string {
-  return `${i.path.join('.')}::${i.message}`;
+// Issue identity must survive reordering. Paths carry ARRAY INDICES, so a
+// pre-existing problem at batches[0] re-appears as batches[5] after a pure
+// reorder and reads as newly introduced — refusing a save that names a record
+// the user never touched, and making the offending collection impossible to
+// clean up from its own list editor. Swapping the index for the record's id
+// makes the two sides comparable.
+function identityKey(doc: unknown, issue: IntegrityIssue): string {
+  const [head] = issue.path;
+  const field = typeof head === 'string' ? collectionIdField(head) : null;
+  const rows = field ? (doc as Record<string, unknown> | null)?.[head as string] : null;
+
+  const parts = issue.path.map((seg, i) => {
+    if (i === 1 && typeof seg === 'number' && field && Array.isArray(rows)) {
+      const id = (rows[seg] as Record<string, unknown> | undefined)?.[field];
+      if (typeof id === 'string') return `#${id}`;
+    }
+    return String(seg);
+  });
+  return `${parts.join('.')}::${issue.message}`;
 }
 
 /** Issues present after the patch that were not already present before it. */
-function introduced(before: IntegrityIssue[], after: IntegrityIssue[]): IntegrityIssue[] {
-  const known = new Set(before.map(issueKey));
-  return after.filter((i) => !known.has(issueKey(i)));
+function introduced(
+  beforeDoc: unknown,
+  before: IntegrityIssue[],
+  afterDoc: unknown,
+  after: IntegrityIssue[],
+): IntegrityIssue[] {
+  const known = new Set(before.map((i) => identityKey(beforeDoc, i)));
+  return after.filter((i) => !known.has(identityKey(afterDoc, i)));
 }
 
 function zodIssues(doc: unknown): IntegrityIssue[] {
@@ -58,7 +81,7 @@ export function applyAndAuthorize(doc: SiteContent, subject: Subject, ops: Op[])
   //    publicly; refusing saves would remove the only way out.)
   const afterZod = zodIssues(next);
   if (afterZod.length > 0) {
-    const newIssues = introduced(zodIssues(doc), afterZod);
+    const newIssues = introduced(doc, zodIssues(doc), next, afterZod);
     if (newIssues.length > 0) return { status: 'invalid', issues: newIssues };
   }
 
@@ -68,7 +91,7 @@ export function applyAndAuthorize(doc: SiteContent, subject: Subject, ops: Op[])
   // 4. Document-level invariants Zod cannot express: unique ids/slugs and
   //    slug references that actually resolve. Two non-overlapping patches can
   //    otherwise orphan each other's references.
-  const newIntegrity = introduced(integrityIssues(doc), integrityIssues(merged));
+  const newIntegrity = introduced(doc, integrityIssues(doc), merged, integrityIssues(merged));
   if (newIntegrity.length > 0) return { status: 'invalid', issues: newIntegrity };
 
   return { status: 'ok', next: merged, changes, mayPublish: decision.mayPublish };
