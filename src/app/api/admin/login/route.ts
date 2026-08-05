@@ -71,10 +71,18 @@ export async function POST(req: Request) {
     }
 
     clearAttempts(ip);
-    const token = await createSessionToken(user);
+    const token = await createSessionToken({
+      uid: user.uid,
+      email: user.email,
+      roles: user.roles,
+      sv: user.sessionVersion,
+      brk: user.breakGlass,
+    });
     await setSessionCookie(token);
     await audit({ actor: user.email, action: 'login' });
-    return respond({ ok: true, role: user.role });
+    // The role is not returned: the client has no use for it, and every
+    // decision is made from the server-resolved subject anyway.
+    return respond({ ok: true, mustChangePassword: user.mustChangePassword });
   } catch (err) {
     // Controlled failure instead of an opaque 500 — logged server-side,
     // generic to the client.

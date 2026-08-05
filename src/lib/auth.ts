@@ -1,7 +1,10 @@
 import 'server-only';
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
-import { isRemoteStorage } from './storage';
+import { readUserStore } from './users';
+import { findByEmail } from './users-schema';
+import { verifyPassword } from './password';
+import { SessionClaimsSchema, type SessionClaims } from './session-claims';
 
 // In production (Cloudflare Workers / no writable disk) the owner account is
 // defined by environment secrets — we never persist password hashes remotely.
@@ -42,16 +45,20 @@ function getJwtSecret(): Uint8Array {
   return new TextEncoder().encode('dev-only-secret-change-me-in-production-32b');
 }
 
-export type Role = 'owner' | 'editor';
-export interface User {
+/** What a successful login establishes, before any policy is applied. */
+export interface AuthenticatedPrincipal {
+  uid: string;
   email: string;
-  passwordHash: string;
-  role: Role;
-  createdAt: string;
+  roles: string[];
+  sessionVersion: number;
+  /** The env-configured break-glass owner (no store record of its own). */
+  breakGlass: boolean;
+  mustChangePassword: boolean;
 }
-interface UsersFile {
-  users: User[];
-}
+
+/** Fixed uid for the break-glass account. Store records can never claim it:
+ *  ids are server-generated UUIDs and this value is not one. */
+export const BREAK_GLASS_UID = 'env-owner';
 
 // ---- constant-time comparison helpers (WebCrypto, workerd-safe) ------------
 
@@ -114,46 +121,10 @@ async function verifyAgainstStoredHash(password: string, hash: string): Promise<
   return false;
 }
 
-// ---- file-based users (dev convenience only) -------------------------------
-// fs is imported lazily so this module loads cleanly on workerd, where these
-// code paths are never taken (prod owner is env-based).
-
-async function readUsers(): Promise<UsersFile> {
-  const { promises: fs } = await import('fs');
-  const path = await import('path');
-  try {
-    const raw = await fs.readFile(path.join(process.cwd(), 'data', 'users.json'), 'utf8');
-    return JSON.parse(raw);
-  } catch (err: unknown) {
-    if ((err as NodeJS.ErrnoException)?.code === 'ENOENT') return { users: [] };
-    throw err;
-  }
-}
-
-async function writeUsers(file: UsersFile): Promise<void> {
-  const { promises: fs } = await import('fs');
-  const path = await import('path');
-  const usersPath = path.join(process.cwd(), 'data', 'users.json');
-  await fs.mkdir(path.dirname(usersPath), { recursive: true });
-  await fs.writeFile(usersPath, JSON.stringify(file, null, 2), 'utf8');
-}
-
-export async function ensureSeedOwner(): Promise<void> {
-  if (await isRemoteStorage()) return; // prod owner is env-based; no file to seed
-  const email = process.env.ADMIN_OWNER_EMAIL;
-  const pw = process.env.ADMIN_OWNER_INITIAL_PASSWORD;
-  if (!email || !pw) return;
-  const file = await readUsers();
-  if (file.users.some((u) => u.role === 'owner')) return;
-  const bcrypt = (await import('bcryptjs')).default;
-  file.users.push({
-    email: email.toLowerCase(),
-    passwordHash: await bcrypt.hash(pw, 10),
-    role: 'owner',
-    createdAt: new Date().toISOString(),
-  });
-  await writeUsers(file);
-}
+// NB: the old filesystem user file is gone. It was unreachable — verifyCredentials
+// returns early for the env owner and never fell through to it, which is why
+// data/users.json was never even created — and it could not work on Workers,
+// which has no writable disk. Users now live in the R2-backed store (users.ts).
 
 // In-memory rate limit. On Workers this is per-isolate (each PoP/isolate has
 // its own window) — weaker than a shared store, but combined with the KDF it
@@ -175,10 +146,21 @@ export function clearAttempts(ip: string) {
   attempts.delete(ip);
 }
 
+function breakGlassPrincipal(email: string): AuthenticatedPrincipal {
+  return {
+    uid: BREAK_GLASS_UID,
+    email,
+    roles: ['owner'],
+    sessionVersion: 0,
+    breakGlass: true,
+    mustChangePassword: false,
+  };
+}
+
 export async function verifyCredentials(
   email: string,
   password: string,
-): Promise<User | null> {
+): Promise<AuthenticatedPrincipal | null> {
   // Trim the typed email too — mobile keyboards append a space on
   // autocomplete. (The password is NOT trimmed: whitespace there is legal.)
   const lower = email.trim().toLowerCase();
@@ -189,25 +171,34 @@ export async function verifyCredentials(
     const hash = (process.env.ADMIN_OWNER_PASSWORD_HASH || '').trim();
     if (hash) {
       const ok = await verifyAgainstStoredHash(password, hash);
-      return ok ? { email: ownerEmail, passwordHash: '', role: 'owner', createdAt: '' } : null;
+      return ok ? breakGlassPrincipal(ownerEmail) : null;
     }
     const plain = (process.env.ADMIN_OWNER_INITIAL_PASSWORD || '').trim();
     if (plain) {
       const ok = await timingSafeStringEqual(password, plain);
-      return ok ? { email: ownerEmail, passwordHash: '', role: 'owner', createdAt: '' } : null;
+      return ok ? breakGlassPrincipal(ownerEmail) : null;
     }
     return null;
   }
 
-  // File-based users (dev convenience / invited editors). Any storage error
-  // must yield 401, never a 500.
+  // Store-backed users. Any storage error must yield 401, never a 500 — and
+  // never a fallback that trusts something weaker.
   try {
-    await ensureSeedOwner();
-    const { users } = await readUsers();
-    const user = users.find((u) => u.email === lower);
-    if (!user) return null;
-    const ok = await verifyAgainstStoredHash(password, user.passwordHash);
-    return ok ? user : null;
+    const state = await readUserStore();
+    if (state == null) return null; // store unreadable: only break-glass logs in
+    const record = findByEmail(state.users, lower);
+    if (!record) return null;
+    if (record.status === 'disabled') return null;
+    const ok = await verifyPassword(password, record.passwordHash);
+    if (!ok) return null;
+    return {
+      uid: record.id,
+      email: record.email,
+      roles: record.roleIds,
+      sessionVersion: record.sessionVersion,
+      breakGlass: false,
+      mustChangePassword: record.mustChangePassword,
+    };
   } catch {
     return null;
   }
@@ -216,8 +207,21 @@ export async function verifyCredentials(
 export const JWT_ISSUER = 'furor-web';
 export const JWT_AUDIENCE = 'furor-admin';
 
-export async function createSessionToken(user: User): Promise<string> {
-  return new SignJWT({ email: user.email, role: user.role })
+export async function createSessionToken(claims: {
+  uid: string;
+  email: string;
+  roles: string[];
+  sv: number;
+  brk?: boolean;
+}): Promise<string> {
+  return new SignJWT({
+    uid: claims.uid,
+    email: claims.email,
+    roles: claims.roles,
+    sv: claims.sv,
+    brk: claims.brk ?? false,
+    ...(claims.brk ? { epoch: (process.env.ADMIN_OWNER_TOKEN_EPOCH || '').trim() } : {}),
+  })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setIssuer(JWT_ISSUER)
@@ -242,7 +246,7 @@ export async function clearSessionCookie(): Promise<void> {
   c.delete(COOKIE_NAME);
 }
 
-export async function getSession(): Promise<{ email: string; role: Role } | null> {
+export async function getSession(): Promise<SessionClaims | null> {
   try {
     const c = await cookies();
     const token = c.get(COOKIE_NAME)?.value;
@@ -252,36 +256,19 @@ export async function getSession(): Promise<{ email: string; role: Role } | null
       issuer: JWT_ISSUER,
       audience: JWT_AUDIENCE,
     });
-    return { email: String(payload.email), role: payload.role as Role };
+    // Validated, not cast: a correctly-signed but malformed token must be
+    // rejected outright rather than flowing on with undefined fields.
+    const claims = SessionClaimsSchema.safeParse(payload);
+    if (!claims.success) return null;
+    // Break-glass tokens carry an epoch that must still match the configured
+    // one — the only revocation lever that account has, since it owns no store
+    // record whose sessionVersion could be bumped.
+    if (claims.data.brk) {
+      const epoch = (process.env.ADMIN_OWNER_TOKEN_EPOCH || '').trim();
+      if ((claims.data.epoch || '') !== epoch) return null;
+    }
+    return claims.data;
   } catch {
     return null;
   }
-}
-
-export async function listUsers(): Promise<User[]> {
-  if (await isRemoteStorage()) {
-    const ownerEmail = envOwnerEmail();
-    return ownerEmail
-      ? [{ email: ownerEmail, passwordHash: '', role: 'owner', createdAt: '' }]
-      : [];
-  }
-  const { users } = await readUsers();
-  return users;
-}
-
-export async function inviteEditor(email: string, password: string): Promise<void> {
-  if (await isRemoteStorage()) {
-    throw new Error('In production the owner is managed via environment secrets.');
-  }
-  const file = await readUsers();
-  const lower = email.toLowerCase();
-  if (file.users.some((u) => u.email === lower)) throw new Error('User already exists');
-  const bcrypt = (await import('bcryptjs')).default;
-  file.users.push({
-    email: lower,
-    passwordHash: await bcrypt.hash(password, 10),
-    role: 'editor',
-    createdAt: new Date().toISOString(),
-  });
-  await writeUsers(file);
 }

@@ -1,27 +1,48 @@
 import 'server-only';
-import { getSession } from './auth';
+import { BREAK_GLASS_UID, getSession } from './auth';
 import type { Subject } from './authz';
-import { SECTION_PATHS } from './roles';
+import { readUserStore } from './users';
+import { findByEmail } from './users-schema';
 
-/**
- * Resolves the acting subject for a request.
- *
- * Plan 1 derives it from the existing single-role JWT so the authorization
- * pipeline is exercisable today. Plan 2 replaces the BODY of this function
- * with a `users.json` lookup (roles, attrs, status, sessionVersion) — every
- * caller keeps working because the signature does not change.
- *
- * Note the current owner is the env-configured break-glass account: it is the
- * only identity that exists in production today, and it must keep working even
- * when a user store is added and something goes wrong with it.
- */
-export async function resolveSubject(): Promise<Subject | null> {
+// Resolving the acting subject is the ONLY place authorization facts come
+// from. The JWT's `roles` claim is a hint for display; it is minted for 14 days
+// and cannot reflect a demotion that happened yesterday.
+
+// A short per-isolate cache keeps page renders from re-reading the store on
+// every component. Five seconds bounds how long a suspension or demotion lags;
+// a longer window is the difference between "revoked" and "revoked eventually".
+// Mutating routes pass { fresh: true } and never consult it.
+const SUBJECT_TTL_MS = 5_000;
+let cache: { at: number; byUid: Map<string, Subject | null> } | null = null;
+
+function cached(uid: string): Subject | null | undefined {
+  if (!cache || Date.now() - cache.at > SUBJECT_TTL_MS) return undefined;
+  return cache.byUid.get(uid);
+}
+
+function remember(uid: string, subject: Subject | null): void {
+  if (!cache || Date.now() - cache.at > SUBJECT_TTL_MS) {
+    cache = { at: Date.now(), byUid: new Map() };
+  }
+  cache.byUid.set(uid, subject);
+}
+
+export function bustSubjectCache(): void {
+  cache = null;
+}
+
+export async function resolveSubject(opts: { fresh?: boolean } = {}): Promise<Subject | null> {
   const session = await getSession();
   if (!session) return null;
 
-  if (session.role === 'owner') {
+  // Break-glass resolves BEFORE any store lookup, and its identity comes from
+  // the token's own claim rather than from a record. That is what keeps it
+  // working when the store is missing, corrupt or locked out by a bad policy —
+  // and a store record cannot impersonate it, because ids are server-generated
+  // UUIDs and this uid is not one.
+  if (session.brk && session.uid === BREAK_GLASS_UID) {
     return {
-      id: session.email,
+      id: BREAK_GLASS_UID,
       email: session.email,
       roleIds: ['owner'],
       attrs: {},
@@ -29,13 +50,32 @@ export async function resolveSubject(): Promise<Subject | null> {
     };
   }
 
-  // The only other role the current JWT can carry. Until real users exist it
-  // gets every section, so behaviour is unchanged for existing accounts —
-  // what changes is that the write is now authorized at all.
-  return {
-    id: session.email,
-    email: session.email,
-    roleIds: ['editor'],
-    attrs: { sections: Object.keys(SECTION_PATHS) },
-  };
+  if (!opts.fresh) {
+    const hit = cached(session.uid);
+    if (hit !== undefined) return hit;
+  }
+
+  const state = await readUserStore();
+  if (state == null) {
+    // Store unreadable. Everyone except break-glass is refused: on Workers a
+    // broken R2 binding makes reads fail silently as empty, so "trust the
+    // token's claims when the store is gone" would turn an infrastructure blip
+    // into a fail-open for every logged-in session.
+    return null;
+  }
+
+  const record = state.users.find((u) => u.id === session.uid) ?? findByEmail(state.users, session.email);
+  let subject: Subject | null = null;
+
+  if (record && record.status === 'active' && record.sessionVersion === session.sv) {
+    subject = {
+      id: record.id,
+      email: record.email,
+      roleIds: record.roleIds,
+      attrs: record.attrs,
+    };
+  }
+
+  remember(session.uid, subject);
+  return subject;
 }
