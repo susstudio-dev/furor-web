@@ -1,7 +1,18 @@
 import 'server-only';
 import { SiteContentSchema, type SiteContent } from './content-schema';
 import { CONTENT_KEY, mergeWithSeed } from './content';
-import { deleteKey, listKeys, readText, writeText } from './storage';
+import {
+  deleteKey,
+  listKeys,
+  readDocWithVersion,
+  readText,
+  writeDocIfMatch,
+  writeText,
+} from './storage';
+import { newLineage, versionToken } from './storage-version-core';
+import { applyAndAuthorize } from './save-pipeline';
+import { diffToOps } from './diff-ops';
+import type { Subject } from './authz';
 import seedContent from '@/data/site-content.seed.json';
 
 const VERSIONS_PREFIX = 'versions/';
@@ -74,14 +85,74 @@ export async function listVersions(): Promise<string[]> {
     .reverse();
 }
 
-export async function restoreVersion(filename: string, actor: string): Promise<SiteContent> {
+export type RestoreResult =
+  | { status: 'ok'; next: SiteContent; version: string }
+  | { status: 'denied'; denied: { path: string; reason: string }[] }
+  | { status: 'invalid'; issues: { path: (string | number)[]; message: string }[] }
+  | { status: 'conflict' }
+  | { status: 'missing' };
+
+/**
+ * Restores a snapshot by expressing it as a set of ops and running them
+ * through the SAME authorization pipeline as an ordinary save.
+ *
+ * Restoring used to be a whole-document write on its own route, which made
+ * the claim that the pipeline is a single choke point simply false: anyone who
+ * could restore could revert path sets they were explicitly denied — theme,
+ * site settings — or reinstate a malicious payment link that had been cleaned
+ * up. Expressed as ops, a restore is authorized leaf by leaf, and per-path
+ * restore falls out for free.
+ */
+export async function restoreVersion(
+  filename: string,
+  subject: Subject,
+): Promise<RestoreResult> {
   if (!/^[a-zA-Z0-9._-]+\.json$/.test(filename)) throw new Error('Invalid version filename');
   const raw = await readText(`${VERSIONS_PREFIX}${filename}`);
-  if (raw == null) throw new Error('Version not found');
-  // Merge through the seed like getContent() does — a snapshot taken before a
-  // schema addition must stay restorable, not rot into a ZodError.
-  const parsed = SiteContentSchema.parse(mergeWithSeed(JSON.parse(raw), seedContent));
-  await snapshotCurrent(actor);
-  await writeText(CONTENT_KEY, JSON.stringify(parsed, null, 2));
-  return parsed;
+  if (raw == null) return { status: 'missing' };
+
+  const current = await readDocWithVersion(CONTENT_KEY);
+  if (current == null) return { status: 'missing' };
+  const published = SiteContentSchema.parse(mergeWithSeed(JSON.parse(current.text), seedContent));
+
+  // Merge the snapshot against a DEFAULTS-ONLY floor, never the shipped seed:
+  // `sync-seed` bakes a developer's live content into the seed, so seeding a
+  // pre-migration snapshot would silently publish their local promos/theme.
+  const snapshot = SiteContentSchema.parse(mergeWithSeed(JSON.parse(raw), defaultsFloor()));
+
+  const ops = diffToOps(published, snapshot);
+  if (ops.length === 0) {
+    return { status: 'ok', next: published, version: versionToken(current.version) };
+  }
+
+  const result = applyAndAuthorize(published, subject, ops);
+  if (result.status === 'denied') return { status: 'denied', denied: result.denied };
+  if (result.status === 'invalid') return { status: 'invalid', issues: result.issues };
+
+  const text = JSON.stringify(result.next, null, 2);
+  // A NEW lineage: every open tab and stored version token from before the
+  // restore must fail loudly rather than apply to content it never saw.
+  const written = await writeDocIfMatch(CONTENT_KEY, text, current.version, {
+    lineage: newLineage(),
+  });
+  if (written === null) return { status: 'conflict' };
+
+  await snapshotAfterWrite(current.text, text, subject.email);
+  return { status: 'ok', next: result.next, version: versionToken(written) };
+}
+
+/** A document containing only schema defaults — the safe merge floor for an
+ *  old snapshot, as opposed to the content-bearing seed. */
+function defaultsFloor(): unknown {
+  return SiteContentSchema.parse({
+    version: 1,
+    site: {
+      title: '',
+      tagline: '',
+      whatsappNumber: '0000000000',
+      instagramHandle: 'x',
+      socials: {},
+    },
+    hero: { headline: '-', subHeadline: '-' },
+  });
 }

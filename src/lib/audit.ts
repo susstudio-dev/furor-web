@@ -1,5 +1,5 @@
 import 'server-only';
-import { readJSON, writeJSON } from './storage';
+import { readDocWithVersion, readJSON, writeDocIfMatch } from './storage';
 
 // Two separate capped logs: pre-auth events (login_failed) carry
 // attacker-controlled actors and could otherwise be flooded to evict the
@@ -19,20 +19,45 @@ export interface AuditEntry {
 
 // Audit is best-effort: it must NEVER throw and break the action it records
 // (login, save, etc.). A storage hiccup just drops the entry.
+//
+// The append is compare-and-swap with one retry. Read-modify-write without it
+// silently drops entries under exactly the concurrency the audit log exists to
+// explain — and it does so invisibly, because the whole body is swallowed.
 export async function audit(entry: Omit<AuditEntry, 'ts'>): Promise<void> {
+  const key = PRE_AUTH_ACTIONS.has(entry.action) ? AUTH_AUDIT_KEY : AUDIT_KEY;
+  const row: AuditEntry = {
+    ts: new Date().toISOString(),
+    ...entry,
+    actor: entry.actor.slice(0, 64),
+    detail: entry.detail?.slice(0, 256),
+  };
+
   try {
-    const key = PRE_AUTH_ACTIONS.has(entry.action) ? AUTH_AUDIT_KEY : AUDIT_KEY;
-    const log = (await readJSON<AuditEntry[]>(key)) ?? [];
-    log.push({
-      ts: new Date().toISOString(),
-      ...entry,
-      actor: entry.actor.slice(0, 64),
-      detail: entry.detail?.slice(0, 256),
-    });
-    if (log.length > CAP) log.splice(0, log.length - CAP);
-    await writeJSON(key, log);
-  } catch {
-    /* swallow — auditing must not break the request */
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const current = await readDocWithVersion(key);
+      const log: AuditEntry[] = current ? (JSON.parse(current.text) as AuditEntry[]) : [];
+      log.push(row);
+      if (log.length > CAP) log.splice(0, log.length - CAP);
+
+      const text = JSON.stringify(log, null, 2);
+      if (!current) {
+        // First ever entry: no version to swap against.
+        const { writeText } = await import('./storage');
+        await writeText(key, text);
+        return;
+      }
+      const written = await writeDocIfMatch(key, text, current.version);
+      if (written !== null) return;
+    }
+    // Both attempts lost the race. Surface it rather than dropping it silently
+    // — wrangler observability is the only place this becomes visible.
+    console.error('audit: lost the write race twice, entry dropped', row.action, row.actor);
+  } catch (err) {
+    // An authorization denial that goes unrecorded is the one case where a
+    // silent drop is genuinely misleading, so it is always logged.
+    if (row.action === 'authz_denied') {
+      console.error('audit: failed to record an authorization denial', row.actor, row.detail, err);
+    }
   }
 }
 
