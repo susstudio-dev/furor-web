@@ -18,24 +18,6 @@ import seedContent from '@/data/site-content.seed.json';
 const VERSIONS_PREFIX = 'versions/';
 const RETENTION = 30;
 
-async function snapshotCurrent(actor: string) {
-  const current = await readText(CONTENT_KEY);
-  if (current == null) return; // nothing to snapshot yet
-
-  const stamp = new Date().toISOString().replace(/[:.]/g, '-');
-  const safeActor = actor.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 64);
-  await writeText(`${VERSIONS_PREFIX}site-content-${stamp}-by-${safeActor}.json`, current);
-
-  // prune oldest beyond retention
-  const versions = (await listKeys(VERSIONS_PREFIX))
-    .map((v) => v.key)
-    .sort();
-  while (versions.length > RETENTION) {
-    const oldest = versions.shift();
-    if (oldest) await deleteKey(oldest);
-  }
-}
-
 /**
  * Snapshots the bytes that were just replaced, AFTER a successful write.
  *

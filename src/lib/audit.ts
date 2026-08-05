@@ -1,5 +1,5 @@
 import 'server-only';
-import { readDocWithVersion, readJSON, writeDocIfMatch } from './storage';
+import { readDocWithVersion, readJSON, writeDocIfMatch, writeText } from './storage';
 
 // Two separate capped logs: pre-auth events (login_failed) carry
 // attacker-controlled actors and could otherwise be flooded to evict the
@@ -41,8 +41,7 @@ export async function audit(entry: Omit<AuditEntry, 'ts'>): Promise<void> {
 
       const text = JSON.stringify(log, null, 2);
       if (!current) {
-        // First ever entry: no version to swap against.
-        const { writeText } = await import('./storage');
+        // First ever entry: there is no version to swap against.
         await writeText(key, text);
         return;
       }
