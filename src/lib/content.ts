@@ -1,36 +1,16 @@
 import 'server-only';
 import { cache } from 'react';
 import { SiteContentSchema, type SiteContent } from './content-schema';
+import { mergeWithSeed } from './content-merge';
 import { readText } from './storage';
 import seedContent from '@/data/site-content.seed.json';
 
 export const CONTENT_KEY = 'site-content.json';
 
-// Deep merge: saved values win, seed fills in anything missing. Arrays are
-// taken whole from saved (we never want to splice in seed items behind the
-// admin's back) — only missing top-level/nested object keys fall back to seed.
-// This protects against schema additions making old saves render blank.
-export function mergeWithSeed(saved: unknown, seed: unknown): unknown {
-  if (Array.isArray(saved)) return saved;
-  if (
-    saved === null ||
-    saved === undefined ||
-    typeof saved !== 'object' ||
-    typeof seed !== 'object' ||
-    seed === null
-  ) {
-    return saved ?? seed;
-  }
-  const out: Record<string, unknown> = { ...(seed as Record<string, unknown>) };
-  for (const [k, v] of Object.entries(saved as Record<string, unknown>)) {
-    // JSON.parse yields __proto__ as an OWN key; assigning it here would
-    // pollute Object.prototype for the whole isolate. This runs BEFORE zod
-    // validation, so the schema's unknown-key stripping can't protect it.
-    if (k === '__proto__' || k === 'constructor' || k === 'prototype') continue;
-    out[k] = mergeWithSeed(v, (seed as Record<string, unknown>)[k]);
-  }
-  return out;
-}
+// The merge itself lives in content-merge.ts so it can be unit-tested — this
+// module imports `server-only`, which throws outside a server bundle.
+// Re-exported so existing call sites keep importing it from here.
+export { mergeWithSeed };
 
 // Cross-request TTL cache (per Worker isolate / per Node process). Public
 // pages render per-request on Cloudflare (see connection() in the root

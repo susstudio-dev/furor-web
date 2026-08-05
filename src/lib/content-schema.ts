@@ -193,6 +193,10 @@ export const StorySchema = z.object({
   id: z.string().min(1),
   slug: z.string().regex(/^[a-z0-9-]+$/),
   title: z.string().min(1),
+  // Provenance for the Author role, whose grant is "stories where authorId is
+  // me". Defaulted so every already-stored story stays valid — a required
+  // field here would fail validation on read and serve the seed site-wide.
+  authorId: z.string().default(''),
   publishedAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   heroImage: z.string().optional().default(''),
   excerpt: z.string().optional().default(''),
