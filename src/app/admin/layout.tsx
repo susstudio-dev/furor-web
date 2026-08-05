@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { getSession } from '@/lib/auth';
+import { getContentVersionToken } from '@/lib/content';
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
@@ -53,12 +54,19 @@ const NAV: NavItem[] = [
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();
+  // The version of the content this page is rendering. Emitted as a meta tag
+  // so every editor's save can carry it without threading a prop through all
+  // twenty of them. It deliberately comes from the SAME cached read as the
+  // content: a fresher token paired with older content would let a stale save
+  // pass the conflict check and silently clobber someone.
+  const contentVersion = session ? await getContentVersionToken() : null;
   // Login page handles its own layout
   // Note: segment-level redirect happens here for all /admin/* except /admin/login
   // We handle /admin/login by checking the children (not great in layout) — instead, the login page's content takes over.
   // For simplicity, we let the login page render even without a session.
   return (
     <div className="min-h-screen bg-ink-950 text-cream">
+      {contentVersion ? <meta name="furor-content-version" content={contentVersion} /> : null}
       <div className="lg:flex">
         {session ? (
           <aside className="lg:w-64 lg:min-h-screen border-b lg:border-b-0 lg:border-r border-cream/10 bg-ink-900/40">

@@ -2,7 +2,8 @@ import 'server-only';
 import { cache } from 'react';
 import { SiteContentSchema, type SiteContent } from './content-schema';
 import { mergeWithSeed } from './content-merge';
-import { readText } from './storage';
+import { readDocWithVersion, type DocVersion } from './storage';
+import { versionToken } from './storage-version-core';
 import seedContent from '@/data/site-content.seed.json';
 
 export const CONTENT_KEY = 'site-content.json';
@@ -18,7 +19,7 @@ export { mergeWithSeed };
 // edits visible within CACHE_TTL_MS everywhere (and instantly in the isolate
 // that saved — see bustContentCache()).
 const CACHE_TTL_MS = 30_000;
-let cached: { raw: string | null; at: number } | null = null;
+let cached: { raw: string | null; version: DocVersion | null; at: number } | null = null;
 
 export function bustContentCache(): void {
   cached = null;
@@ -28,9 +29,25 @@ async function readContentRaw(): Promise<string | null> {
   if (process.env.NODE_ENV === 'production' && cached && Date.now() - cached.at < CACHE_TTL_MS) {
     return cached.raw;
   }
-  const raw = await readText(CONTENT_KEY);
-  cached = { raw, at: Date.now() };
-  return raw;
+  const doc = await readDocWithVersion(CONTENT_KEY);
+  cached = { raw: doc?.text ?? null, version: doc?.version ?? null, at: Date.now() };
+  return cached.raw;
+}
+
+/**
+ * The version token for the content an admin page is CURRENTLY rendering.
+ *
+ * It deliberately comes from the same cached read as `getContent()`, not from
+ * a fresh store read. A fresher token paired with older content is the exact
+ * shape of a silent clobber: the conflict check would pass while the editor's
+ * base was stale. A *stale* token can only ever produce a false 409 — "reload
+ * to get their changes" — which is safe.
+ *
+ * Returns null before any read has happened or when the document is absent.
+ */
+export async function getContentVersionToken(): Promise<string | null> {
+  await getContent(); // ensure the cache slot is populated for this request
+  return cached?.version ? versionToken(cached.version) : null;
 }
 
 // Reads the live content from storage (filesystem in dev, R2 in prod).

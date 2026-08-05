@@ -7,12 +7,6 @@ import seedContent from '@/data/site-content.seed.json';
 const VERSIONS_PREFIX = 'versions/';
 const RETENTION = 30;
 
-export class ContentValidationError extends Error {
-  constructor(public issues: unknown) {
-    super('Content failed schema validation');
-  }
-}
-
 async function snapshotCurrent(actor: string) {
   const current = await readText(CONTENT_KEY);
   if (current == null) return; // nothing to snapshot yet
@@ -31,14 +25,45 @@ async function snapshotCurrent(actor: string) {
   }
 }
 
-export async function saveContent(next: unknown, actor: string): Promise<SiteContent> {
-  const parsed = SiteContentSchema.safeParse(next);
-  if (!parsed.success) throw new ContentValidationError(parsed.error.issues);
+/**
+ * Snapshots the bytes that were just replaced, AFTER a successful write.
+ *
+ * Snapshotting before the write burns a retention slot on every failed
+ * compare-and-swap, and an unchanged save would evict real history for a copy
+ * of itself. Both matter now that several people can save concurrently.
+ *
+ * `previous` is the document as it was read for this save; `written` is what
+ * replaced it. Best-effort: a snapshot failure must never fail the save that
+ * already succeeded.
+ */
+export async function snapshotAfterWrite(
+  previous: string,
+  written: string,
+  actor: string,
+): Promise<void> {
+  if (previous === written) return; // no-op save: nothing worth keeping
+  try {
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const safeActor = actor.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 64);
+    // A random suffix keeps two saves in the same millisecond by the same
+    // actor from colliding on the key and silently overwriting each other.
+    const rand = Math.random().toString(36).slice(2, 8);
+    await writeText(`${VERSIONS_PREFIX}site-content-${stamp}-by-${safeActor}-${rand}.json`, previous);
 
-  await snapshotCurrent(actor);
-  await writeText(CONTENT_KEY, JSON.stringify(parsed.data, null, 2));
-  return parsed.data;
+    const versions = (await listKeys(VERSIONS_PREFIX)).map((v) => v.key).sort();
+    while (versions.length > RETENTION) {
+      const oldest = versions.shift();
+      if (oldest) await deleteKey(oldest);
+    }
+  } catch {
+    /* snapshotting must never break a save that already landed */
+  }
 }
+
+// NB: there is deliberately no `saveContent(wholeDocument)` helper any more.
+// Content writes go through the save route's pipeline (expand → authorize →
+// validate → integrity → compare-and-swap); an unauthorized whole-document
+// write function sitting here is how that pipeline would quietly get bypassed.
 
 export async function listVersions(): Promise<string[]> {
   const items = await listKeys(VERSIONS_PREFIX);

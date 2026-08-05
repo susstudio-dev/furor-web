@@ -1,4 +1,5 @@
 import { collectionIdField } from './collections';
+import { deepEqual } from './deep-equal';
 import { applyOps, type Json, type Op } from './patch';
 import { formatPath, parsePath, type PathSegment } from './patch-path';
 
@@ -22,22 +23,6 @@ export type LeafChange =
   | { kind: 'reorder'; path: string; collection: string; before: string[]; after: string[] };
 
 type Obj = Record<string, unknown>;
-
-// Key-order-insensitive: a client that re-serialises a record with its keys in
-// a different order has not changed anything, and treating that as a change
-// would demand authorization for records the user never touched.
-function deepEqual(a: unknown, b: unknown): boolean {
-  if (a === b) return true;
-  if (a === null || b === null || typeof a !== 'object' || typeof b !== 'object') return false;
-  if (Array.isArray(a) !== Array.isArray(b)) return false;
-  if (Array.isArray(a) && Array.isArray(b)) {
-    return a.length === b.length && a.every((v, i) => deepEqual(v, b[i]));
-  }
-  const ka = Object.keys(a as Obj);
-  const kb = Object.keys(b as Obj);
-  if (ka.length !== kb.length) return false;
-  return ka.every((k) => Object.hasOwn(b as Obj, k) && deepEqual((a as Obj)[k], (b as Obj)[k]));
-}
 
 /** Tolerant reader: returns undefined instead of throwing when the path does
  *  not resolve (a record may exist on only one side of the diff). */
