@@ -19,11 +19,27 @@ function baseVersion(): string | null {
   return document.querySelector('meta[name="furor-content-version"]')?.getAttribute('content') ?? null;
 }
 
+// One-shot flag consumed by the next save. Set by the SaveBar's
+// "Save as draft" action — routed this way so none of the twenty editors'
+// save() functions need a signature change.
+let nextSaveMode: 'publish' | 'draft' = 'publish';
+export function requestDraftSave(): void {
+  nextSaveMode = 'draft';
+}
+
+export interface SaveOutcome {
+  status: 'published' | 'draft' | 'unchanged';
+  draftId?: string;
+  leafPaths?: string[];
+}
+
 export async function saveSiteContent(payload: unknown): Promise<void> {
+  const mode = nextSaveMode;
+  nextSaveMode = 'publish';
   const res = await fetch('/api/admin/save', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ baseVersion: baseVersion(), document: payload }),
+    body: JSON.stringify({ baseVersion: baseVersion(), document: payload, mode }),
   });
   const j = (await res.json().catch(() => ({}))) as {
     error?: string;
@@ -36,6 +52,17 @@ export async function saveSiteContent(payload: unknown): Promise<void> {
     // not report a conflict against its own write.
     const meta = document.querySelector('meta[name="furor-content-version"]');
     if (meta && j.version) meta.setAttribute('content', j.version);
+    // Tell the SaveBar what actually happened (published vs stored as a
+    // draft) without threading a return value through every editor.
+    const detail: SaveOutcome =
+      res.status === 201
+        ? {
+            status: 'draft',
+            draftId: (j as { draftId?: string }).draftId,
+            leafPaths: (j as { leafPaths?: string[] }).leafPaths,
+          }
+        : { status: (j as { unchanged?: boolean }).unchanged ? 'unchanged' : 'published' };
+    window.dispatchEvent(new CustomEvent('furor:save-outcome', { detail }));
     return;
   }
 

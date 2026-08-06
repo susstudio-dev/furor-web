@@ -6,6 +6,7 @@ import { canWrite } from '@/lib/guard';
 import { resolveSubject } from '@/lib/subject';
 import type { Subject } from '@/lib/authz';
 import { getContentVersionToken } from '@/lib/content';
+import { AdminNav } from '@/components/admin/AdminNav';
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
@@ -50,6 +51,7 @@ const NAV: NavItem[] = [
   { label: 'Payments', href: '/admin/payments' },
 
   { label: 'System', href: '#', groupHeader: true },
+  { label: 'Drafts', href: '/admin/drafts' },
   { label: 'Raw JSON', href: '/admin/json' },
   { label: 'Versions', href: '/admin/versions' },
   { label: 'Users', href: '/admin/users', ownerOnly: true },
@@ -108,52 +110,16 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       {contentVersion ? <meta name="furor-content-version" content={contentVersion} /> : null}
       <div className="lg:flex">
         {subject ? (
-          <aside className="lg:w-64 lg:min-h-screen border-b lg:border-b-0 lg:border-r border-cream/10 bg-ink-900/40">
-            <div className="p-5">
-              <Link href="/admin" className="display text-lg font-extrabold">
-                <span className="text-ember-500">Furor</span> admin
-              </Link>
-              <p className="mt-1 text-cream/50 text-xs">Signed in as {subject.email} · {subject.breakGlass ? 'owner' : subject.roleIds.join(', ') || 'no role'}</p>
-            </div>
-            <nav className="px-3 pb-6 grid gap-1">
-              {NAV.filter((n) => navVisible(n, subject)).map((n) => {
-                if (n.groupHeader) {
-                  if (n.href === '#') {
-                    return (
-                      <p
-                        key={n.label}
-                        className="mt-3 px-3 py-1 text-[10px] uppercase tracking-widest text-cream/40"
-                      >
-                        {n.label}
-                      </p>
-                    );
-                  }
-                  return (
-                    <Link
-                      key={n.href}
-                      href={n.href}
-                      className="mt-3 rounded-xl px-3 py-2 text-[10px] uppercase tracking-widest text-cream/50 hover:text-ember-400"
-                    >
-                      {n.label}
-                    </Link>
-                  );
-                }
-                return (
-                  <Link
-                    key={n.href}
-                    href={n.href}
-                    className="rounded-xl px-3 py-2 text-sm text-cream/80 hover:bg-cream/5 hover:text-cream whitespace-pre"
-                  >
-                    {n.label}
-                  </Link>
-                );
-              })}
-              <form action="/api/admin/logout" method="post" className="mt-4 px-3">
-                <button className="text-xs text-cream/50 hover:text-cream/80">Sign out</button>
-              </form>
-              <Link href="/" className="px-3 mt-2 text-xs text-cream/50 hover:text-cream/80">← Back to public site</Link>
-            </nav>
-          </aside>
+          <AdminNav
+            items={NAV.filter((n) => navVisible(n, subject)).map(({ label, href, groupHeader }) => ({
+              label,
+              href,
+              ...(groupHeader ? { groupHeader } : {}),
+            }))}
+            signedInAs={`Signed in as ${subject.email} · ${
+              subject.breakGlass ? 'owner' : subject.roleIds.join(', ') || 'no role'
+            }`}
+          />
         ) : null}
         <div className="flex-1 min-w-0">{children}</div>
       </div>

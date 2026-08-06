@@ -29,6 +29,7 @@ Prereqs: a Cloudflare account (free) and `npx wrangler login` once locally.
    npm run hash-password -- 'the-strong-password'      # prints a pbkdf2$... string
    npx wrangler secret put ADMIN_OWNER_PASSWORD_HASH   # paste that string
    npx wrangler secret put ADMIN_OWNER_TOKEN_EPOCH     # any string; change it to sign the owner out everywhere
+   npx wrangler secret put PREVIEW_SECRET              # optional; draft-preview signing key (defaults to a key derived from JWT_SECRET)
    ```
 
    Notes:

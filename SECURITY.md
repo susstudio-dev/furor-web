@@ -46,6 +46,13 @@ repository. Please do not open public issues for vulnerabilities.
 - A temp-password account (fresh invite) can reach exactly two things until
   it sets its own password: the change-password screen and the self-service
   endpoint that performs the change. Every mutating API refuses it.
+- Draft preview uses its own 15-minute token (separate issuer/audience and a
+  domain-separated secret — an admin session cookie replayed into the preview
+  cookie does not verify). While it is set, public responses are
+  private/no-store/noindex and the site is frameable by ITSELF only, for the
+  admin's side-by-side review. The overlay applies to public renders only;
+  admin editors, the save pipeline and the sitemap always read published
+  content.
 - Residual gaps, stated plainly: admin READ access is all-or-nothing — any
   signed-in admin session can view the whole content document and the
   payments log regardless of write grants; and the env break-glass owner
