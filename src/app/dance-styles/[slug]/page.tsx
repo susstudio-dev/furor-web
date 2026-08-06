@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { getContent, batchesForStyle, formatBatchDate, formatInr, styleBySlug, batchStyleLabel } from '@/lib/content';
+import { getPublicContent, batchesForStyle, formatBatchDate, formatInr, styleBySlug, batchStyleLabel } from '@/lib/content';
 import { EnquiryCTA } from '@/components/EnquiryCTA';
 import { BatchActions } from '@/components/BatchActions';
 import { JsonLd } from '@/components/JsonLd';
@@ -9,7 +9,7 @@ import { breadcrumbLd, courseLd, truncateAtWord } from '@/lib/seo';
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const c = await getContent();
+  const c = await getPublicContent();
   const s = styleBySlug(c, slug);
   if (!s) return {};
   return {
@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function StylePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const content = await getContent();
+  const content = await getPublicContent();
   const style = styleBySlug(content, slug);
   if (!style) notFound();
   const batches = batchesForStyle(content, style.slug);

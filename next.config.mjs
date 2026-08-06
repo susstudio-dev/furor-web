@@ -90,6 +90,17 @@ const CSP = [
 
 const nextConfig = {
   reactStrictMode: true,
+  // Next 15.2+ streams <title>/<meta>/<link rel=canonical> into the BODY for
+  // any user agent it believes runs JavaScript, and only blocks on metadata
+  // for the short built-in "HTML-limited bots" list (Twitterbot, Slackbot…).
+  // Googlebot renders JS so it copes, but every other crawler — Bingbot,
+  // Screaming Frog, Ahrefs, most AI crawlers — reads raw HTML and sees a page
+  // with no title, no description and no canonical in <head>. A crawl of this
+  // site flagged exactly that on the pages that happened to lose the race.
+  // Matching every UA makes metadata blocking (i.e. always inside <head>).
+  // The cost here is nil: layout.tsx already awaits connection() + getContent()
+  // before it can render anything, so the shell could never flush earlier.
+  htmlLimitedBots: /.*/,
   // Dev server compiles into its own directory so a concurrent
   // `next build` / `opennextjs-cloudflare build` (which writes production
   // output to `.next`) can never clobber the running dev server's chunks.
@@ -133,6 +144,25 @@ const nextConfig = {
       {
         source: '/uploads/:path*',
         headers: [{ key: 'Content-Security-Policy', value: "default-src 'none'" }],
+      },
+      // Draft preview: while the (signed, 15-minute) furor_preview cookie is
+      // present, the public site becomes frameable BY ITSELF ONLY — the admin
+      // split-view review iframe needs it, and only our own authenticated
+      // preview endpoint can set that cookie, so an attacker page cannot make
+      // the site frameable for an ordinary visitor. Preview responses vary by
+      // cookie and must never be cached or indexed. Placement matters: this
+      // rule sits AFTER '/:path*' because later matching rules win per header
+      // key under the OpenNext routing layer.
+      {
+        source: '/:path*',
+        has: [{ type: 'cookie', key: 'furor_preview' }],
+        headers: [
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+          { key: 'Content-Security-Policy', value: CSP.replace("frame-ancestors 'none'", "frame-ancestors 'self'") },
+          { key: 'Cache-Control', value: 'private, no-store' },
+          { key: 'Vary', value: 'Cookie' },
+          { key: 'X-Robots-Tag', value: 'noindex' },
+        ],
       },
     ];
   },

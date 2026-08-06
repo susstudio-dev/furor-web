@@ -4,6 +4,7 @@ import { SiteContentSchema, type SiteContent } from './content-schema';
 import { mergeWithSeed } from './content-merge';
 import { readDocWithVersion, type DocVersion } from './storage';
 import { versionToken } from './storage-version-core';
+import { PREVIEW_COOKIE, verifyPreviewToken } from './preview-token';
 import seedContent from '@/data/site-content.seed.json';
 
 export const CONTENT_KEY = 'site-content.json';
@@ -127,6 +128,64 @@ export async function getContent(): Promise<SiteContent> {
 export async function getContentVersionToken(): Promise<string | null> {
   const loaded = await loadContent();
   return loaded.fromSeed || !loaded.version ? null : versionToken(loaded.version);
+}
+
+// ── Preview ────────────────────────────────────────────────────────────────
+// Public pages read through getPublicContent(): when a valid furor_preview
+// cookie names an open draft, that draft's ops are applied to a FRESH deep
+// clone of the published document (applyOps never mutates its input). The
+// overlay deliberately touches nothing else: not the 30s raw cache, not the
+// version token, not admin editors (which import getContent directly), not
+// the save pipeline (readDocWithVersion), and not the sitemap. Any failure —
+// bad token, revoked subject, missing/closed draft, unapplicable ops — falls
+// back to published content silently: preview is a lens, never an error.
+
+interface PreviewView {
+  content: SiteContent;
+  draftId: string | null;
+  touchedIds: string[];
+}
+
+const loadPreview = cache(async (): Promise<PreviewView> => {
+  const published = await getContent();
+  try {
+    const { cookies } = await import('next/headers');
+    const token = (await cookies()).get(PREVIEW_COOKIE)?.value;
+    if (!token) return { content: published, draftId: null, touchedIds: [] };
+
+    const claims = await verifyPreviewToken(token);
+    if (!claims) return { content: published, draftId: null, touchedIds: [] };
+
+    // The holder must still resolve — a preview cookie outliving a disabled
+    // account must die with it.
+    const { resolveSubject } = await import('./subject');
+    const subject = await resolveSubject();
+    if (!subject) return { content: published, draftId: null, touchedIds: [] };
+
+    const { readDraft } = await import('./drafts');
+    const draft = await readDraft(claims.draftId);
+    if (!draft || draft.status !== 'open') {
+      return { content: published, draftId: null, touchedIds: [] };
+    }
+
+    const { applyOps } = await import('./patch');
+    const overlaid = applyOps(published, draft.ops as never);
+    return { content: overlaid, draftId: draft.id, touchedIds: draft.touchedIds };
+  } catch {
+    return { content: published, draftId: null, touchedIds: [] };
+  }
+});
+
+/** Public pages' content read: published, or the previewed draft overlaid. */
+export async function getPublicContent(): Promise<SiteContent> {
+  return (await loadPreview()).content;
+}
+
+/** Which draft (if any) this request is previewing, and the record ids it
+ *  touches — /p/[slug] relaxes its published filter for exactly those. */
+export async function getPreviewInfo(): Promise<{ draftId: string | null; touchedIds: string[] }> {
+  const view = await loadPreview();
+  return { draftId: view.draftId, touchedIds: view.touchedIds };
 }
 
 // Re-exports so existing call sites don't break.

@@ -63,7 +63,7 @@ describe('applyAndAuthorize', () => {
     expect(({} as Record<string, unknown>).x).toBeUndefined();
   });
 
-  it('lets a section-scoped editor save the sections they hold', () => {
+  it('authorizes a section-scoped editor with mayPublish false (draft-bound)', () => {
     const editor: Subject = {
       id: 'u_3',
       email: 'e@x.com',
@@ -72,7 +72,7 @@ describe('applyAndAuthorize', () => {
     };
     const r = applyAndAuthorize(doc(), editor, [{ op: 'set', path: 'site.tagline', value: 'edited' }]);
     expect(r.status).toBe('ok');
-    if (r.status === 'ok') expect(r.mayPublish).toBe(true);
+    if (r.status === 'ok') expect(r.mayPublish).toBe(false);
   });
 
   // The /admin/site screen writes trial, tonight and whyFuror alongside site,

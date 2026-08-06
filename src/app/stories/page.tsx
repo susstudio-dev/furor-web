@@ -1,8 +1,8 @@
 import Link from 'next/link';
-import { getContent } from '@/lib/content';
+import { getPublicContent } from '@/lib/content';
 
 export async function generateMetadata() {
-  const c = await getContent();
+  const c = await getPublicContent();
   return {
     title: 'Stories',
     description:
@@ -16,7 +16,7 @@ export async function generateMetadata() {
 export const dynamic = 'force-dynamic';
 
 export default async function StoriesIndex() {
-  const content = await getContent();
+  const content = await getPublicContent();
   const intro = content.pages.stories.intro;
   const stories = content.stories.slice().sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
   return (

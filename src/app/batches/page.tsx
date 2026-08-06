@@ -1,9 +1,9 @@
-import { getContent, visibleBatches, batchStyleLabel } from '@/lib/content';
+import { getPublicContent, visibleBatches, batchStyleLabel } from '@/lib/content';
 import { JsonLd } from '@/components/JsonLd';
 import { BatchesBrowser, type BatchRow } from '@/components/BatchesBrowser';
 
 export async function generateMetadata() {
-  const c = await getContent();
+  const c = await getPublicContent();
   return {
     title: 'Batches & Pricing',
     description:
@@ -17,7 +17,7 @@ export async function generateMetadata() {
 export const dynamic = 'force-dynamic';
 
 export default async function BatchesPage() {
-  const content = await getContent();
+  const content = await getPublicContent();
   const visible = visibleBatches(content);
 
   const rows: BatchRow[] = visible.map((b) => {

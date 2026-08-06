@@ -1,11 +1,11 @@
 import Link from 'next/link';
-import { getContent } from '@/lib/content';
+import { getPublicContent } from '@/lib/content';
 import { EnquiryCTA } from '@/components/EnquiryCTA';
 import { JsonLd } from '@/components/JsonLd';
 import { PhotoCarousel } from '@/components/PhotoCarousel';
 
 export async function generateMetadata() {
-  const c = await getContent();
+  const c = await getPublicContent();
   return {
     title: 'About',
     description:
@@ -19,7 +19,7 @@ export async function generateMetadata() {
 export const dynamic = 'force-dynamic';
 
 export default async function AboutPage() {
-  const content = await getContent();
+  const content = await getPublicContent();
   const a = content.pages.about;
   const personLd = content.instructors.map((i) => ({
     '@context': 'https://schema.org',

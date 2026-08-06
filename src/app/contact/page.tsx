@@ -1,4 +1,4 @@
-import { getContent } from '@/lib/content';
+import { getPublicContent } from '@/lib/content';
 import { EnquiryCTA } from '@/components/EnquiryCTA';
 
 export const metadata = {
@@ -10,7 +10,7 @@ export const metadata = {
 // The DanceSchool/LocalBusiness JSON-LD is emitted site-wide from the root
 // layout (one node per studio, with geo + sameAs) — no page-local copy here.
 export default async function ContactPage() {
-  const content = await getContent();
+  const content = await getPublicContent();
   const p = content.pages.contact;
   const studios = content.studios.slice().sort((a, b) => a.displayOrder - b.displayOrder);
   // Long addresses have to wrap somewhere. Offer the break at the "@" so it

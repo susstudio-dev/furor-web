@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import type { Batch } from '@/lib/content-schema';
-import { getContent } from '@/lib/content';
+import { getPublicContent } from '@/lib/content';
 import { visibleBatches } from '@/lib/content-helpers';
 import { formatBatchDate } from '@/lib/format';
 import { resolveWelcomeState } from '@/lib/welcome-confirm';
@@ -42,7 +42,7 @@ export async function generateMetadata({
   params: Promise<{ track: string }>;
 }): Promise<Metadata> {
   const { track } = await params;
-  const content = await getContent();
+  const content = await getPublicContent();
   const cfg = content.welcome.tracks.find((t) => t.key === track);
   return {
     title: 'You’re in — Furor Hyderabad',
@@ -144,7 +144,7 @@ export default async function WelcomePage({
   // Decided here, on the server, so a cancelled payment never paints the
   // confirmation hero first — and a no-JS visitor still sees the right state.
   const paymentState = resolveWelcomeState(query);
-  const content = await getContent();
+  const content = await getPublicContent();
   const cfg = content.welcome.tracks.find((t) => t.key === track);
   if (!cfg) notFound();
 

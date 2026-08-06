@@ -33,10 +33,9 @@ describe('ROLES', () => {
     expect(owner?.capabilities).toContain('versions.restore');
   });
 
-  it('does not ship a role whose approval flag nothing honours yet', () => {
-    // Drafts arrive in a later plan. Until the save route can store one, a role
-    // carrying requiresApproval would be refused outright rather than queued —
-    // so no built-in role sets it.
-    expect(ROLES.filter((r) => r.requiresApproval).map((r) => r.id)).toEqual([]);
+  it('routes exactly the Editor role through approval', () => {
+    // The save route stores requiresApproval saves as drafts; only Editor is
+    // meant to stage rather than publish.
+    expect(ROLES.filter((r) => r.requiresApproval).map((r) => r.id)).toEqual(['editor']);
   });
 });

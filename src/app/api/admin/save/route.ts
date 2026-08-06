@@ -10,6 +10,10 @@ import { versionToken } from '@/lib/storage-version-core';
 import { contentLengthWithin, sameOrigin } from '@/lib/request-guards';
 import { revalidatePublicPages } from '@/lib/revalidate-public';
 import { resolveMutationSubject } from '@/lib/subject';
+import { buildDraft } from '@/lib/drafts-core';
+import { newDraftId, writeDraft } from '@/lib/drafts';
+import { readUserStore } from '@/lib/users';
+import { BREAK_GLASS_UID } from '@/lib/auth';
 import seedContent from '@/data/site-content.seed.json';
 
 // The whole site-content document is well under 1 MB; 4 MB leaves headroom
@@ -38,9 +42,16 @@ export async function POST(req: Request) {
   // version token the page was rendered from. The ops are derived server-side
   // by diffing against the document we just read — which is what stops a
   // whole-document POST from being one unauthorized write at the root.
-  const envelope = body as { baseVersion?: unknown; document?: unknown };
+  const envelope = body as {
+    baseVersion?: unknown;
+    document?: unknown;
+    mode?: unknown;
+    note?: unknown;
+  };
   const submitted = envelope?.document ?? body;
   const baseVersion = typeof envelope?.baseVersion === 'string' ? envelope.baseVersion : null;
+  const explicitDraft = envelope?.mode === 'draft';
+  const note = typeof envelope?.note === 'string' ? envelope.note.slice(0, 500) : '';
 
   // A missing token is "I do not know what I edited", not "no opinion". Treating
   // it as no-opinion fails OPEN: the compare-and-swap below swaps against the
@@ -95,6 +106,44 @@ export async function POST(req: Request) {
         });
         return NextResponse.json({ error: 'Not permitted', denied: result.denied }, { status: 403 });
       }
+      // A draft — asked for explicitly, or forced because this role's saves
+      // need approval. Stored, never published, and never refused: the old
+      // behaviour of 403ing an approval-required role was a lockout with a
+      // policy flag's name on it.
+      if (result.status === 'ok' && (explicitDraft || !result.mayPublish)) {
+        const draftBuilt = buildDraft({
+          doc,
+          subject,
+          ops,
+          baseVersion: versionToken(current.version),
+          note,
+          id: newDraftId(),
+          now: new Date().toISOString(),
+        });
+        if (!draftBuilt.ok) {
+          return NextResponse.json({ error: draftBuilt.error }, { status: 400 });
+        }
+        // The author's CURRENT sessionVersion is frozen in: a later disable or
+        // password change makes this draft unapprovable. Break-glass has no
+        // record; its drafts pin sv 0 and resolve specially at approval.
+        let authorSv = 0;
+        if (subject.id !== BREAK_GLASS_UID) {
+          const store = await readUserStore();
+          authorSv = store?.users.find((u) => u.id === subject.id)?.sessionVersion ?? 0;
+        }
+        const draft = { ...draftBuilt.draft, authorSv };
+        await writeDraft(draft);
+        await audit({
+          actor: subject.email,
+          action: 'draft_created',
+          detail: `${draft.id} · ${draft.leafPaths.join(', ')}`,
+        });
+        return NextResponse.json(
+          { ok: true, draft: true, draftId: draft.id, leafPaths: draft.leafPaths },
+          { status: 201 },
+        );
+      }
+
       // The conflict answer comes BEFORE validation. A stale base often makes
       // the merged document fail integrity — B's studios array omits the studio
       // A just added, which A's new batch references — and a 400 naming records
@@ -116,16 +165,6 @@ export async function POST(req: Request) {
         return NextResponse.json(
           { error: 'Validation failed', issues: result.issues },
           { status: 400 },
-        );
-      }
-
-      // Fail closed on a role whose saves are meant to need approval. The draft
-      // pipeline does not exist yet, so the only safe reading of "may not
-      // publish" is "refuse", never "publish anyway".
-      if (!result.mayPublish) {
-        return NextResponse.json(
-          { error: 'This account’s changes need approval, which is not available yet.' },
-          { status: 403 },
         );
       }
 

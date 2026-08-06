@@ -94,10 +94,10 @@ export const ROLES: Role[] = [
     rules: [DENY_IDS],
     capabilities: [],
     sectionScoped: true,
-    // requiresApproval stays OFF until the draft pipeline exists. The save
-    // route refuses (rather than silently publishes) anything flagged for
-    // approval, so turning it on now would simply lock editors out; turning it
-    // on lands together with the draft write.
+    // Editors stage changes; a Manager or Owner publishes them. The save route
+    // stores anything flagged for approval as a draft (never publishes it, and
+    // never refuses it either).
+    requiresApproval: true,
   },
   {
     id: 'author',

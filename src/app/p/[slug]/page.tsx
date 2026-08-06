@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { getContent } from '@/lib/content';
+import { getPreviewInfo, getPublicContent } from '@/lib/content';
 import { CustomPageView } from '@/components/CustomPageView';
 
 // Admin-editable pages live in Blob and are added/edited without a redeploy, so
@@ -17,8 +17,11 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const c = await getContent();
-  const page = c.customPages.find((p) => p.slug === slug && p.published);
+  const c = await getPublicContent();
+  const { touchedIds } = await getPreviewInfo();
+  const page = c.customPages.find(
+    (p) => p.slug === slug && (p.published || touchedIds.includes(p.id)),
+  );
   if (!page) return {};
   return {
     title: page.title,
@@ -34,8 +37,11 @@ export default async function CustomPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const c = await getContent();
-  const page = c.customPages.find((p) => p.slug === slug && p.published);
+  const c = await getPublicContent();
+  const { touchedIds } = await getPreviewInfo();
+  const page = c.customPages.find(
+    (p) => p.slug === slug && (p.published || touchedIds.includes(p.id)),
+  );
   if (!page) notFound();
   return <CustomPageView page={page} />;
 }

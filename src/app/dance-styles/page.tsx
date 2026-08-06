@@ -1,11 +1,11 @@
 import Link from 'next/link';
-import { getContent } from '@/lib/content';
+import { getPublicContent } from '@/lib/content';
 import { StyleFinder } from '@/components/StyleFinder';
 import { Img } from '@/components/Img';
 import { RhythmSignature } from '@/components/RhythmSignature';
 
 export async function generateMetadata() {
-  const c = await getContent();
+  const c = await getPublicContent();
   return {
     title: 'Dance Styles',
     description:
@@ -20,7 +20,7 @@ export async function generateMetadata() {
 export const dynamic = 'force-dynamic';
 
 export default async function StylesIndex() {
-  const content = await getContent();
+  const content = await getPublicContent();
   const intro = content.pages.danceStyles.intro;
   const styles = content.danceStyles.slice().sort((a, b) => a.displayOrder - b.displayOrder);
   return (

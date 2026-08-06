@@ -1,9 +1,9 @@
 import Link from 'next/link';
-import { getContent, nextBatchPerStyle, visibleBatches, formatBatchDate, formatInr, batchStyleLabel } from '@/lib/content';
+import { getPublicContent, nextBatchPerStyle, visibleBatches, formatBatchDate, formatInr, batchStyleLabel } from '@/lib/content';
 import { truncateAtWord } from '@/lib/seo';
 
 export async function generateMetadata() {
-  const c = await getContent();
+  const c = await getPublicContent();
   const styleNames = c.danceStyles
     .slice()
     .sort((a, b) => a.displayOrder - b.displayOrder)
@@ -43,7 +43,7 @@ import { BatchActions } from '@/components/BatchActions';
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  const content = await getContent();
+  const content = await getPublicContent();
   const sortedStyles = content.danceStyles.slice().sort((a, b) => a.displayOrder - b.displayOrder);
   const sortedStudios = content.studios.slice().sort((a, b) => a.displayOrder - b.displayOrder);
   const nextPerStyle = nextBatchPerStyle(content);

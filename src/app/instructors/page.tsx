@@ -1,10 +1,10 @@
-import { getContent } from '@/lib/content';
+import { getPublicContent } from '@/lib/content';
 import { EnquiryCTA } from '@/components/EnquiryCTA';
 import { JsonLd } from '@/components/JsonLd';
 import { Img } from '@/components/Img';
 
 export async function generateMetadata() {
-  const c = await getContent();
+  const c = await getPublicContent();
   return {
     title: 'Instructors',
     description:
@@ -18,7 +18,7 @@ export async function generateMetadata() {
 export const dynamic = 'force-dynamic';
 
 export default async function InstructorsPage() {
-  const content = await getContent();
+  const content = await getPublicContent();
   const p = content.pages.instructorsPage;
   const personLd = content.instructors.map((i) => ({
     '@context': 'https://schema.org',

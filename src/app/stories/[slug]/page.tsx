@@ -1,12 +1,12 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { getContent } from '@/lib/content';
+import { getPublicContent } from '@/lib/content';
 import { JsonLd } from '@/components/JsonLd';
 import { articleLd, breadcrumbLd } from '@/lib/seo';
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const c = await getContent();
+  const c = await getPublicContent();
   const story = c.stories.find((s) => s.slug === slug);
   if (!story) return {};
   const description = story.excerpt || story.body.slice(0, 155);
@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function StoryPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const content = await getContent();
+  const content = await getPublicContent();
   const story = content.stories.find((s) => s.slug === slug);
   if (!story) notFound();
 
