@@ -23,11 +23,14 @@ describe('diffToOps', () => {
     expect(diffToOps(base(), next)).toEqual([]);
   });
 
-  it('emits a set for a changed non-collection branch', () => {
+  // Fine-grained on purpose: a coarse `set pages` carries the author's stale
+  // copy of every sibling page, which a later draft approval would replay as
+  // reverts of fields the author never touched.
+  it('emits a set at the changed subpath, not the whole branch', () => {
     const next = base();
     next.pages.home.closingCta.headline = 'Come dance with us';
     expect(diffToOps(base(), next)).toEqual([
-      { op: 'set', path: 'pages', value: next.pages },
+      { op: 'set', path: 'pages.home.closingCta.headline', value: 'Come dance with us' },
     ]);
   });
 

@@ -13,7 +13,7 @@ export function PreviewChip({ draftId }: { draftId: string }) {
   }
 
   return (
-    <div className="fixed inset-x-0 top-0 z-[60] flex items-center justify-center gap-3 bg-gold-500 px-4 py-1.5 text-xs font-semibold text-ink-950">
+    <div className="relative z-[60] flex items-center justify-center gap-3 bg-gold-500 px-4 py-1.5 text-xs font-semibold text-ink-950">
       <span className="uppercase tracking-widest">Previewing a draft</span>
       <span className="hidden text-ink-950/70 sm:inline">{draftId.slice(0, 8)}</span>
       <button

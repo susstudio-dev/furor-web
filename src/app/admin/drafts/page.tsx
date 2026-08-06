@@ -1,7 +1,39 @@
 import { requireSubject } from '@/lib/guard';
 import { hasCapability } from '@/lib/authz';
+import { getContent } from '@/lib/content';
+import { expandOps } from '@/lib/expand';
 import { listDrafts } from '@/lib/drafts';
+import type { Op } from '@/lib/patch';
 import { DraftsList } from './DraftsList';
+
+// The approver signs what will be applied NOW - so the list shows the LIVE
+// leaf expansion, never the set frozen at author time. A draft whose ops no
+// longer expand cleanly is shown as needing a redo rather than approvable.
+async function liveRows(drafts: Awaited<ReturnType<typeof listDrafts>>) {
+  const docNow = await getContent();
+  return drafts.map((d) => {
+    try {
+      const changes = expandOps(docNow, d.ops as Op[]);
+      return {
+        id: d.id,
+        note: d.note,
+        authorEmail: d.authorEmail,
+        createdAt: d.createdAt,
+        leafPaths: changes.map((c) => c.path),
+        broken: changes.length === 0 ? 'Already applied or nothing left to change.' : null,
+      };
+    } catch (err) {
+      return {
+        id: d.id,
+        note: d.note,
+        authorEmail: d.authorEmail,
+        createdAt: d.createdAt,
+        leafPaths: d.leafPaths,
+        broken: (err as Error).message,
+      };
+    }
+  });
+}
 
 export default async function Page() {
   const subject = await requireSubject();
@@ -18,19 +50,7 @@ export default async function Page() {
         Editors&rsquo; saves land here instead of going live. Preview shows the draft on the real
         site; approving publishes it through the same checks as a direct save.
       </p>
-      <DraftsList
-        drafts={drafts.map((d) => ({
-          id: d.id,
-          title: d.title,
-          note: d.note,
-          authorEmail: d.authorEmail,
-          status: d.status,
-          leafPaths: d.leafPaths,
-          createdAt: d.createdAt,
-          reviewedBy: d.reviewedBy,
-        }))}
-        canApprove={canApprove}
-      />
+      <DraftsList drafts={await liveRows(drafts)} canApprove={canApprove} />
     </div>
   );
 }

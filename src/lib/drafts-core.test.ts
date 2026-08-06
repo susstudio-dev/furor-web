@@ -3,6 +3,7 @@ import seed from '@/data/site-content.seed.json';
 import { SiteContentSchema, type SiteContent } from './content-schema';
 import type { Subject } from './authz';
 import { assessApproval, buildDraft, type Draft } from './drafts-core';
+import { diffToOps } from './diff-ops';
 
 const doc = (): SiteContent => SiteContentSchema.parse(seed);
 
@@ -91,9 +92,11 @@ describe('assessApproval', () => {
     expect(r).toMatchObject({ ok: false, reason: 'author-revoked' });
   });
 
-  it('refuses a draft after the author’s session version was bumped', () => {
-    const r = assessApproval(base({ authorRecord: { status: 'active', sessionVersion: 1 } }));
-    expect(r).toMatchObject({ ok: false, reason: 'author-revoked' });
+  // Deliberately status-based: a routine self-service password change bumps
+  // sessionVersion and must NOT destroy the author's queue.
+  it('still approves after the author merely changed their password', () => {
+    const r = assessApproval(base({ authorRecord: { status: 'active', sessionVersion: 7 } }));
+    expect(r.ok).toBe(true);
   });
 
   // The intersection: authored-then-demoted must not approve.
@@ -108,12 +111,104 @@ describe('assessApproval', () => {
     expect(r).toMatchObject({ ok: false, reason: 'approver-not-authorized' });
   });
 
-  // The echo is the proof the approver saw the change list.
+  // The echo is the proof the approver saw the change list — the LIVE one.
   it('refuses an approval that does not echo the exact leaf set', () => {
     const r = assessApproval(base({ echoedLeafPaths: [] }));
     expect(r).toMatchObject({ ok: false, reason: 'echo-mismatch' });
     const r2 = assessApproval(base({ echoedLeafPaths: ['site.tagline', 'site.title'] }));
     expect(r2).toMatchObject({ ok: false, reason: 'echo-mismatch' });
+  });
+
+  // THE C1 regression, reproduced by review #3: a record published AFTER the
+  // draft was written becomes a delete leaf at approval time (setList replays
+  // the whole array). It must surface as a conflict — the old code skipped
+  // unfrozen leaves, so the approval applied and audited a deletion the
+  // approver was never shown.
+  it('refuses when the base drifted into leaves the draft never froze', () => {
+    const d = doc();
+    const storyDraft = buildDraft({
+      doc: d,
+      subject: { id: 'u_own', email: 'o@x.com', roleIds: ['owner'], attrs: {} },
+      ops: [{ op: 'setList', path: 'stories', value: d.stories.map((s, i) => (i === 0 ? { ...s, title: 'Retitled' } : s)) as never }],
+      baseVersion: 'L:1',
+      note: '',
+      id: 'd_drift',
+      now: '2026-08-06T00:00:00.000Z',
+    });
+    if (!storyDraft.ok) throw new Error('setup');
+
+    const moved = doc();
+    moved.stories = [
+      ...moved.stories,
+      { ...moved.stories[0], id: 's_brand_new', slug: 'brand-new', title: 'Published after the draft' },
+    ];
+    const r = assessApproval({
+      draft: storyDraft.draft,
+      currentDoc: moved,
+      authorRecord: activeAuthor,
+      authorSubject: { id: 'u_own', email: 'o@x.com', roleIds: ['owner'], attrs: {} },
+      approver: manager,
+      echoedLeafPaths: storyDraft.draft.leafPaths,
+    });
+    expect(r.ok).toBe(false);
+    if (!r.ok) {
+      expect(r.reason === 'conflict' || r.reason === 'echo-mismatch').toBe(true);
+      // Whatever the refusal, the brand-new story must never be deleted by an
+      // approval that echoed only the title change.
+    }
+  });
+
+  // Production-shape end-to-end: the ops reaching drafts come from diffToOps
+  // (whole-document diff), not hand-written fine-grained ops. Review #3 found
+  // every prior test asserted a granularity production never produces — which
+  // is exactly why C1 survived two reviews.
+  it('handles a real diffToOps-produced draft end to end', () => {
+    const d = doc();
+    const edited = doc();
+    edited.pages.about.intro.headline = 'A drafted About headline';
+    const ops = diffToOps(d, edited);
+    const built = buildDraft({
+      doc: d,
+      subject: { id: 'u_own', email: 'o@x.com', roleIds: ['owner'], attrs: {} },
+      ops,
+      baseVersion: 'L:1',
+      note: 'production shape',
+      id: 'd_prod',
+      now: '2026-08-06T00:00:00.000Z',
+    });
+    if (!built.ok) throw new Error(built.error);
+    // Per-field leaves, not one coarse 'pages' chip.
+    expect(built.draft.leafPaths).toEqual(['pages.about.intro.headline']);
+
+    // An UNRELATED page edit must not wedge it…
+    const unrelated = doc();
+    unrelated.pages.faqs.intro.lead = 'Someone edited the FAQs meanwhile';
+    const ok = assessApproval({
+      draft: built.draft,
+      currentDoc: unrelated,
+      authorRecord: activeAuthor,
+      authorSubject: { id: 'u_own', email: 'o@x.com', roleIds: ['owner'], attrs: {} },
+      approver: manager,
+      echoedLeafPaths: built.draft.leafPaths,
+    });
+    expect(ok.ok).toBe(true);
+    if (ok.ok) {
+      expect(ok.next.pages.about.intro.headline).toBe('A drafted About headline');
+      expect(ok.next.pages.faqs.intro.lead).toBe('Someone edited the FAQs meanwhile'); // not reverted
+    }
+
+    // …while an edit to the SAME field must.
+    const clashing = doc();
+    clashing.pages.about.intro.headline = 'A competing headline';
+    const clash = assessApproval({
+      draft: built.draft,
+      currentDoc: clashing,
+      authorRecord: activeAuthor,
+      authorSubject: { id: 'u_own', email: 'o@x.com', roleIds: ['owner'], attrs: {} },
+      approver: manager,
+      echoedLeafPaths: built.draft.leafPaths,
+    });
+    expect(clash).toMatchObject({ ok: false, reason: 'conflict' });
   });
 
   // The concurrent-edit case the leafBefore map exists for: same field,

@@ -4,15 +4,16 @@ import { hasCapability } from '@/lib/authz';
 import { readDraft } from '@/lib/drafts';
 import { mintPreviewToken, PREVIEW_COOKIE, PREVIEW_TTL_SECONDS } from '@/lib/preview-token';
 import { sameOrigin } from '@/lib/request-guards';
-import { resolveSubject } from '@/lib/subject';
+import { resolveMutationSubject, resolveSubject } from '@/lib/subject';
 
 // Starts and ends a preview session. The cookie is a 15-minute capability to
 // see ONE draft overlaid on the public site — only the draft's author or a
 // reviewer can mint it.
 
 export async function POST(req: Request) {
-  const subject = await resolveSubject({ fresh: true });
-  if (!subject) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const gate = await resolveMutationSubject();
+  if (!gate.ok) return NextResponse.json({ error: gate.error }, { status: gate.status });
+  const subject = gate.subject;
   if (!sameOrigin(req)) {
     return NextResponse.json({ error: 'Cross-origin request rejected' }, { status: 403 });
   }
@@ -39,7 +40,14 @@ export async function POST(req: Request) {
   return NextResponse.json({ ok: true, expiresInSeconds: PREVIEW_TTL_SECONDS });
 }
 
-export async function DELETE() {
+export async function DELETE(req: Request) {
+  // Clearing a cookie is harmless, but every mutating handler carries the
+  // same two guards — one unguarded route is how patterns erode.
+  const subject = await resolveSubject();
+  if (!subject) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!sameOrigin(req)) {
+    return NextResponse.json({ error: 'Cross-origin request rejected' }, { status: 403 });
+  }
   const c = await cookies();
   c.delete(PREVIEW_COOKIE);
   return NextResponse.json({ ok: true });

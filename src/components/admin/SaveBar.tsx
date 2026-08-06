@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { requestDraftSave, type SaveOutcome } from '@/lib/admin-save';
+import { clearDraftRequest, requestDraftSave, type SaveOutcome } from '@/lib/admin-save';
 
 export function SaveBar({
   onSave,
@@ -22,6 +22,8 @@ export function SaveBar({
     if (!dirty) return;
     const warn = (e: BeforeUnloadEvent) => {
       e.preventDefault();
+      // Safari still requires returnValue to be set.
+      e.returnValue = '';
     };
     window.addEventListener('beforeunload', warn);
     return () => window.removeEventListener('beforeunload', warn);
@@ -50,6 +52,7 @@ export function SaveBar({
     } catch (err: unknown) {
       setMsg((err as Error)?.message || 'Save failed');
     } finally {
+      clearDraftRequest();
       setBusy(false);
     }
   }

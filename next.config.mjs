@@ -154,7 +154,11 @@ const nextConfig = {
       // rule sits AFTER '/:path*' because later matching rules win per header
       // key under the OpenNext routing layer.
       {
-        source: '/:path*',
+        // Public routes only: matching '/:path*' here would overwrite the
+        // /uploads lockdown above (later rules win per header key) and flip
+        // the framing headers on the whole admin and API surface — none of
+        // which the split view ever frames.
+        source: '/((?!admin|api|uploads).*)',
         has: [{ type: 'cookie', key: 'furor_preview' }],
         headers: [
           { key: 'X-Frame-Options', value: 'SAMEORIGIN' },

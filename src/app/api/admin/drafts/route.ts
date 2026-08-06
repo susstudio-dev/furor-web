@@ -6,7 +6,7 @@ import { bustContentCache, CONTENT_KEY, mergeWithSeed } from '@/lib/content';
 import { snapshotAfterWrite } from '@/lib/content-write';
 import { SiteContentSchema } from '@/lib/content-schema';
 import { assessApproval } from '@/lib/drafts-core';
-import { listDrafts, readDraft, writeDraft } from '@/lib/drafts';
+import { deleteDraft, listDrafts, readDraft } from '@/lib/drafts';
 import { contentLengthWithin, sameOrigin } from '@/lib/request-guards';
 import { readDocWithVersion, writeDocIfMatch, StorageUnavailableError } from '@/lib/storage';
 import { versionToken } from '@/lib/storage-version-core';
@@ -15,7 +15,7 @@ import { resolveMutationSubject, resolveSubject } from '@/lib/subject';
 import { readUserStore } from '@/lib/users';
 import seedContent from '@/data/site-content.seed.json';
 
-const MAX_BODY_BYTES = 64 * 1024;
+const MAX_BODY_BYTES = 256 * 1024; // per-field leaf lists are long
 
 export async function GET() {
   const subject = await resolveSubject();
@@ -68,15 +68,18 @@ export async function POST(req: Request) {
 
   const draft = await readDraft(id);
   if (!draft) return NextResponse.json({ error: 'No such draft' }, { status: 404 });
-  if (draft.status !== 'open') {
-    return NextResponse.json({ error: `Already ${draft.status}` }, { status: 409 });
-  }
-
-  const now = new Date().toISOString();
 
   if (action === 'reject') {
-    await writeDraft({ ...draft, status: 'rejected', reviewedBy: approver.email, reviewedAt: now });
-    await audit({ actor: approver.email, action: 'draft_rejected', detail: draft.id });
+    // Reviewed drafts are DELETED — the audit log is the history. Keeping
+    // every draft forever meant an unbounded store behind an O(n) sequential
+    // read on the dashboard, against the free plan's per-request subrequest
+    // cap.
+    await deleteDraft(draft.id);
+    await audit({
+      actor: approver.email,
+      action: 'draft_rejected',
+      detail: `${draft.id} by ${draft.authorEmail} · ${draft.leafPaths.join(', ')}`,
+    });
     return NextResponse.json({ ok: true });
   }
 
@@ -133,13 +136,17 @@ export async function POST(req: Request) {
       const written = await writeDocIfMatch(CONTENT_KEY, text, current.version);
       if (written === null) continue; // lost the CAS — re-read and re-assess once
 
-      await writeDraft({ ...draft, status: 'approved', reviewedBy: approver.email, reviewedAt: now });
+      // Delete rather than mark: the audit line below is the history. If this
+      // delete fails the draft stays open — a re-approval then finds no live
+      // changes and refuses on the echo, so nothing double-applies.
+      await deleteDraft(draft.id);
       await snapshotAfterWrite(current.text, text, approver.email);
       bustContentCache();
       await audit({
         actor: approver.email,
         action: 'draft_approved',
-        detail: `${draft.id} by ${draft.authorEmail} · ${draft.leafPaths.join(', ')}`,
+        // The leaves actually applied — never the author-time frozen list.
+        detail: `${draft.id} by ${draft.authorEmail} · ${assessment.changes.map((c) => c.path).join(', ')}`,
       });
       revalidatePublicPages(assessment.next);
       return NextResponse.json({ ok: true, version: versionToken(written) });

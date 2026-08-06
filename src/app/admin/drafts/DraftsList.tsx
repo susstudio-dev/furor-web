@@ -6,13 +6,13 @@ import { useRouter } from 'next/navigation';
 
 export interface DraftRow {
   id: string;
-  title: string;
   note: string;
   authorEmail: string;
-  status: 'open' | 'approved' | 'rejected';
+  /** LIVE leaf paths - what approving would apply now, and what gets echoed. */
   leafPaths: string[];
   createdAt: string;
-  reviewedBy: string;
+  /** Set when the draft can no longer apply cleanly. */
+  broken: string | null;
 }
 
 export function DraftsList({ drafts, canApprove }: { drafts: DraftRow[]; canApprove: boolean }) {
@@ -83,11 +83,8 @@ export function DraftsList({ drafts, canApprove }: { drafts: DraftRow[]; canAppr
                 <span className="ml-2 text-xs text-cream/50">
                   {new Date(d.createdAt).toLocaleString('en-IN')}
                 </span>
-                {d.status !== 'open' ? (
-                  <span className="pill ml-2 bg-cream/10 text-cream/60">
-                    {d.status}
-                    {d.reviewedBy ? ` by ${d.reviewedBy}` : ''}
-                  </span>
+                {d.broken ? (
+                  <span className="pill ml-2 bg-gold-500/15 text-gold-400">needs a redo</span>
                 ) : null}
               </p>
               {d.note ? <p className="mt-1 text-sm text-cream/75">{d.note}</p> : null}
@@ -101,7 +98,7 @@ export function DraftsList({ drafts, canApprove }: { drafts: DraftRow[]; canAppr
                 ))}
               </div>
             </div>
-            {d.status === 'open' ? (
+            {(
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
@@ -118,9 +115,9 @@ export function DraftsList({ drafts, canApprove }: { drafts: DraftRow[]; canAppr
                   <>
                     <button
                       type="button"
-                      disabled={busy === d.id}
+                      disabled={busy === d.id || d.broken != null}
                       onClick={() => act(d, 'approve')}
-                      className="rounded-full bg-ember-600 px-4 py-1.5 text-sm font-semibold text-on-ember transition hover:bg-ember-700"
+                      className="rounded-full bg-ember-600 px-4 py-1.5 text-sm font-semibold text-on-ember transition hover:bg-ember-700 disabled:opacity-50"
                     >
                       {busy === d.id ? 'Working…' : 'Approve & publish'}
                     </button>
@@ -135,8 +132,9 @@ export function DraftsList({ drafts, canApprove }: { drafts: DraftRow[]; canAppr
                   </>
                 ) : null}
               </div>
-            ) : null}
+            )}
           </div>
+          {d.broken ? <p className="mt-2 text-xs text-gold-400">{d.broken}</p> : null}
         </div>
       ))}
     </div>

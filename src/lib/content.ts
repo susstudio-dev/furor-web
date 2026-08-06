@@ -156,11 +156,14 @@ const loadPreview = cache(async (): Promise<PreviewView> => {
     const claims = await verifyPreviewToken(token);
     if (!claims) return { content: published, draftId: null, touchedIds: [] };
 
-    // The holder must still resolve — a preview cookie outliving a disabled
-    // account must die with it.
+    // The holder must still resolve AND be the account the token was minted
+    // for — a preview cookie outliving a disabled account dies with it, and a
+    // cookie value moved between browsers buys nothing extra.
     const { resolveSubject } = await import('./subject');
     const subject = await resolveSubject();
-    if (!subject) return { content: published, draftId: null, touchedIds: [] };
+    if (!subject || subject.id !== claims.uid) {
+      return { content: published, draftId: null, touchedIds: [] };
+    }
 
     const { readDraft } = await import('./drafts');
     const draft = await readDraft(claims.draftId);

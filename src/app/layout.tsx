@@ -9,7 +9,8 @@ import { NoticeBanner } from '@/components/NoticeBanner';
 import { PreviewChip } from '@/components/PreviewChip';
 import { Analytics } from '@/components/Analytics';
 import { JsonLd } from '@/components/JsonLd';
-import { getPreviewInfo, getPublicContent } from '@/lib/content';
+import { headers } from 'next/headers';
+import { getContent, getPreviewInfo, getPublicContent } from '@/lib/content';
 import { danceSchoolsLd, organizationLd, webSiteLd } from '@/lib/seo';
 
 const display = Bricolage_Grotesque({
@@ -73,8 +74,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // On Cloudflare Workers every page renders per-request so admin edits are
   // always fresh (there is no ISR tag-cache machinery on the free plan).
   await connection();
-  const content = await getPublicContent();
-  const { draftId: previewDraftId } = await getPreviewInfo();
+  // The root layout wraps /admin too (no route group). The admin shell must
+  // render PUBLISHED content — its editors diff against the published doc —
+  // and must never wear the preview chip over its own nav.
+  const isAdmin = (await headers()).get('x-admin-path') != null;
+  const content = isAdmin ? await getContent() : await getPublicContent();
+  const previewDraftId = isAdmin ? null : (await getPreviewInfo()).draftId;
   return (
     // data-scroll-behavior tells Next to neutralise smooth scrolling on route
     // changes while leaving hash navigation smooth. Without it, once Next 16

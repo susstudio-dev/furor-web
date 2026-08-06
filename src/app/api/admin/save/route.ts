@@ -106,10 +106,29 @@ export async function POST(req: Request) {
         });
         return NextResponse.json({ error: 'Not permitted', denied: result.denied }, { status: 403 });
       }
+      // The conflict answer comes BEFORE validation. A stale base often makes
+      // the merged document fail integrity — B's studios array omits the studio
+      // A just added, which A's new batch references — and a 400 naming records
+      // B never touched is a far worse answer than "someone else saved, reload".
+      // (The denial above still comes first: a subject with no write grants must
+      // not be able to poll 409s as a change-feed oracle.)
+      const token = versionToken(current.version);
+      if (baseVersion !== token) {
+        return NextResponse.json(
+          {
+            error: 'Someone else saved while you were editing. Reload to get their changes.',
+            currentVersion: token,
+          },
+          { status: 409 },
+        );
+      }
+
       // A draft — asked for explicitly, or forced because this role's saves
-      // need approval. Stored, never published, and never refused: the old
-      // behaviour of 403ing an approval-required role was a lockout with a
-      // policy flag's name on it.
+      // need approval. Stored, never published. This branch sits BELOW the
+      // base-version check on purpose: a stale editor tab's whole-document
+      // diff encodes reverts of everything the tab never saw, and freezing
+      // that into a draft would launder the clobber through an approval.
+      // Editors get 409s exactly like publishers do.
       if (result.status === 'ok' && (explicitDraft || !result.mayPublish)) {
         const draftBuilt = buildDraft({
           doc,
@@ -144,22 +163,6 @@ export async function POST(req: Request) {
         );
       }
 
-      // The conflict answer comes BEFORE validation. A stale base often makes
-      // the merged document fail integrity — B's studios array omits the studio
-      // A just added, which A's new batch references — and a 400 naming records
-      // B never touched is a far worse answer than "someone else saved, reload".
-      // (The denial above still comes first: a subject with no write grants must
-      // not be able to poll 409s as a change-feed oracle.)
-      const token = versionToken(current.version);
-      if (baseVersion !== token) {
-        return NextResponse.json(
-          {
-            error: 'Someone else saved while you were editing. Reload to get their changes.',
-            currentVersion: token,
-          },
-          { status: 409 },
-        );
-      }
 
       if (result.status === 'invalid') {
         return NextResponse.json(

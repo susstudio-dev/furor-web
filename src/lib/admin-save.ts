@@ -26,6 +26,12 @@ let nextSaveMode: 'publish' | 'draft' = 'publish';
 export function requestDraftSave(): void {
   nextSaveMode = 'draft';
 }
+/** Reset unconditionally after a save attempt — if an editor's save() throws
+ *  before reaching the fetch, a stale 'draft' flag would silently turn the
+ *  NEXT ordinary save into a draft. */
+export function clearDraftRequest(): void {
+  nextSaveMode = 'publish';
+}
 
 export interface SaveOutcome {
   status: 'published' | 'draft' | 'unchanged';

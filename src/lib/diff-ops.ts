@@ -31,8 +31,34 @@ export function diffToOps(base: unknown, next: unknown): Op[] {
     if (collectionIdField(key) && Array.isArray(n[key])) {
       ops.push({ op: 'setList', path: key, value: n[key] as Json[] });
     } else {
-      ops.push({ op: 'set', path: key, value: n[key] as Json });
+      // Recurse to the CHANGED subpaths instead of shipping the whole
+      // top-level object. A coarse `set pages` carries the author's stale
+      // copy of every sibling page — replayed later (a draft approval), it
+      // reverts fields the author never touched, and no downstream check can
+      // save an op that genuinely rewrites them.
+      emitFineOps(key, b[key] as Json, n[key] as Json, ops);
     }
   }
   return ops;
+}
+
+function emitFineOps(path: string, before: Json, after: Json, out: Op[]): void {
+  if (deepEqual(before, after)) return;
+  const bothObjects =
+    before != null &&
+    after != null &&
+    typeof before === 'object' &&
+    typeof after === 'object' &&
+    !Array.isArray(before) &&
+    !Array.isArray(after);
+  if (!bothObjects) {
+    out.push({ op: 'set', path, value: after ?? null });
+    return;
+  }
+  const b = before as { [k: string]: Json };
+  const a = after as { [k: string]: Json };
+  for (const key of new Set([...Object.keys(b), ...Object.keys(a)])) {
+    if (key === '__proto__' || key === 'constructor' || key === 'prototype') continue;
+    emitFineOps(`${path}.${key}`, b[key] ?? null, a[key] ?? null, out);
+  }
 }

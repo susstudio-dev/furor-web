@@ -129,6 +129,29 @@ function diffCollection(
   return changes;
 }
 
+// Recursively emits one update leaf per changed field. Plain objects recurse;
+// arrays (order-is-data), scalars and type changes are atomic leaves.
+function emitObjectLeaves(path: string, before: Json, after: Json, out: LeafChange[]): void {
+  if (deepEqual(before, after)) return;
+  const bothObjects =
+    before != null &&
+    after != null &&
+    typeof before === 'object' &&
+    typeof after === 'object' &&
+    !Array.isArray(before) &&
+    !Array.isArray(after);
+  if (!bothObjects) {
+    out.push({ kind: 'update', path, before, after });
+    return;
+  }
+  const b = before as { [k: string]: Json };
+  const a = after as { [k: string]: Json };
+  for (const key of new Set([...Object.keys(b), ...Object.keys(a)])) {
+    if (key === '__proto__' || key === 'constructor' || key === 'prototype') continue;
+    emitObjectLeaves(`${path}.${key}`, b[key] ?? null, a[key] ?? null, out);
+  }
+}
+
 /**
  * Expands an op envelope into the leaf changes it implies.
  *
@@ -168,7 +191,11 @@ export function expandOps(base: unknown, ops: Op[]): LeafChange[] {
 
     const recordIdx = segments.findIndex((s) => s.kind === 'id');
     if (recordIdx === -1) {
-      changes.push({ kind: 'update', path: canonical, before, after: afterValue });
+      // One leaf per changed FIELD, recursively. A single coarse leaf at a
+      // top-level key ('pages') makes the approver's echo sign one word for a
+      // 12KB subtree and turns the narrow per-leaf conflict rule back into
+      // the strict whole-subtree one it exists to replace.
+      emitObjectLeaves(canonical, before, afterValue, changes);
       continue;
     }
 

@@ -21,7 +21,8 @@ function slugify(s: string): string {
 export function WelcomePageEditor({ initial }: { initial: SiteContent }) {
   const [c, setC] = useState<SiteContent>(initial);
   const [dirty, setDirty] = useState(false);
-  const autosave = useAutosave<SiteContent>('welcome', c, dirty);
+  // Subtree only - see AboutPageEditor.
+  const autosave = useAutosave('welcome', c.welcome, dirty);
 
   const w = c.welcome;
 
@@ -112,7 +113,8 @@ export function WelcomePageEditor({ initial }: { initial: SiteContent }) {
           savedAt={autosave.stash.savedAt}
           matchesVersion={autosave.stashMatchesVersion}
           onRestore={() => {
-            setC(autosave.stash!.value);
+            const welcome = autosave.stash!.value;
+            setC((prev) => ({ ...prev, welcome }));
             setDirty(true);
             autosave.clear();
           }}

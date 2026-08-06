@@ -61,7 +61,8 @@ export function CustomPagesEditor({ initial }: { initial: SiteContent }) {
   const [c, setC] = useState<SiteContent>(() => migrateBlocks(initial));
   const [dirty, setDirty] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const autosave = useAutosave<SiteContent>('customPages', c, dirty);
+  // Subtree only - see AboutPageEditor.
+  const autosave = useAutosave('customPages', c.customPages, dirty);
 
   const pages = c.customPages;
 
@@ -149,7 +150,8 @@ export function CustomPagesEditor({ initial }: { initial: SiteContent }) {
           savedAt={autosave.stash.savedAt}
           matchesVersion={autosave.stashMatchesVersion}
           onRestore={() => {
-            setC(autosave.stash!.value);
+            const customPages = autosave.stash!.value;
+            setC((prev) => ({ ...prev, customPages }));
             setDirty(true);
             autosave.clear();
           }}

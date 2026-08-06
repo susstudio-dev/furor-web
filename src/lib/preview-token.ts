@@ -18,12 +18,17 @@ export interface PreviewClaims {
 
 function secret(): Uint8Array {
   // PREVIEW_SECRET when configured; otherwise derived from JWT_SECRET with a
-  // domain separator so the two key spaces never coincide. The dev fallback
-  // mirrors auth.ts's, with the same separator.
-  const base =
-    process.env.PREVIEW_SECRET ||
-    `${process.env.JWT_SECRET || 'dev-only-secret-change-me-in-production-32b'}:preview`;
-  return new TextEncoder().encode(base);
+  // domain separator so the two key spaces never coincide. Fails closed in
+  // production exactly like auth.ts's getJwtSecret — the two files must never
+  // disagree about that policy.
+  const configured = process.env.PREVIEW_SECRET;
+  if (configured && configured.length >= 32) return new TextEncoder().encode(configured);
+  const jwt = process.env.JWT_SECRET;
+  if (jwt && jwt.length >= 32) return new TextEncoder().encode(`${jwt}:preview`);
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('JWT_SECRET (or PREVIEW_SECRET, 32+ chars) is not configured.');
+  }
+  return new TextEncoder().encode('dev-only-secret-change-me-in-production-32b:preview');
 }
 
 export async function mintPreviewToken(claims: PreviewClaims): Promise<string> {

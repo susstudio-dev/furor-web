@@ -15,7 +15,9 @@ type AboutPage = Pages['about'];
 export function AboutPageEditor({ initial }: { initial: SiteContent }) {
   const [c, setC] = useState<SiteContent>(initial);
   const [dirty, setDirty] = useState(false);
-  const autosave = useAutosave<SiteContent>('pages.about', c, dirty);
+  // Subtree only: stashing the whole document meant a restore reverted every
+  // section this tab happened to hold stale copies of.
+  const autosave = useAutosave('pages.about', c.pages.about, dirty);
 
   function patchAbout(patch: Partial<AboutPage>) {
     setC((prev) => ({
@@ -40,7 +42,8 @@ export function AboutPageEditor({ initial }: { initial: SiteContent }) {
           savedAt={autosave.stash.savedAt}
           matchesVersion={autosave.stashMatchesVersion}
           onRestore={() => {
-            setC(autosave.stash!.value);
+            const about = autosave.stash!.value;
+            setC((prev) => ({ ...prev, pages: { ...prev.pages, about } }));
             setDirty(true);
             autosave.clear();
           }}

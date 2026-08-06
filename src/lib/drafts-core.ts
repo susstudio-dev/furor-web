@@ -74,8 +74,14 @@ export function buildDraft(args: {
   if (result.changes.length === 0) return { ok: false, error: 'Nothing changed' };
 
   const leafPaths = result.changes.map((c) => c.path);
+  // Qualified `collection:id`, so an id from one collection can never satisfy
+  // a check against another (e.g. a batch id unlocking an unpublished page).
   const touchedIds = [
-    ...new Set(result.changes.flatMap((c) => ('id' in c && c.id ? [c.id] : []))),
+    ...new Set(
+      result.changes.flatMap((c) =>
+        'id' in c && c.id && 'collection' in c && c.collection ? [`${c.collection}:${c.id}`] : [],
+      ),
+    ),
   ];
   const leafBefore: Record<string, string> = {};
   for (const c of result.changes) {
@@ -117,37 +123,36 @@ export function assessApproval(args: {
 }): ApprovalAssessment {
   const { draft, currentDoc, authorRecord, authorSubject, approver, echoedLeafPaths } = args;
 
-  // A fired or suspended author's queued drafts must die with the account —
-  // nothing in status/sessionVersion reaches a stored draft by itself.
-  if (!authorRecord || authorRecord.status !== 'active' || authorRecord.sessionVersion !== draft.authorSv) {
-    return { ok: false, reason: 'author-revoked', detail: 'The author’s account changed since this draft was written.' };
+  // A fired or suspended author's queued drafts must die with the account.
+  // Deliberately STATUS-based, not sessionVersion-based: a routine password
+  // change bumps the version and must not silently destroy the queue, while
+  // disabling the account (the actual revocation act) still kills it.
+  if (!authorRecord || authorRecord.status !== 'active') {
+    return { ok: false, reason: 'author-revoked', detail: 'The author’s account was disabled after this draft was written.' };
   }
 
-  // The echo is the proof the approver saw what they are approving. sameSite
-  // lax admits top-level navigations, so a GET link would execute unseen.
-  const want = [...draft.leafPaths].sort().join('\n');
-  const got = [...echoedLeafPaths].sort().join('\n');
-  if (want !== got) {
-    return { ok: false, reason: 'echo-mismatch', detail: 'The approval did not match the draft’s change list. Reload and review again.' };
-  }
-
-  // Narrower conflict rule than a direct save: only the draft's OWN leaves are
-  // compared between its base and now. An unrelated publish must not wedge the
-  // queue (the strict whole-document rule would make any publish freeze every
-  // open draft, on day one) — but a leaf whose LIVE value differs from what
-  // the author diffed against is a concurrent edit to the same field, and
-  // approving over it would be exactly the silent clobber this system exists
-  // to prevent.
+  // Both the echo and the conflict check derive from what the ops would do to
+  // the LIVE document — never from the set frozen at author time. The frozen
+  // set can drift under the ops (a setList replays a whole array, so a record
+  // published after the draft was written becomes a delete leaf at approval):
+  // deriving from the frozen set let an approval apply — and audit — changes
+  // the approver was never shown.
   let changes: LeafChange[];
   try {
     changes = expandOps(currentDoc, draft.ops as Op[]);
   } catch (err) {
     return { ok: false, reason: 'invalid', detail: (err as Error).message };
   }
+
+  // A live leaf the author's frozen decision never covered is base drift into
+  // territory the author never saw. Conflict, never a silent skip.
   const conflicted: string[] = [];
   for (const c of changes) {
     const frozen = draft.leafBefore[c.path];
-    if (frozen === undefined) continue; // leaf appeared only now — apply-time checks cover it
+    if (frozen === undefined) {
+      conflicted.push(c.path);
+      continue;
+    }
     const liveBefore = JSON.stringify('before' in c ? (c.before ?? null) : null);
     if (liveBefore !== frozen) conflicted.push(c.path);
   }
@@ -157,6 +162,15 @@ export function assessApproval(args: {
       reason: 'conflict',
       detail: `Changed since this draft was written: ${conflicted.join(', ')}. Ask the author to redo it against the current site.`,
     };
+  }
+
+  // The echo signs what will actually be applied NOW. sameSite=lax admits
+  // top-level navigations, so a GET link would execute unseen — and an echo of
+  // yesterday's list would sign yesterday's changes.
+  const want = changes.map((c) => c.path).sort().join('\n');
+  const got = [...echoedLeafPaths].sort().join('\n');
+  if (want !== got) {
+    return { ok: false, reason: 'echo-mismatch', detail: 'The change list moved since you reviewed it. Reload and review again.' };
   }
 
   // Author must still be authorized under CURRENT policy/attrs.
