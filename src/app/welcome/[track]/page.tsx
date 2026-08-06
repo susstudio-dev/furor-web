@@ -16,6 +16,12 @@ import { WelcomeView, type BatchBundle } from './WelcomeView';
 //   /welcome/latin?d=2026-07-12   (the batch's start date — easiest to set)
 //   /welcome/latin?b=batch-007    (the batch id)
 // With no param we fall back to the next upcoming batch for the track.
+//
+// Confirmation: Payment PAGES (pages.razorpay.com) redirect with NO query
+// params on success, so a bare visit here IS the success case; the failure
+// layout appears only for an explicit razorpay_payment_link_status of
+// cancelled/expired/failed (which Payment LINKS append). Preview the failure
+// state with ?razorpay_payment_link_status=cancelled.
 // noindex — this is a post-registration confirmation, not a public/SEO page.
 
 // Tracks are admin-managed (added/edited in /admin/pages/welcome → Blob), so the
