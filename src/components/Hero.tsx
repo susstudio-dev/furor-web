@@ -125,7 +125,8 @@ export function Hero({ content }: { content: SiteContent }) {
             />
           </div>
           <p className="mt-2.5 text-sm text-cream/65">
-            One real class. No partner needed. Then you decide.
+            One real class. No partner needed.
+            {trialFrom != null ? ` Not for you? Your ${formatInr(trialFrom)} back.` : ' Then you decide.'}
           </p>
         </div>
         {/* No scroll cue here: the QuickEnroll card overlaps this space and its

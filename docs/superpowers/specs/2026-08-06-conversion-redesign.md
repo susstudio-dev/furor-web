@@ -112,12 +112,15 @@ Everything else is server markup + CSS on existing tokens (`--beat`, ember ramps
 alphas). Home first-load stays ~119KB (already over the 100KB budget; this adds nothing
 material — reducing it is separate work worth scheduling).
 
-## 6. Owner decisions & verifications (not shipped until confirmed)
-1. **Does the ₹500 count toward the program fee?** If yes, one line — "Your ₹500 counts
-   toward the program" — is the single cheapest trust lever available. Terms currently only
-   say the token confirms a seat.
-2. **Refund experiment**: "First class not for you? Your ₹500 back." Evidence-backed; ship
-   only if genuinely honored.
+## 6. Owner decisions & verifications — ANSWERED 2026-08-06
+1. **Does the ₹500 count toward the program fee?** **No** (owner-confirmed). The credit line
+   is NOT shipped, and no shipped copy claims it — cards say "decide after class one", which
+   stays true either way.
+2. **Refund experiment**: **Yes** (owner-confirmed). Shipped, amount derived from batch data:
+   the hero click-trigger ("Not for you? Your ₹500 back.") and the board's count-8
+   ("Nothing to lose. If the first class isn't for you, your ₹500 comes back — just tell us
+   on WhatsApp."). Deliberately not repeated on every /batches row — the promise lives at the
+   two decision points the conversion test measured. The studio must honor it on request.
 3. The Intermediate Salsa "booking link" is a Google Form, not a payment page — replace with
    a real Razorpay link or expect its button to behave differently from its label.
 4. PRODUCT.md still says "no payments on the site" — out of date since Razorpay landed;

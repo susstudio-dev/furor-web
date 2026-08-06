@@ -28,14 +28,23 @@ function pickBoard(content: SiteContent): Batch[] {
   return sorted.slice(0, 4);
 }
 
-const COUNT_IN: { count: string; title: string; body: string }[] = [
-  // Every line below is backed by live site copy (FAQ / hero) — the truth
-  // constraint on this codebase is absolute.
-  { count: '5', title: 'Come alone.', body: 'No partner needed — partners rotate all class, so you’ll dance with everyone.' },
-  { count: '6', title: 'Never danced?', body: 'Foundation assumes zero experience. Most of the room started exactly there.' },
-  { count: '7', title: 'Wear anything.', body: 'Anything comfortable you can move in. Sneakers are perfect.' },
-  { count: '8', title: 'Try it first.', body: 'One real class for a small token. Then — and only then — decide on the full program.' },
-];
+// Items 5-7 are backed by live site copy (FAQ / hero); item 8's refund promise
+// was confirmed by the owner on 2026-08-06 — the truth constraint on this
+// codebase is absolute, so none of these lines ship unverified.
+function countIn(trialPrice: string | null): { count: string; title: string; body: string }[] {
+  return [
+    { count: '5', title: 'Come alone.', body: 'No partner needed — partners rotate all class, so you’ll dance with everyone.' },
+    { count: '6', title: 'Never danced?', body: 'Foundation assumes zero experience. Most of the room started exactly there.' },
+    { count: '7', title: 'Wear anything.', body: 'Anything comfortable you can move in. Sneakers are perfect.' },
+    {
+      count: '8',
+      title: 'Nothing to lose.',
+      body: trialPrice
+        ? `If the first class isn’t for you, your ${trialPrice} comes back — just tell us on WhatsApp.`
+        : 'If the first class isn’t for you, your token comes back — just tell us on WhatsApp.',
+    },
+  ];
+}
 
 export function QuickEnroll({ content }: { content: SiteContent }) {
   const batches = pickBoard(content);
@@ -238,7 +247,7 @@ export function QuickEnroll({ content }: { content: SiteContent }) {
                   the resolve lands where every dance does. */}
               <div className="mt-8 border-t border-cream/10 pt-6">
                 <div className="grid gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-4">
-                  {COUNT_IN.map((item) => (
+                  {countIn(trialFrom != null ? formatInr(trialFrom) : null).map((item) => (
                     <div key={item.count} className="relative pl-9">
                       <span
                         aria-hidden
