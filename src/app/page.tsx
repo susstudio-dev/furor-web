@@ -57,7 +57,7 @@ export default async function HomePage() {
       <Hero content={content} />
 
       {/* Fast lane: join a real batch before the brochure even starts. */}
-      <QuickEnroll content={content} />
+      <QuickEnroll content={content} trialFrom={trialFrom} />
 
       {/* The After-Band wrapper: everything below the board shares a container
           whose LAST child is the mobile sticky trial bar — sticky clamping

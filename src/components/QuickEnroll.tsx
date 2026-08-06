@@ -35,7 +35,7 @@ function countIn(trialPrice: string | null): { count: string; title: string; bod
   return [
     { count: '5', title: 'Come alone.', body: 'No partner needed — partners rotate all class, so you’ll dance with everyone.' },
     { count: '6', title: 'Never danced?', body: 'Foundation assumes zero experience. Most of the room started exactly there.' },
-    { count: '7', title: 'Wear anything.', body: 'Anything comfortable you can move in. Sneakers are perfect.' },
+    { count: '7', title: 'Wear anything.', body: 'Anything comfortable you can move in — fresh socks or smooth soles beat fancy shoes.' },
     {
       count: '8',
       title: 'Nothing to lose.',
@@ -46,12 +46,18 @@ function countIn(trialPrice: string | null): { count: string; title: string; bod
   ];
 }
 
-export function QuickEnroll({ content }: { content: SiteContent }) {
+export function QuickEnroll({
+  content,
+  trialFrom,
+}: {
+  content: SiteContent;
+  /** Cheapest trial across ALL visible batches — computed once in the page so
+   *  the hero, the sticky bar and this board can never print two different
+   *  refund amounts on one screen. */
+  trialFrom: number | null;
+}) {
   const batches = pickBoard(content);
   const branchOf = (slug: string) => content.studios.find((s) => s.slug === slug);
-  const trialFrom = batches.length
-    ? Math.min(...batches.map((b) => b.reservationInr))
-    : null;
   // Real proof at the point of decision — rendered from the content document
   // so the admin stays the source of truth; nothing renders if it's removed.
   const proof =

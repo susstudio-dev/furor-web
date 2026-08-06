@@ -39,8 +39,19 @@ repository. Please do not open public issues for vulnerabilities.
 
 - Store-backed accounts carry a `sessionVersion`: disabling an account or
   changing its password bumps it, which invalidates that user's outstanding
-  tokens within the subject cache window (~5 s). The env-configured owner has
-  its own lever — bump `ADMIN_OWNER_TOKEN_EPOCH` to invalidate its tokens.
+  tokens within the subject cache window (~5 s) on every admin surface —
+  pages and all mutating API routes, uploads included. The env-configured
+  owner has its own lever — set or bump `ADMIN_OWNER_TOKEN_EPOCH` (a wrangler
+  secret, any string) to invalidate its outstanding tokens.
+- A temp-password account (fresh invite) can reach exactly two things until
+  it sets its own password: the change-password screen and the self-service
+  endpoint that performs the change. Every mutating API refuses it.
+- Residual gaps, stated plainly: admin READ access is all-or-nothing — any
+  signed-in admin session can view the whole content document and the
+  payments log regardless of write grants; and the env break-glass owner
+  bypasses policy entirely, including the id-immutability deny — it is the
+  recovery account, and recovery means unconditional. Last sign-in times are
+  best-effort (a storage blip may skip one).
 - The env owner's sessions are otherwise 14-day JWTs; logout clears the
   cookie only. Rotating `JWT_SECRET` invalidates everything.
 - The rate limiter and content cache are per-isolate on Workers.

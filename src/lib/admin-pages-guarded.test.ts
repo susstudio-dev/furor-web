@@ -10,8 +10,10 @@ import { describe, expect, it } from 'vitest';
 const ADMIN_DIR = path.join(process.cwd(), 'src', 'app', 'admin');
 const GUARDS = ['requireSubject', 'requireCapability', 'requireWriteAccess'];
 
-// The login page must render to a signed-out visitor by definition. The
-// layout exempts exactly these paths too — keep the two lists in step.
+// Only the login page is exempt from the sweep: it must render to a
+// signed-out visitor by definition. (The layout also exempts
+// /admin/change-password from ITS redirect, but that page still guards
+// itself with requireSubject, so the sweep covers it.)
 const EXEMPT = new Set(['login']);
 
 function pageFiles(dir: string, acc: string[] = []): string[] {

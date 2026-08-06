@@ -4,7 +4,7 @@ import { hasCapability } from '@/lib/authz';
 import { hashPassword } from '@/lib/password';
 import { contentLengthWithin, sameOrigin } from '@/lib/request-guards';
 import { StorageUnavailableError } from '@/lib/storage';
-import { bustSubjectCache, resolveSubject } from '@/lib/subject';
+import { bustSubjectCache, resolveMutationSubject } from '@/lib/subject';
 import { readUserStore, writeUserStore } from '@/lib/users';
 import { createUser, setStatus, updateUser, type MutationResult } from '@/lib/users-mutations';
 
@@ -33,10 +33,9 @@ export async function PATCH(req: Request) {
 }
 
 async function handle(req: Request, kind: 'create' | 'update') {
-  // Always fresh: a mutation must never act on a subject cached before a
-  // demotion landed.
-  const subject = await resolveSubject({ fresh: true });
-  if (!subject) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const gate = await resolveMutationSubject();
+  if (!gate.ok) return NextResponse.json({ error: gate.error }, { status: gate.status });
+  const subject = gate.subject;
   if (!hasCapability(subject, 'users.manage')) {
     return NextResponse.json({ error: 'Not permitted' }, { status: 403 });
   }

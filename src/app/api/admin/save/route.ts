@@ -9,7 +9,7 @@ import { readDocWithVersion, writeDocIfMatch, StorageUnavailableError } from '@/
 import { versionToken } from '@/lib/storage-version-core';
 import { contentLengthWithin, sameOrigin } from '@/lib/request-guards';
 import { revalidatePublicPages } from '@/lib/revalidate-public';
-import { resolveSubject } from '@/lib/subject';
+import { resolveMutationSubject } from '@/lib/subject';
 import seedContent from '@/data/site-content.seed.json';
 
 // The whole site-content document is well under 1 MB; 4 MB leaves headroom
@@ -17,8 +17,9 @@ import seedContent from '@/data/site-content.seed.json';
 const MAX_BODY_BYTES = 4 * 1024 * 1024;
 
 export async function POST(req: Request) {
-  const subject = await resolveSubject();
-  if (!subject) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const gate = await resolveMutationSubject();
+  if (!gate.ok) return NextResponse.json({ error: gate.error }, { status: gate.status });
+  const subject = gate.subject;
   if (!sameOrigin(req)) {
     return NextResponse.json({ error: 'Cross-origin request rejected' }, { status: 403 });
   }

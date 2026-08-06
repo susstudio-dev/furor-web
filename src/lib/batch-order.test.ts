@@ -12,8 +12,9 @@ describe('levelRank', () => {
   });
 
   it('sinks an unknown level to the end rather than the front', () => {
-    // A future level name added in the admin must never outrank Foundation
-    // on a page built for first-timers.
+    // Defence-in-depth, not coverage: the schema enum forbids this value
+    // today, so this pins only what happens if that ever changes without
+    // LEVEL_ORDER changing with it.
     expect(levelRank('Masterclass' as never)).toBeGreaterThan(levelRank('Advanced'));
   });
 });

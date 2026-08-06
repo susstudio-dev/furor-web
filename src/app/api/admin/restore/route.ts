@@ -6,13 +6,14 @@ import { restoreVersion } from '@/lib/content-write';
 import { contentLengthWithin, sameOrigin } from '@/lib/request-guards';
 import { revalidatePublicPages } from '@/lib/revalidate-public';
 import { StorageUnavailableError } from '@/lib/storage';
-import { resolveSubject } from '@/lib/subject';
+import { resolveMutationSubject } from '@/lib/subject';
 
 const MAX_BODY_BYTES = 4 * 1024;
 
 export async function POST(req: Request) {
-  const subject = await resolveSubject();
-  if (!subject) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const gate = await resolveMutationSubject();
+  if (!gate.ok) return NextResponse.json({ error: gate.error }, { status: gate.status });
+  const subject = gate.subject;
   if (!hasCapability(subject, 'versions.restore')) {
     return NextResponse.json({ error: 'Not permitted' }, { status: 403 });
   }

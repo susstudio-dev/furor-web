@@ -28,6 +28,7 @@ Prereqs: a Cloudflare account (free) and `npx wrangler login` once locally.
    npx wrangler secret put ADMIN_OWNER_EMAIL           # the studio's login email
    npm run hash-password -- 'the-strong-password'      # prints a pbkdf2$... string
    npx wrangler secret put ADMIN_OWNER_PASSWORD_HASH   # paste that string
+   npx wrangler secret put ADMIN_OWNER_TOKEN_EPOCH     # any string; change it to sign the owner out everywhere
    ```
 
    Notes:

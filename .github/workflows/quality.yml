@@ -22,6 +22,12 @@ jobs:
 
       - run: npm ci
 
+      # The unit suite is a gate, not a suggestion — it carries the security
+      # regressions (authorization, CAS, guard sweep) that typecheck and build
+      # cannot see.
+      - name: Test
+        run: npm test
+
       - name: Typecheck
         run: npm run typecheck
 

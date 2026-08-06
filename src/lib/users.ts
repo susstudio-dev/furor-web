@@ -1,5 +1,11 @@
 import 'server-only';
-import { readDocWithVersion, writeDocIfMatch, writeText, type DocVersion } from './storage';
+import {
+  readDocWithVersion,
+  storageMisconfigured,
+  writeDocIfMatch,
+  writeText,
+  type DocVersion,
+} from './storage';
 import { UserStoreSchema, type User } from './users-schema';
 
 // The user store lives beside the content document in the same private R2
@@ -35,7 +41,14 @@ export async function readUserStore(): Promise<UserStoreState | null> {
   } catch {
     return null;
   }
-  if (doc == null) return { users: [], version: null };
+  if (doc == null) {
+    // Absent document ≠ broken store. On Workers with the binding missing the
+    // read falls through to a filesystem that cannot exist there and comes
+    // back null — reporting that as "no users invited yet" would show the
+    // owner an empty roster during exactly the incident this distinction was
+    // written for.
+    return (await storageMisconfigured()) ? null : { users: [], version: null };
+  }
 
   try {
     const parsed = UserStoreSchema.parse(JSON.parse(doc.text));

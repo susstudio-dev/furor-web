@@ -39,13 +39,20 @@ describe('resolveWelcomeState', () => {
     expect(resolve('razorpay_payment_link_status=partially_paid').confirmed).toBe(true);
   });
 
-  // Explicit failure signals — the ONLY way to reach the unconfirmed state.
-  it.each(['cancelled', 'expired', 'failed'])(
-    'does not confirm an explicit %s status',
+  // The rule is an allow-list: paid/partially_paid (or no status at all)
+  // confirm; EVERYTHING else does not. 'created' is the real Razorpay status
+  // for an abandoned Payment Link.
+  it.each(['cancelled', 'expired', 'created'])(
+    'does not confirm a %s status',
     (status) => {
       expect(resolve(`razorpay_payment_link_status=${status}`).confirmed).toBe(false);
     },
   );
+
+  it('does not confirm a status value it has never seen', () => {
+    // A status added by Razorpay later must never read as money received.
+    expect(resolve('razorpay_payment_link_status=settled_v2').confirmed).toBe(false);
+  });
 
   it('is case-insensitive about the status value', () => {
     expect(resolve('razorpay_payment_link_status=PAID').confirmed).toBe(true);

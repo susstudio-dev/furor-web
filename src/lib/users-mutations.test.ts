@@ -113,4 +113,29 @@ describe('setStatus', () => {
     const r = updateUser([user({ roleIds: ['owner'] })], 'u_1', { roleIds: ['editor'] }, ctx(owner));
     expect(r.ok).toBe(false);
   });
+
+  // A disabled sole owner holds no live power — refusing to demote it wedges
+  // the store behind an actively misleading error.
+  it('allows demoting an owner who is already disabled', () => {
+    const r = updateUser(
+      [user({ roleIds: ['owner'], status: 'disabled' })],
+      'u_1',
+      { roleIds: ['editor'] },
+      ctx(owner),
+    );
+    expect(r.ok).toBe(true);
+  });
+
+  // Attributes follow roles: dormant section grants must not survive a
+  // demotion and silently resurrect on a later role change.
+  it('clears section attrs when the new roles have no section-scoped role', () => {
+    const r = updateUser(
+      [user({ roleIds: ['editor'], attrs: { sections: ['site', 'batches'] } })],
+      'u_1',
+      { roleIds: ['viewer'] },
+      ctx(owner),
+    );
+    if (!r.ok) throw new Error('expected ok');
+    expect(r.users[0].attrs.sections).toBeUndefined();
+  });
 });

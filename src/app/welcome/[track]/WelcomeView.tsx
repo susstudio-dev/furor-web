@@ -4,7 +4,7 @@ import { Fragment, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Reveal } from '@/components/Reveal';
 import type { Welcome } from '@/lib/content-schema';
-import { resolveWelcomeState, type WelcomeState } from '@/lib/welcome-confirm';
+import type { WelcomeState } from '@/lib/welcome-confirm';
 
 // Everything the page shows for one batch, precomputed server-side. The client
 // picks the right one from the ?d=/?b= redirect param.
@@ -30,6 +30,9 @@ interface Props {
   vcardHref: string;
   defaultBundle: BatchBundle;
   options: BatchBundle[];
+  /** Decided server-side from the redirect params (welcome-confirm.ts), so a
+   *  failed payment never flashes the confirmation hero. */
+  paymentState: WelcomeState;
 }
 
 // Renders an admin-editable copy template, replacing {placeholders} with live
@@ -70,15 +73,11 @@ export function WelcomeView({
   vcardHref,
   defaultBundle,
   options,
+  paymentState,
 }: Props) {
-  // Payment LINKS append their result to the redirect URL; Payment PAGES —
-  // which most of the live booking links are — redirect on success with no
-  // params at all. The decision lives in resolveWelcomeState (unit-tested):
-  // confirmed unless the URL carries an EXPLICIT failure status. The redirect
-  // may also pin a specific batch with ?d=<startDate> or ?b=<batchId>.
-  // (To preview the failure state deliberately, append
-  // ?razorpay_payment_link_status=cancelled to the URL.)
-  const [payment, setPayment] = useState<WelcomeState | null>(null);
+  // The confirmed/unconfirmed decision arrived from the server (see the page
+  // component) — this effect only pins the ?d=/?b= batch bundle and fires the
+  // analytics event, which mirrors the same server decision exactly.
   const [bundle, setBundle] = useState<BatchBundle>(defaultBundle);
 
   useEffect(() => {
@@ -91,26 +90,23 @@ export function WelcomeView({
       (b && options.find((o) => o.id === b)) || (d && options.find((o) => o.startDate === d));
     if (picked) setBundle(picked);
 
-    const state = resolveWelcomeState(q);
-    setPayment(state);
-
     const w = window as unknown as { gtag?: (...args: unknown[]) => void };
     if (w.gtag) {
-      // The event mirrors resolveWelcomeState exactly, so analytics can never
-      // disagree with what the visitor was shown.
-      w.gtag('event', state.confirmed ? 'registration_confirmed' : 'registration_unconfirmed', {
-        track,
-        status: q.get('razorpay_payment_link_status') ?? 'none',
-        payment_id: state.paymentId ?? null,
-      });
+      w.gtag(
+        'event',
+        paymentState.confirmed ? 'registration_confirmed' : 'registration_unconfirmed',
+        {
+          track,
+          status: q.get('razorpay_payment_link_status') ?? 'none',
+          payment_id: paymentState.paymentId ?? null,
+        },
+      );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [track]);
 
-  // Before the effect runs (SSR + first client render) stay optimistic so the
-  // common success case never flashes the failure layout.
-  const confirmed = payment === null || payment.confirmed;
-  const paymentId = payment?.paymentId ?? null;
+  const confirmed = paymentState.confirmed;
+  const paymentId = paymentState.paymentId;
 
   const { intakeDate, whenDays, whenTime, arriveBy, venue, mapUrl, gcalUrl, icsHref } = bundle;
 

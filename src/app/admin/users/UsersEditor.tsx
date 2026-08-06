@@ -11,9 +11,12 @@ import { EditorStyles, Field, MultiToggle, Select } from '@/components/admin/fie
 // the UI just avoids offering actions the API would refuse.
 
 const SECTION_KEYS = Object.keys(SECTION_PATHS);
-// All roles are offered; the API refuses grants the actor can't make (owner
-// can only be granted by an owner, and never to yourself).
-const INVITABLE_ROLES = ROLES;
+// Instructor and Author are hidden until the form can set the attributes
+// their rules bind to (instructorId / story authorship) — inviting one today
+// produces an account whose every action is refused and whose sidebar is
+// empty. The API still refuses grants the actor cannot make.
+const USABLE_ROLES = ROLES.filter((r) => r.id !== 'instructor' && r.id !== 'author');
+const INVITABLE_ROLES = USABLE_ROLES;
 
 export function UsersEditor({ users, selfId }: { users: User[]; selfId: string }) {
   const router = useRouter();
@@ -231,7 +234,7 @@ function UserRow({
             label="Role"
             value={roleId}
             onChange={setRoleId}
-            options={ROLES.map((r) => ({ value: r.id, label: r.name }))}
+            options={USABLE_ROLES.map((r) => ({ value: r.id, label: r.name }))}
           />
           {roleId === 'editor' ? (
             <MultiToggle

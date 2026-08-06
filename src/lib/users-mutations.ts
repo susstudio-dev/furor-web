@@ -125,21 +125,31 @@ export function updateUser(
       return { ok: false, error: 'You cannot grant a role with capabilities you do not hold' };
     }
     const losesOwner = current.roleIds.includes('owner') && !input.roleIds.includes('owner');
-    if (losesOwner && activeOwners(users).length <= 1) {
+    // Count the owners who would REMAIN — a disabled sole owner holds no live
+    // power and must stay demotable, or the store wedges.
+    const otherActiveOwners = activeOwners(users).filter((u) => u.id !== id).length;
+    if (losesOwner && current.status === 'active' && otherActiveOwners === 0) {
       return { ok: false, error: 'The last remaining owner cannot be demoted' };
     }
   }
 
   // Rebuilt from the STORED record, never merged from the request — so no
   // field outside the allow-list above can ride along.
+  const nextRoles = input.roleIds ?? current.roleIds;
+  const attrs =
+    input.sections || input.instructorId || input.branchSlugs
+      ? { ...current.attrs, ...attrsFrom(input) }
+      : { ...current.attrs };
+  // Attributes follow roles: a demoted editor must not keep dormant section
+  // grants that a later role change would silently resurrect.
+  if (!nextRoles.some((r) => roleById(r)?.sectionScoped)) delete attrs.sections;
+  if (!nextRoles.includes('instructor')) delete attrs.instructorId;
+
   const next: User = {
     ...current,
     name: input.name?.trim() ?? current.name,
-    roleIds: input.roleIds ?? current.roleIds,
-    attrs:
-      input.sections || input.instructorId || input.branchSlugs
-        ? { ...current.attrs, ...attrsFrom(input) }
-        : current.attrs,
+    roleIds: nextRoles,
+    attrs,
   };
 
   const parsed = UserSchema.safeParse(next);
@@ -162,7 +172,8 @@ export function setStatus(
 
   if (status === 'disabled') {
     if (ctx.actor.id === id) return { ok: false, error: 'You cannot disable your own account' };
-    if (current.roleIds.includes('owner') && activeOwners(users).length <= 1) {
+    const otherActiveOwners = activeOwners(users).filter((u) => u.id !== id).length;
+    if (current.roleIds.includes('owner') && current.status === 'active' && otherActiveOwners === 0) {
       return { ok: false, error: 'The last remaining owner cannot be disabled' };
     }
   }

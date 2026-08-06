@@ -81,6 +81,14 @@ async function resolveBucket(): Promise<{ bucket: R2BucketLike | null; inWorkerR
   }
 }
 
+/** On Workers with the binding MISSING, reads silently fall through to a
+ *  filesystem that cannot exist there — callers who must distinguish "no
+ *  document yet" from "the store is broken" check this first. */
+export async function storageMisconfigured(): Promise<boolean> {
+  const { bucket, inWorkerRuntime } = await resolveBucket();
+  return inWorkerRuntime && bucket == null;
+}
+
 /** True when a remote (R2) store backs this request — i.e. prod on Workers. */
 export async function isRemoteStorage(): Promise<boolean> {
   const { bucket } = await resolveBucket();

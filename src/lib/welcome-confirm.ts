@@ -6,13 +6,14 @@
 //   - Payment PAGES (pages.razorpay.com/…) redirect on success with NO query
 //     parameters at all. Most of the studio's live booking links are Pages.
 //
-// So the default must be CONFIRMED: the only organic way a customer arrives
-// here is Razorpay's own success redirect, and requiring Link-style params
-// showed every real Pages customer "we couldn't confirm your payment" seconds
-// after they paid. The unconfirmed state is reserved for explicit failure
-// signals. Someone hand-typing the URL sees a welcome page that grants
-// nothing — the studio's real payment record is the webhook log, and intake
-// is verified in person.
+// So the rule is an ALLOW-LIST with a confirmed default: confirmed when the
+// URL carries NO status at all (the Pages redirect, and hand-typed visits —
+// the page grants nothing; the webhook log is the studio's real payment
+// record) or a status of paid/partially_paid. EVERY other status value,
+// known or unknown, is unconfirmed — deliberately, so a status this code
+// does not recognise never reads as money received. Requiring Link-style
+// params had shown every real Pages customer "we couldn't confirm your
+// payment" seconds after they paid.
 
 export interface WelcomeState {
   confirmed: boolean;

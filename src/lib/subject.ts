@@ -80,3 +80,21 @@ export async function resolveSubject(opts: { fresh?: boolean } = {}): Promise<Su
   remember(session.uid, subject);
   return subject;
 }
+
+/** Subject resolution for MUTATING API routes: always fresh (never a subject
+ *  cached before a demotion landed), and a temp-password account is refused —
+ *  the layout redirect alone made mustChangePassword a UI courtesy, leaving a
+ *  forwarded WhatsApp invite as a fully privileged 14-day credential for
+ *  anyone who never loads a page. /api/admin/me is the one exemption: it is
+ *  how the flag gets cleared. */
+export async function resolveMutationSubject(): Promise<
+  | { ok: true; subject: Subject }
+  | { ok: false; status: 401 | 403; error: string }
+> {
+  const subject = await resolveSubject({ fresh: true });
+  if (!subject) return { ok: false, status: 401, error: 'Unauthorized' };
+  if (subject.mustChangePassword) {
+    return { ok: false, status: 403, error: 'Set your own password before making changes.' };
+  }
+  return { ok: true, subject };
+}
