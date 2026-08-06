@@ -1,14 +1,21 @@
 'use client';
 
-import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import type { SiteContent } from '@/lib/content-schema';
+import { visibleBatches } from '@/lib/content-helpers';
+import { formatInr } from '@/lib/format';
 import { EnquiryCTA } from './EnquiryCTA';
 import { Img } from './Img';
 import { CinematicHeadline } from './CinematicHeadline';
 
 export function Hero({ content }: { content: SiteContent }) {
   const [allowVideo, setAllowVideo] = useState(false);
+  // The trial price comes from live batch data, never a hardcoded string —
+  // if the studio changes the token in the admin, every button follows.
+  const bookable = visibleBatches(content);
+  const trialFrom = bookable.length
+    ? Math.min(...bookable.map((b) => b.reservationInr))
+    : null;
   const videoRef = useRef<HTMLVideoElement>(null);
   const spotRef = useRef<HTMLDivElement>(null);
 
@@ -100,21 +107,26 @@ export function Hero({ content }: { content: SiteContent }) {
         >
           {content.hero.subHeadline}
         </p>
-        <div
-          className="mt-8 flex flex-wrap items-center gap-3 hero-fade"
-          style={{ animationDelay: '1.15s' }}
-        >
-          <EnquiryCTA
-            whatsappNumber={content.site.whatsappNumber}
-            instagramHandle={content.site.instagramHandle}
-            ctx={{ source: 'primary' }}
-            variant="primary"
-            label="Chat on WhatsApp"
-            className="magnetic"
-          />
-          <Link href="/batches" className="btn-secondary magnetic">
-            See batches
-          </Link>
+        {/* One filled action per viewport (attention ratio): the paid trial is
+            the primary, WhatsApp demotes to link weight beside it, and the old
+            "See batches" button is gone — the booking board this button anchors
+            to already links there. The .downbeat class fires the button's
+            one-shot accent at the exact moment the count-in above resolves. */}
+        <div className="mt-8 hero-fade" style={{ animationDelay: '1.15s' }}>
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
+            <a href="#start-this-week" className="btn-primary magnetic downbeat">
+              Book my first class{trialFrom != null ? ` · ${formatInr(trialFrom)}` : ''}
+            </a>
+            <EnquiryCTA
+              whatsappNumber={content.site.whatsappNumber}
+              ctx={{ source: 'primary' }}
+              variant="link"
+              label="or chat first on WhatsApp"
+            />
+          </div>
+          <p className="mt-2.5 text-sm text-cream/65">
+            One real class. No partner needed. Then you decide.
+          </p>
         </div>
         {/* No scroll cue here: the QuickEnroll card overlaps this space and its
             lit top edge + "Booking open" pulse already pull the eye down. A

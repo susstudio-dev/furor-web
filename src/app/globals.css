@@ -134,7 +134,9 @@
     @apply mx-auto max-w-screen-2xl px-5 sm:px-6 lg:px-10;
   }
   .pill {
-    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs uppercase tracking-wider;
+    /* nowrap: a pill that breaks onto two lines ("FILLING / FAST") stops
+       reading as a status chip at all — the sibling text wraps instead. */
+    @apply inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-xs uppercase tracking-wider;
   }
   .hairline {
     @apply border-t border-cream/10;
@@ -663,4 +665,49 @@ html[data-theme='light'] .strip-light {
   .strip-light { left: 27%; transform: none }
   /* The scrubbed entrance and the strip nudge declare their own reduced-motion
      forms above — they are replacements, not casualties. */
+}
+
+/* THE DOWNBEAT ---------------------------------------------------------
+   The hero counts 5-6-7-8; the booking button lands on the 1. One authored
+   accent, once, at the exact moment the count-in resolves (the count's
+   spans tick at 0..3 beats, so beat 4 is "the 1" — same delay the count's
+   own fade-out uses). The button is visible from its hero-fade entrance —
+   this only accents it; it never delays it. Declared inside the motion
+   gate below, per the opt-in rule. */
+@keyframes downbeat {
+  0% { transform: scale(1) }
+  45% {
+    transform: scale(1.045);
+    box-shadow:
+      0 0 0 6px rgb(var(--c-ember-500) / 0.22),
+      0 8px 32px rgb(var(--c-ember-500) / 0.4);
+  }
+  100% { transform: scale(1) }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .downbeat {
+    animation: downbeat calc(var(--beat) * 1.2) cubic-bezier(0.22, 1, 0.36, 1) 1;
+    animation-delay: calc(var(--beat) * 4 + 0.1s);
+  }
+}
+
+/* THE SPOTLIGHT --------------------------------------------------------
+   A pool of stage light over the featured Foundation card — the same
+   optical language as the board's lit top edge, so "lit" keeps meaning
+   "book here". Static gradient, no animation. The light theme gets its
+   own quieter mix: ember at dark-theme alpha reads as a pink stain on the
+   white card surface. */
+.spot-beam {
+  background: radial-gradient(
+    120% 90% at 50% -10%,
+    rgb(var(--c-ember-500) / 0.13),
+    transparent 62%
+  );
+}
+html[data-theme='light'] .spot-beam {
+  background: radial-gradient(
+    120% 90% at 50% -10%,
+    rgb(var(--c-ember-600) / 0.06),
+    transparent 58%
+  );
 }

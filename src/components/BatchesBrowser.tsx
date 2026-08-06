@@ -243,7 +243,7 @@ export function BatchesBrowser({ rows, styles, studios, whatsappNumber, instagra
   ];
 
   const presets: { label: string; p: Partial<Record<FacetKey, string[]>> }[] = [
-    { label: '🔰 Beginner-friendly', p: { level: ['Foundation'] } },
+    { label: '🔰 Never danced? Start here', p: { level: ['Foundation'] } },
     { label: '🗓️ Weekend classes', p: { days: ['Weekend'] } },
     { label: '🌙 Evening classes', p: { tod: ['Evening'] } },
     { label: '⚡ Starting soon', p: { starting: ['This month', 'Next 30 days'] } },
@@ -395,7 +395,14 @@ export function BatchesBrowser({ rows, styles, studios, whatsappNumber, instagra
                 >
                   <div className="lg:col-span-3">
                     <p className="display text-xl font-bold">{row.styleName}</p>
-                    <p className="text-cream/60 text-sm">{b.level}</p>
+                    <p className="text-cream/60 text-sm">
+                      {b.level}
+                      {b.level === 'Foundation' ? (
+                        <span className="pill ml-2 bg-ember-500/15 text-ember-400">
+                          first-timers welcome
+                        </span>
+                      ) : null}
+                    </p>
                   </div>
                   <div className="lg:col-span-3">
                     <p className="text-cream">{row.branchName}</p>

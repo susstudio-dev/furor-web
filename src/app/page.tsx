@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { getContent, nextBatchPerStyle, formatBatchDate, formatInr, batchStyleLabel } from '@/lib/content';
+import { getContent, nextBatchPerStyle, visibleBatches, formatBatchDate, formatInr, batchStyleLabel } from '@/lib/content';
 import { truncateAtWord } from '@/lib/seo';
 
 export async function generateMetadata() {
@@ -34,6 +34,7 @@ import { Img } from '@/components/Img';
 import { Accentuate } from '@/components/Accentuate';
 import { Reveal } from '@/components/Reveal';
 import { QuickEnroll } from '@/components/QuickEnroll';
+import { StickyTrialBar } from '@/components/StickyTrialBar';
 import { BatchActions } from '@/components/BatchActions';
 
 // Render per request so admin edits show immediately and no stale/blip HTML is
@@ -47,6 +48,9 @@ export default async function HomePage() {
   const sortedStudios = content.studios.slice().sort((a, b) => a.displayOrder - b.displayOrder);
   const nextPerStyle = nextBatchPerStyle(content);
   const h = content.pages.home;
+  const bookable = visibleBatches(content);
+  const trialFrom = bookable.length ? Math.min(...bookable.map((b) => b.reservationInr)) : null;
+  const trialLabel = `Book my first class${trialFrom != null ? ` · ${formatInr(trialFrom)}` : ''}`;
 
   return (
     <>
@@ -54,6 +58,12 @@ export default async function HomePage() {
 
       {/* Fast lane: join a real batch before the brochure even starts. */}
       <QuickEnroll content={content} />
+
+      {/* The After-Band wrapper: everything below the board shares a container
+          whose LAST child is the mobile sticky trial bar — sticky clamping
+          makes the bar appear only after the visitor scrolls past the board,
+          with zero JS. See StickyTrialBar. */}
+      <div className="relative">
 
       <KineticStrip styles={sortedStyles} />
 
@@ -272,12 +282,18 @@ export default async function HomePage() {
             <p className="mt-3 text-on-ember max-w-xl text-lg">{h.closingCta.body}</p>
           ) : null}
           <div className="mt-8 flex flex-wrap gap-3">
+            <a
+              href="#start-this-week"
+              className="btn-primary !bg-ink-950 !text-cream hover:!bg-ink-800 magnetic"
+            >
+              {trialLabel}
+            </a>
             <EnquiryCTA
               whatsappNumber={content.site.whatsappNumber}
               ctx={{ source: 'primary' }}
-              variant="primary"
-              label="Chat on WhatsApp"
-              className="!bg-ink-950 !text-cream hover:!bg-ink-800 magnetic"
+              variant="secondary"
+              label="or chat on WhatsApp"
+              className="!border-on-ember/45 !text-on-ember hover:!border-on-ember magnetic"
             />
             <EnquiryCTA
               whatsappNumber={content.site.whatsappNumber}
@@ -395,6 +411,9 @@ export default async function HomePage() {
           </div>
         </section>
       ) : null}
+
+      <StickyTrialBar whatsappNumber={content.site.whatsappNumber} label={trialLabel} />
+      </div>
     </>
   );
 }
