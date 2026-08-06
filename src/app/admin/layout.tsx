@@ -93,6 +93,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   // then render children anyway — with a comment saying so — which meant a
   // page without its own guard rendered its content to anyone who reached it.
   if (!subject && !PUBLIC_ADMIN_PATHS.has(path)) redirect('/admin/login');
+  // A temp password grants exactly one destination until it is replaced.
+  if (subject?.mustChangePassword && path !== '/admin/change-password') {
+    redirect('/admin/change-password');
+  }
   // The version of the content this page is rendering. Emitted as a meta tag
   // so every editor's save can carry it without threading a prop through all
   // twenty of them. It deliberately comes from the SAME cached read as the

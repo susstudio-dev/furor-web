@@ -37,7 +37,11 @@ repository. Please do not open public issues for vulnerabilities.
 
 ## Known limitations (accepted for v1)
 
-- Sessions are 14-day JWTs with no server-side revocation; logout clears the
+- Store-backed accounts carry a `sessionVersion`: disabling an account or
+  changing its password bumps it, which invalidates that user's outstanding
+  tokens within the subject cache window (~5 s). The env-configured owner has
+  its own lever — bump `ADMIN_OWNER_TOKEN_EPOCH` to invalidate its tokens.
+- The env owner's sessions are otherwise 14-day JWTs; logout clears the
   cookie only. Rotating `JWT_SECRET` invalidates everything.
 - The rate limiter and content cache are per-isolate on Workers.
 - CSP allows `'unsafe-inline'` scripts (Next.js inline bootstrap); a

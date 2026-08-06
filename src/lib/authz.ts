@@ -17,6 +17,8 @@ export interface Subject {
    *  and never subject to policy — it is the account that recovers the site
    *  when the user store or a bad policy locks everyone else out. */
   breakGlass?: boolean;
+  /** Temp password not yet replaced — the layout forces the change screen. */
+  mustChangePassword?: boolean;
 }
 
 export interface AuthzResult {

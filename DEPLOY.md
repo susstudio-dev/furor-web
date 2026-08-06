@@ -150,8 +150,9 @@ Two things worth knowing about this build:
 ## Notes / limits (v1)
 
 - **Owner is secret-managed in production.** One owner account. Editor
-  invites + in-app password change are dev-only; multi-user needs a real
-  user store (R2 is fine) — that's the v1.1 gap.
+  invites + in-app password change work in production: accounts live in the
+  `users.json` document in the same private R2 bucket, invited from
+  /admin/users with a one-time temp password (send it over WhatsApp).
 - To rotate the prod password: `npm run hash-password -- '<new>'` →
   `npx wrangler secret put ADMIN_OWNER_PASSWORD_HASH` → redeploy.
 - Login rate limiting is per-isolate on Workers (each PoP counts its own
@@ -159,6 +160,7 @@ Two things worth knowing about this build:
   this is proportionate for a single-admin site; a KV-backed limiter is the
   upgrade path if it ever matters.
 - Dev is unchanged: no bucket → filesystem (`data/`, `public/uploads/`),
-  `data/users.json` owner seeded from env on first run.
+  the owner account is env-based and never stored; invited accounts live in
+  the `users.json` store.
 - Local `npm run preview` (Windows): if the OpenNext build misbehaves on
   Windows, run it in WSL or lean on CI — known adapter rough edges.

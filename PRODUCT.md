@@ -14,7 +14,7 @@ web
 
 ## Product Purpose
 
-The new dancehyderabad.com: the public face and enquiry funnel of Furor, a Latin dance school. Success = a visitor sends a WhatsApp message (or Instagram DM); the team converts that conversation into a trial or Foundation-batch join. There are no signup forms and no payments on the site — conversion is always a human conversation.
+The new dancehyderabad.com: the public face and enquiry funnel of Furor, a Latin dance school. Success = a visitor books a ₹500 trial class (Razorpay) or sends a WhatsApp message; the team converts that into a Foundation-batch join. There are no signup forms or accounts — the paid path is a one-tap Razorpay page, and every other path is a human conversation. <!-- updated 2026-08-06: Razorpay trial booking + webhook are live; the original "no payments" model is retired -->
 
 ## Positioning
 
@@ -29,7 +29,7 @@ All confirmed as true, binding claims (user-verified 2026-08-02):
 
 - Visitors arrive mostly on mobile, via Instagram (@furorhyd) and WhatsApp forwards.
 - Enquiry routing: WhatsApp primary (`wa.me/918886072572` with context-aware prefilled message per style/branch/batch), Instagram DM secondary (deep link + message copied to clipboard). Every CTA fires GA4 `enquiry_click`.
-- One studio today: **Jubilee Hills only** — 2nd Floor, Alcazar Mall, Road No. 36, Jubilee Hills, Hyderabad 500033. (Older docs mention Kondapur; it is not current.)
+- Two venues today: **Jubilee Hills** (2nd Floor, Alcazar Mall, Road No. 36) and **PUP Unleash — HUDA Colony**. (Older docs mention Kondapur; it is not current.) <!-- updated 2026-08-06 from live content -->
 - Staff edit content on the deployed `/admin`; edits appear on the public site within ~30 s (per-request rendering, no redeploy).
 
 ## Capabilities and Constraints

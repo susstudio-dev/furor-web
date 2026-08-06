@@ -73,6 +73,7 @@ export async function resolveSubject(opts: { fresh?: boolean } = {}): Promise<Su
       email: record.email,
       roleIds: record.roleIds,
       attrs: record.attrs,
+      ...(record.mustChangePassword ? { mustChangePassword: true } : {}),
     };
   }
 
