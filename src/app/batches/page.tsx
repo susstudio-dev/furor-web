@@ -1,14 +1,16 @@
 import { getPublicContent, visibleBatches, batchStyleLabel } from '@/lib/content';
 import { JsonLd } from '@/components/JsonLd';
 import { BatchesBrowser, type BatchRow } from '@/components/BatchesBrowser';
+import { fitDescription } from '@/lib/seo';
 
 export async function generateMetadata() {
   const c = await getPublicContent();
   return {
     title: 'Batches & Pricing',
-    description:
-      c.pages.batches.intro.lead ||
+    description: fitDescription(
+      c.pages.batches.intro.lead,
       'Upcoming Salsa, Bachata and West Coast Swing batches in Hyderabad with transparent pricing.',
+    ),
     alternates: { canonical: '/batches' },
   };
 }
@@ -87,6 +89,13 @@ export default async function BatchesPage() {
         {content.pages.batches.intro.lead ? (
           <p className="mt-4 text-cream/70 max-w-2xl">{content.pages.batches.intro.lead}</p>
         ) : null}
+      </section>
+
+      {/* The browser below carried no heading of its own, so this page shipped
+          an h1 and nothing else — no signpost between the intro and the list
+          for either readers or crawlers. */}
+      <section className="container-x pb-2">
+        <h2 className="display text-sm uppercase tracking-widest text-ember-400">Every open batch</h2>
       </section>
 
       <BatchesBrowser

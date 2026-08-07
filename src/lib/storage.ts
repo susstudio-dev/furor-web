@@ -21,6 +21,8 @@ interface R2ObjectBody {
   // header form and can carry a weak W/ prefix that R2 rejects on the way back
   // in, so it is deliberately not modelled here.
   etag: string;
+  /** Object size in bytes — sent as content-length when serving uploads. */
+  size: number;
   customMetadata?: Record<string, string>;
   httpMetadata?: { contentType?: string };
   body: ReadableStream;
@@ -302,10 +304,24 @@ export async function writeBinary(
   return `/uploads/${name}`;
 }
 
-/** Read an uploaded image for serving. Null when it doesn't exist. */
+/**
+ * Read an uploaded image for serving. Null when it doesn't exist.
+ *
+ * `size` is returned so the route can send content-length. Without it the
+ * response is chunked with no declared length: browsers cannot show real
+ * download progress, and crawlers record the image as 0 bytes — which is why
+ * an SEO audit reported only the 9 oversized /photos files and silently missed
+ * the far heavier /uploads ones. `etag` lets conditional requests 304 instead
+ * of re-sending megabytes.
+ */
 export async function readBinary(
   name: string,
-): Promise<{ body: ReadableStream | Uint8Array; contentType: string } | null> {
+): Promise<{
+  body: ReadableStream | Uint8Array;
+  contentType: string;
+  size?: number;
+  etag?: string;
+} | null> {
   const { bucket } = await resolveBucket();
   if (bucket) {
     const obj = await bucket.get(`uploads/${name}`);
@@ -313,6 +329,11 @@ export async function readBinary(
     return {
       body: obj.body,
       contentType: obj.httpMetadata?.contentType || 'application/octet-stream',
+      size: obj.size,
+      // `etag` is the unquoted form (see the interface note); an HTTP ETag
+      // header must be quoted, so add the quotes here rather than model
+      // httpEtag, whose weak W/ prefix R2 rejects on conditional writes.
+      etag: `"${obj.etag}"`,
     };
   }
   try {
@@ -325,7 +346,11 @@ export async function readBinary(
       webp: 'image/webp',
       avif: 'image/avif',
     };
-    return { body: new Uint8Array(buf), contentType: types[ext] || 'application/octet-stream' };
+    return {
+      body: new Uint8Array(buf),
+      contentType: types[ext] || 'application/octet-stream',
+      size: buf.byteLength,
+    };
   } catch (err: unknown) {
     if ((err as NodeJS.ErrnoException)?.code === 'ENOENT') return null;
     throw err;

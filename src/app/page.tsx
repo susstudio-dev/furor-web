@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { getPublicContent, nextBatchPerStyle, visibleBatches, formatBatchDate, formatInr, batchStyleLabel } from '@/lib/content';
-import { truncateAtWord } from '@/lib/seo';
+import { fitDescription, fitTitle } from '@/lib/seo';
 
 export async function generateMetadata() {
   const c = await getPublicContent();
@@ -12,14 +12,19 @@ export async function generateMetadata() {
     styleNames.length > 1
       ? `${styleNames.slice(0, -1).join(', ')} & ${styleNames[styleNames.length - 1]}`
       : styleNames[0] || 'Dance';
+  // Two lead styles, not all three. "Furor — Dance Hyderabad | Salsa, Bachata
+  // & West Coast Swing Classes" ran to 71 characters — a SERP shows ~60, so the
+  // city was being cut off, which is the one word this page most needs to rank
+  // for. West Coast Swing has its own page and stays in the description.
+  const lead = styleNames.slice(0, 2).join(' & ') || 'Dance';
   return {
-    // The layout default title is brand-only; the homepage must also say what
-    // we sell ("… Classes") for queries like "dance classes in Hyderabad".
-    // `absolute` opts out of the layout's "%s · brand" template.
-    title: { absolute: `${c.site.title} | ${classes} Classes` },
+    title: fitTitle(`${lead} Classes in Hyderabad`, c.site.title),
     // The hero sub-headline carries the service+city phrasing ("Learn Salsa,
     // Bachata… Jubilee Hills, Hyderabad") — the highest-value local query.
-    description: truncateAtWord(c.hero.subHeadline || c.site.tagline),
+    description: fitDescription(
+      c.hero.subHeadline || c.site.tagline,
+      `${classes} classes in Jubilee Hills, Hyderabad.`,
+    ),
     alternates: { canonical: '/' },
   };
 }

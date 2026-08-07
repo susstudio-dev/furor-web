@@ -1,13 +1,15 @@
 import { getPublicContent } from '@/lib/content';
 import { LegalDoc } from '@/components/LegalDoc';
+import { fitDescription, fitTitle } from '@/lib/seo';
 
 export async function generateMetadata() {
   const c = await getPublicContent();
   return {
-    title: c.pages.privacy.intro.headline || 'Privacy Policy',
-    description:
-      c.pages.privacy.intro.lead ||
+    title: fitTitle(c.pages.privacy.intro.headline || 'Privacy Policy', c.site.title),
+    description: fitDescription(
+      c.pages.privacy.intro.lead,
       'How Furor Dance Hyderabad collects, uses and protects your information.',
+    ),
     alternates: { canonical: '/privacy' },
   };
 }

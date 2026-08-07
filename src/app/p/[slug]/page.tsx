@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { getPreviewInfo, getPublicContent } from '@/lib/content';
 import { CustomPageView } from '@/components/CustomPageView';
+import { fitDescription, fitTitle } from '@/lib/seo';
 
 // Admin-editable pages live in Blob and are added/edited without a redeploy, so
 // they must render per-request — never frozen at build. Statically prerendering
@@ -24,8 +25,8 @@ export async function generateMetadata({
   );
   if (!page) return {};
   return {
-    title: page.title,
-    description: page.seoDescription || page.intro.lead || undefined,
+    title: fitTitle(page.title, c.site.title),
+    description: fitDescription(page.seoDescription || page.intro.lead, c.site.tagline),
     robots: page.noindex ? { index: false, follow: false } : undefined,
     alternates: { canonical: `/p/${page.slug}` },
   };

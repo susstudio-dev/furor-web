@@ -1,13 +1,15 @@
 import { getPublicContent } from '@/lib/content';
 import { LegalDoc } from '@/components/LegalDoc';
+import { fitDescription, fitTitle } from '@/lib/seo';
 
 export async function generateMetadata() {
   const c = await getPublicContent();
   return {
-    title: c.pages.terms.intro.headline || 'Terms & Services',
-    description:
-      c.pages.terms.intro.lead ||
+    title: fitTitle(c.pages.terms.intro.headline || 'Terms & Services', c.site.title),
+    description: fitDescription(
+      c.pages.terms.intro.lead,
       'Terms of service for Furor Dance Hyderabad — classes, payments, conduct and refunds.',
+    ),
     alternates: { canonical: '/terms' },
   };
 }

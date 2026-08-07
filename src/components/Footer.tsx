@@ -97,7 +97,10 @@ export function Footer({ content }: { content: SiteContent }) {
           <div className="flex items-center gap-5 pr-12 sm:pr-28">
             <Link href="/privacy" className="inline-block py-1.5 hover:text-cream transition-colors">Privacy</Link>
             <Link href="/terms" className="inline-block py-1.5 hover:text-cream transition-colors">Terms</Link>
-            <Link href="/admin" className="inline-block py-1.5 hover:text-cream transition-colors">Studio login</Link>
+            {/* No "Studio login" link here. robots.txt disallows /admin, so a
+                followed internal link to it made every crawl report a blocked
+                URL — and it invited bots to the login screen for no gain.
+                Staff reach the admin by bookmarking /admin directly. */}
           </div>
         </div>
       </div>

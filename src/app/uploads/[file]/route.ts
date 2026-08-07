@@ -30,6 +30,11 @@ export async function GET(
       ...(safeType === 'application/octet-stream'
         ? { 'content-disposition': 'attachment' }
         : {}),
+      // Declared length + validator: without these the response is chunked and
+      // unsized, so browsers show no download progress and crawlers log the
+      // image as 0 bytes (an SEO audit missed every oversized upload this way).
+      ...(hit.size != null ? { 'content-length': String(hit.size) } : {}),
+      ...(hit.etag ? { etag: hit.etag } : {}),
       'cache-control': 'public, max-age=31536000, immutable',
       'x-content-type-options': 'nosniff',
       'content-security-policy': "default-src 'none'",

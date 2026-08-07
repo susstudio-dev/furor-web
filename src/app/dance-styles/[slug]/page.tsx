@@ -5,7 +5,7 @@ import { EnquiryCTA } from '@/components/EnquiryCTA';
 import { BatchActions } from '@/components/BatchActions';
 import { JsonLd } from '@/components/JsonLd';
 import { Img } from '@/components/Img';
-import { breadcrumbLd, courseLd, truncateAtWord } from '@/lib/seo';
+import { breadcrumbLd, courseLd, fitDescription, fitTitle } from '@/lib/seo';
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -13,8 +13,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const s = styleBySlug(c, slug);
   if (!s) return {};
   return {
-    title: `${s.name} Classes in Hyderabad`,
-    description: truncateAtWord(`${s.tagline} ${s.description}`),
+    title: fitTitle(`${s.name} Classes in Hyderabad`, c.site.title),
+    description: fitDescription(
+      `${s.tagline} ${s.description}`,
+      `${s.name} classes in Jubilee Hills, Hyderabad.`,
+    ),
     alternates: { canonical: `/dance-styles/${s.slug}` },
     openGraph: {
       title: `${s.name} Classes in Hyderabad`,
@@ -58,7 +61,7 @@ export default async function StylePage({ params }: { params: Promise<{ slug: st
         <div className="absolute inset-0 -z-10">
           <Img
             src={style.heroImage}
-            alt=""
+            alt={`${style.name} dancers on the floor at Furor in Hyderabad`}
             seed={`style-${style.slug}`}
             label={style.name}
             fill
@@ -99,12 +102,15 @@ export default async function StylePage({ params }: { params: Promise<{ slug: st
       </section>
 
       <section className="container-x py-20">
-        <h2 className="display text-sm uppercase tracking-widest text-ember-400">Who it&apos;s for</h2>
+        {/* Every h2 on this template names the style. All three style pages
+            shared an identical set of four headings otherwise, which reads to a
+            crawler as three pages about the same thing. */}
+        <h2 className="display text-sm uppercase tracking-widest text-ember-400">Who {style.name} is for</h2>
         <p className="mt-3 display text-2xl sm:text-3xl max-w-3xl text-cream/90">{style.whoItsFor}</p>
       </section>
 
       <section className="container-x py-12">
-        <h2 className="display text-sm uppercase tracking-widest text-ember-400">Level path</h2>
+        <h2 className="display text-sm uppercase tracking-widest text-ember-400">Your {style.name} level path</h2>
         <div className="mt-6 grid gap-4 md:grid-cols-3">
           {(['foundation', 'intermediate', 'advanced'] as const).map((k) => (
             <div key={k} className="rounded-2xl border border-cream/10 bg-ink-900/40 p-6">
@@ -116,7 +122,7 @@ export default async function StylePage({ params }: { params: Promise<{ slug: st
       </section>
 
       <section className="container-x py-12">
-        <h2 className="display text-sm uppercase tracking-widest text-ember-400">Upcoming batches</h2>
+        <h2 className="display text-sm uppercase tracking-widest text-ember-400">Upcoming {style.name} batches</h2>
         {batches.length === 0 ? (
           <div className="mt-6 rounded-2xl border border-cream/10 bg-ink-900/40 p-8">
             <p className="text-cream/80">
@@ -168,7 +174,7 @@ export default async function StylePage({ params }: { params: Promise<{ slug: st
 
       {style.faqs.length > 0 ? (
         <section className="container-x py-20">
-          <h2 className="display text-sm uppercase tracking-widest text-ember-400">Questions, asked</h2>
+          <h2 className="display text-sm uppercase tracking-widest text-ember-400">{style.name} questions, asked</h2>
           <div className="mt-6 grid gap-3">
             {style.faqs.map((f, i) => (
               <details key={i} className="group rounded-2xl border border-cream/10 bg-ink-900/40 p-5">

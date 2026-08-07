@@ -2,14 +2,16 @@ import { getPublicContent } from '@/lib/content';
 import { EnquiryCTA } from '@/components/EnquiryCTA';
 import { JsonLd } from '@/components/JsonLd';
 import { Img } from '@/components/Img';
+import { fitDescription } from '@/lib/seo';
 
 export async function generateMetadata() {
   const c = await getPublicContent();
   return {
     title: 'Instructors',
-    description:
-      c.pages.instructorsPage.intro.lead ||
-      'Meet the instructors behind Furor’s Salsa, Bachata and West Coast Swing classes.',
+    description: fitDescription(
+      c.pages.instructorsPage.intro.lead,
+      'Meet the instructors behind Furor’s Salsa, Bachata and West Coast Swing classes in Hyderabad.',
+    ),
     alternates: { canonical: '/instructors' },
   };
 }

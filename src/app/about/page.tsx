@@ -3,14 +3,18 @@ import { getPublicContent } from '@/lib/content';
 import { EnquiryCTA } from '@/components/EnquiryCTA';
 import { JsonLd } from '@/components/JsonLd';
 import { PhotoCarousel } from '@/components/PhotoCarousel';
+import { fitDescription } from '@/lib/seo';
 
 export async function generateMetadata() {
   const c = await getPublicContent();
   return {
     title: 'About',
-    description:
-      c.pages.about.introParagraphs[0] ||
+    // introParagraphs[0] is a 322-character paragraph — it was being emitted
+    // whole, more than double what a SERP renders.
+    description: fitDescription(
+      c.pages.about.introParagraphs[0],
       'The story of Furor — Hyderabad’s home for Salsa, Bachata and West Coast Swing.',
+    ),
     alternates: { canonical: '/about' },
   };
 }

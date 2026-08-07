@@ -544,7 +544,11 @@ export const SiteContentSchema = z.object({
     body: 'Open Salsa, Bachata and West Coast Swing batches every Saturday and Sunday. Beginner-friendly. No partner needed.',
     when: 'Sat & Sun · Jubilee Hills',
     ctaLabel: 'See weekend batches',
-    ctaHref: '/batches?days=Weekend',
+    // Plain path, no query. /batches ignores search params entirely (there is
+    // no searchParams read in the page or BatchesBrowser), so "?days=Weekend"
+    // filtered nothing — it only produced a parameterised, uppercase URL whose
+    // canonical pointed at /batches, i.e. a self-inflicted duplicate.
+    ctaHref: '/batches',
     whatsappLabel: 'Or chat on WhatsApp',
     ctaContext: 'a weekend Salsa or Bachata class',
     footnote: '',

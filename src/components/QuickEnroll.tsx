@@ -296,8 +296,12 @@ export function QuickEnroll({
                 <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
                   {/* The experienced-dancer lane: featuring Foundation never
                       costs the secondary audience a single tap. */}
+                  {/* Plain /batches, no ?level= — the batches page reads no
+                      search params, so the query filtered nothing and only
+                      minted a second, parameterised URL that canonicalises
+                      back here. Same trap as trial.ctaHref. */}
                   <Link
-                    href="/batches?level=Intermediate,Advanced"
+                    href="/batches"
                     className="inline-flex min-h-[44px] items-center py-2 text-sm text-cream/75 transition hover:text-cream"
                   >
                     Danced before? Intermediate &amp; Advanced →
