@@ -118,7 +118,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <NoticeBanner notice={content.site.notice || ''} />
         <Header content={content} />
         <main>{children}</main>
-        <Footer content={content} />
+        <Footer content={content} flush={isAdmin} />
         <FloatingTalkToUs
           whatsappNumber={content.site.whatsappNumber}
           instagramHandle={content.site.instagramHandle}

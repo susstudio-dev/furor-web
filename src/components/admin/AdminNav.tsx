@@ -88,8 +88,10 @@ export function AdminNav({ items, signedInAs }: { items: AdminNavItem[]; signedI
 
   return (
     <>
-      {/* Mobile top bar */}
-      <div className="sticky top-0 z-40 flex items-center justify-between border-b border-cream/10 bg-ink-950/95 px-4 py-3 lg:hidden">
+      {/* Mobile top bar. `top-16` clears the public header, which is sticky at
+          top-0 on this route too — at top-0 the two pinned bars landed on the
+          same 64px of screen and this one simply covered it. */}
+      <div className="sticky top-16 z-30 flex items-center justify-between border-b border-cream/10 bg-ink-950/95 px-4 py-3 lg:hidden">
         <Link href="/admin" className="display font-extrabold">
           <span className="text-ember-500">Furor</span> admin
         </Link>
@@ -117,8 +119,12 @@ export function AdminNav({ items, signedInAs }: { items: AdminNavItem[]; signedI
         </div>
       ) : null}
 
-      {/* Desktop sidebar */}
-      <aside className="hidden lg:block lg:min-h-screen lg:w-64 lg:border-r border-cream/10 bg-ink-900/40">
+      {/* Desktop sidebar. Pinned below the public header (h-16) and scrolled
+          internally: as a static full-height column the ~30-row menu was the
+          tallest thing on the page, so it both scrolled away from the editor
+          and stretched every admin screen to the menu's height. `self-start`
+          is load-bearing — a stretched flex item has no room to stick. */}
+      <aside className="hidden lg:sticky lg:top-16 lg:block lg:h-[calc(100vh-4rem)] lg:w-64 lg:shrink-0 lg:self-start lg:overflow-y-auto lg:overscroll-contain lg:border-r border-cream/10 bg-ink-900/40">
         {brand}
         {nav}
       </aside>

@@ -106,9 +106,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   // pass the conflict check and silently clobber someone.
   const contentVersion = subject ? await getContentVersionToken() : null;
   return (
-    <div className="min-h-screen bg-ink-950 text-cream">
+    // No `min-h-screen` here: the root layout already puts a 64px sticky header
+    // above this shell and the footer below it, so a full viewport height on
+    // top of both guaranteed a dead band above the footer on every short
+    // screen. The content column carries the minimum instead, matching the
+    // pinned sidebar so neither can outrun the other.
+    <div className="bg-ink-950 text-cream">
       {contentVersion ? <meta name="furor-content-version" content={contentVersion} /> : null}
-      <div className="lg:flex">
+      <div className="lg:flex lg:items-start">
         {subject ? (
           <AdminNav
             items={NAV.filter((n) => navVisible(n, subject)).map(({ label, href, groupHeader }) => ({
@@ -121,7 +126,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             }`}
           />
         ) : null}
-        <div className="flex-1 min-w-0">{children}</div>
+        <div className="min-w-0 flex-1 lg:min-h-[calc(100vh-4rem)]">{children}</div>
       </div>
     </div>
   );

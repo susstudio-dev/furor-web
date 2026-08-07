@@ -3,7 +3,11 @@ import type { SiteContent } from '@/lib/content-schema';
 import { buildWhatsAppHref } from '@/lib/enquiry';
 import { BrandMark } from './BrandMark';
 
-export function Footer({ content }: { content: SiteContent }) {
+// `flush` drops the breathing room above the footer. On the public pages that
+// margin is the pause after the closing CTA; under the admin shell — which
+// already fills the viewport — it is just a gap between the editor and the
+// footer with nothing in it.
+export function Footer({ content, flush = false }: { content: SiteContent; flush?: boolean }) {
   const wa = (branchSlug: string, branchName: string) =>
     buildWhatsAppHref(content.site.whatsappNumber, {
       source: 'footer',
@@ -11,7 +15,7 @@ export function Footer({ content }: { content: SiteContent }) {
     });
 
   return (
-    <footer className="mt-32 border-t border-cream/10 bg-ink-950/60">
+    <footer className={`${flush ? '' : 'mt-32'} border-t border-cream/10 bg-ink-950/60`}>
       <div className="container-x py-14">
         <div className="grid gap-10 md:grid-cols-12">
           {/* Brand */}
