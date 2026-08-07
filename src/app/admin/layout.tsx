@@ -7,6 +7,7 @@ import { resolveSubject } from '@/lib/subject';
 import type { Subject } from '@/lib/authz';
 import { getContentVersionToken } from '@/lib/content';
 import { AdminNav } from '@/components/admin/AdminNav';
+import { SitePreviewDrawer } from '@/components/admin/SitePreviewDrawer';
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
@@ -128,6 +129,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         ) : null}
         <div className="min-w-0 flex-1 lg:min-h-[calc(100vh-4rem)]">{children}</div>
       </div>
+      {/* Gated on `subject` for the same reason AdminNav is: on /admin/login
+          and /admin/change-password there is no session, so the framing rule
+          keyed on furor_admin would not apply and the drawer would open onto a
+          blank frame. */}
+      {subject ? <SitePreviewDrawer /> : null}
     </div>
   );
 }

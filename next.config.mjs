@@ -145,6 +145,37 @@ const nextConfig = {
         source: '/uploads/:path*',
         headers: [{ key: 'Content-Security-Policy', value: "default-src 'none'" }],
       },
+      // Admin site-preview drawer: an admin session makes the public site
+      // frameable BY ITSELF ONLY, so /admin can show it in an iframe. This is
+      // not a hole — 'self' still bars every other origin from framing us, so
+      // exploiting it would need an attacker page on our own origin, which
+      // already implies an XSS foothold that defeats the CSP outright.
+      // Placement is load-bearing twice over, because later matching rules win
+      // per header key: AFTER '/:path*' so it overrides DENY, and BEFORE the
+      // furor_preview rule below so a draft preview's stricter no-store +
+      // noindex still wins when someone holds both cookies. Vary: Cookie keeps
+      // a cache from handing the frameable variant to a public visitor.
+      {
+        source: '/:path*',
+        has: [{ type: 'cookie', key: 'furor_admin' }],
+        headers: [
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+          { key: 'Content-Security-Policy', value: CSP.replace("frame-ancestors 'none'", "frame-ancestors 'self'") },
+          // Next's own Vary tokens are repeated here on purpose. A rule in this
+          // block REPLACES a header by key rather than appending to it, so
+          // `Vary: Cookie` alone silently dropped
+          // `rsc, next-router-state-tree, next-router-prefetch,
+          // next-router-segment-prefetch` — which is what keeps an RSC payload
+          // and the HTML for the same URL from being treated as one cacheable
+          // response. Verified by diffing the built worker's headers with and
+          // without the cookie.
+          {
+            key: 'Vary',
+            value:
+              'rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch, Cookie',
+          },
+        ],
+      },
       // Draft preview: while the (signed, 15-minute) furor_preview cookie is
       // present, the public site becomes frameable BY ITSELF ONLY — the admin
       // split-view review iframe needs it, and only our own authenticated
