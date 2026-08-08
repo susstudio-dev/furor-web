@@ -4,14 +4,6 @@ import { existsSync, lstatSync, mkdirSync, rmSync, symlinkSync } from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 
-// When GH_PAGES=true (CI only) we build a static export of the PUBLIC site for
-// GitHub Pages. Admin panel / API / middleware are stripped by the workflow
-// before this runs, since they need a server runtime.
-const isPages = process.env.GH_PAGES === 'true';
-
-// Project page is served from https://<user>.github.io/furor-web/
-const REPO = 'furor-web';
-
 // Windows + OneDrive workaround.
 // OneDrive intercepts readlink() on files it has synced and returns EINVAL,
 // which crashes `next dev` and `next build` when they touch `.next/...`.
@@ -98,6 +90,17 @@ const CSP = [
 
 const nextConfig = {
   reactStrictMode: true,
+  // Next 15.2+ streams <title>/<meta>/<link rel=canonical> into the BODY for
+  // any user agent it believes runs JavaScript, and only blocks on metadata
+  // for the short built-in "HTML-limited bots" list (Twitterbot, Slackbot…).
+  // Googlebot renders JS so it copes, but every other crawler — Bingbot,
+  // Screaming Frog, Ahrefs, most AI crawlers — reads raw HTML and sees a page
+  // with no title, no description and no canonical in <head>. A crawl of this
+  // site flagged exactly that on the pages that happened to lose the race.
+  // Matching every UA makes metadata blocking (i.e. always inside <head>).
+  // The cost here is nil: layout.tsx already awaits connection() + getContent()
+  // before it can render anything, so the shell could never flush earlier.
+  htmlLimitedBots: /.*/,
   // Dev server compiles into its own directory so a concurrent
   // `next build` / `opennextjs-cloudflare build` (which writes production
   // output to `.next`) can never clobber the running dev server's chunks.
@@ -107,53 +110,97 @@ const nextConfig = {
   // pre-sized. The old *.public.blob.vercel-storage.com URLs keep rendering
   // via plain <img>/unoptimized <Image> until content is re-uploaded.)
   images: { unoptimized: true },
-  ...(isPages
-    ? {
-        output: 'export',
-        basePath: `/${REPO}`,
-        assetPrefix: `/${REPO}/`,
-        trailingSlash: true,
-      }
-    : {
-        // headers() is a no-op under `output: 'export'`; the OpenNext routing
-        // layer applies these on Cloudflare Workers.
-        async headers() {
-          return [
-            {
-              source: '/:path*',
-              headers: [
-                { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
-                { key: 'X-Content-Type-Options', value: 'nosniff' },
-                { key: 'X-Frame-Options', value: 'DENY' },
-                { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-                { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), payment=(), usb=(), browsing-topics=()' },
-                { key: 'X-DNS-Prefetch-Control', value: 'off' },
-                { key: 'Content-Security-Policy', value: CSP },
-              ],
-            },
-            {
-              source: '/admin/:path*',
-              headers: [
-                { key: 'Cache-Control', value: 'no-store, private' },
-                { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
-              ],
-            },
-            {
-              source: '/api/:path*',
-              headers: [
-                { key: 'Cache-Control', value: 'no-store, private' },
-                { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
-              ],
-            },
-            // Served uploads are opaque image bytes — lock them down harder
-            // than the site CSP (later matching rules win per header key).
-            {
-              source: '/uploads/:path*',
-              headers: [{ key: 'Content-Security-Policy', value: "default-src 'none'" }],
-            },
-          ];
-        },
-      }),
+  // The OpenNext routing layer applies these on Cloudflare Workers.
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), payment=(), usb=(), browsing-topics=()' },
+          { key: 'X-DNS-Prefetch-Control', value: 'off' },
+          { key: 'Content-Security-Policy', value: CSP },
+        ],
+      },
+      {
+        source: '/admin/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'no-store, private' },
+          { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
+        ],
+      },
+      {
+        source: '/api/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'no-store, private' },
+          { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
+        ],
+      },
+      // Served uploads are opaque image bytes — lock them down harder
+      // than the site CSP (later matching rules win per header key).
+      {
+        source: '/uploads/:path*',
+        headers: [{ key: 'Content-Security-Policy', value: "default-src 'none'" }],
+      },
+      // Admin site-preview drawer: an admin session makes the public site
+      // frameable BY ITSELF ONLY, so /admin can show it in an iframe. This is
+      // not a hole — 'self' still bars every other origin from framing us, so
+      // exploiting it would need an attacker page on our own origin, which
+      // already implies an XSS foothold that defeats the CSP outright.
+      // Placement is load-bearing twice over, because later matching rules win
+      // per header key: AFTER '/:path*' so it overrides DENY, and BEFORE the
+      // furor_preview rule below so a draft preview's stricter no-store +
+      // noindex still wins when someone holds both cookies. Vary: Cookie keeps
+      // a cache from handing the frameable variant to a public visitor.
+      {
+        source: '/:path*',
+        has: [{ type: 'cookie', key: 'furor_admin' }],
+        headers: [
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+          { key: 'Content-Security-Policy', value: CSP.replace("frame-ancestors 'none'", "frame-ancestors 'self'") },
+          // Next's own Vary tokens are repeated here on purpose. A rule in this
+          // block REPLACES a header by key rather than appending to it, so
+          // `Vary: Cookie` alone silently dropped
+          // `rsc, next-router-state-tree, next-router-prefetch,
+          // next-router-segment-prefetch` — which is what keeps an RSC payload
+          // and the HTML for the same URL from being treated as one cacheable
+          // response. Verified by diffing the built worker's headers with and
+          // without the cookie.
+          {
+            key: 'Vary',
+            value:
+              'rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch, Cookie',
+          },
+        ],
+      },
+      // Draft preview: while the (signed, 15-minute) furor_preview cookie is
+      // present, the public site becomes frameable BY ITSELF ONLY — the admin
+      // split-view review iframe needs it, and only our own authenticated
+      // preview endpoint can set that cookie, so an attacker page cannot make
+      // the site frameable for an ordinary visitor. Preview responses vary by
+      // cookie and must never be cached or indexed. Placement matters: this
+      // rule sits AFTER '/:path*' because later matching rules win per header
+      // key under the OpenNext routing layer.
+      {
+        // Public routes only: matching '/:path*' here would overwrite the
+        // /uploads lockdown above (later rules win per header key) and flip
+        // the framing headers on the whole admin and API surface — none of
+        // which the split view ever frames.
+        source: '/((?!admin|api|uploads).*)',
+        has: [{ type: 'cookie', key: 'furor_preview' }],
+        headers: [
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+          { key: 'Content-Security-Policy', value: CSP.replace("frame-ancestors 'none'", "frame-ancestors 'self'") },
+          { key: 'Cache-Control', value: 'private, no-store' },
+          { key: 'Vary', value: 'Cookie' },
+          { key: 'X-Robots-Tag', value: 'noindex' },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;

@@ -6,9 +6,11 @@ import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { FloatingTalkToUs } from '@/components/FloatingTalkToUs';
 import { NoticeBanner } from '@/components/NoticeBanner';
+import { PreviewChip } from '@/components/PreviewChip';
 import { Analytics } from '@/components/Analytics';
 import { JsonLd } from '@/components/JsonLd';
-import { getContent } from '@/lib/content';
+import { headers } from 'next/headers';
+import { getContent, getPreviewInfo, getPublicContent } from '@/lib/content';
 import { danceSchoolsLd, organizationLd, webSiteLd } from '@/lib/seo';
 
 const display = Bricolage_Grotesque({
@@ -29,10 +31,8 @@ const sans = Inter({
   display: 'swap',
 });
 
-const isMirror = process.env.GH_PAGES === 'true';
-
 export async function generateMetadata(): Promise<Metadata> {
-  const content = await getContent();
+  const content = await getPublicContent();
   return {
     metadataBase: new URL('https://www.dancehyderabad.com'),
     title: { default: content.site.title, template: `%s · ${content.site.title}` },
@@ -40,8 +40,6 @@ export async function generateMetadata(): Promise<Metadata> {
     // NB: no alternates.canonical here — layout metadata is inherited, and a
     // site-wide '/' canonical would point every page at the home page. Each
     // page declares its own.
-    // The GH Pages mirror is a duplicate of the real site — never index it.
-    ...(isMirror ? { robots: { index: false, follow: false } } : {}),
     formatDetection: { telephone: false },
     openGraph: {
       title: content.site.title,
@@ -74,11 +72,14 @@ export const viewport: Viewport = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   // On Cloudflare Workers every page renders per-request so admin edits are
-  // always fresh (there is no ISR tag-cache machinery on the free plan). The
-  // GitHub Pages mirror build (GH_PAGES=true, inlined at build time) skips
-  // this and stays fully static-exportable.
-  if (process.env.GH_PAGES !== 'true') await connection();
-  const content = await getContent();
+  // always fresh (there is no ISR tag-cache machinery on the free plan).
+  await connection();
+  // The root layout wraps /admin too (no route group). The admin shell must
+  // render PUBLISHED content — its editors diff against the published doc —
+  // and must never wear the preview chip over its own nav.
+  const isAdmin = (await headers()).get('x-admin-path') != null;
+  const content = isAdmin ? await getContent() : await getPublicContent();
+  const previewDraftId = isAdmin ? null : (await getPreviewInfo()).draftId;
   return (
     // data-scroll-behavior tells Next to neutralise smooth scrolling on route
     // changes while leaving hash navigation smooth. Without it, once Next 16
@@ -113,10 +114,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         {/* The room: a warm stage-light wash that breathes with the tempo,
             behind everything, never interactive. */}
         <div className="stage-lights" aria-hidden />
+        {previewDraftId ? <PreviewChip draftId={previewDraftId} /> : null}
         <NoticeBanner notice={content.site.notice || ''} />
         <Header content={content} />
         <main>{children}</main>
-        <Footer content={content} />
+        <Footer content={content} flush={isAdmin} />
         <FloatingTalkToUs
           whatsappNumber={content.site.whatsappNumber}
           instagramHandle={content.site.instagramHandle}

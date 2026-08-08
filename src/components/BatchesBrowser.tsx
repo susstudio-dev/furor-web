@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { Batch } from '@/lib/content-schema';
 import { formatBatchDate, formatInr } from '@/lib/format';
+import { compareByLevel } from '@/lib/batch-order';
 import { EnquiryCTA } from './EnquiryCTA';
 import { BatchActions } from './BatchActions';
 
@@ -109,7 +110,12 @@ export function BatchesBrowser({ rows, styles, studios, whatsappNumber, instagra
     price: new Set(),
     status: new Set(),
   });
-  const [sort, setSort] = useState<'soon' | 'late' | 'priceLow' | 'priceHigh'>('soon');
+  // Level-first is the default on purpose: the primary visitor has never
+  // danced, and a date-sorted list can put an Advanced batch at the top.
+  // Price sorting was dropped — with a handful of batches at two price
+  // points it was two extra decisions that answered nothing; the price
+  // FILTER below still exists.
+  const [sort, setSort] = useState<'level' | 'soon' | 'late'>('level');
   // Detailed facets are collapsed by default on mobile so the batch list isn't
   // pushed off-screen by a wall of pills. Always expanded on lg+ (room for it).
   const [showFilters, setShowFilters] = useState(false);
@@ -126,7 +132,8 @@ export function BatchesBrowser({ rows, styles, studios, whatsappNumber, instagra
       return next;
     });
     const s = q.get('sort');
-    if (s === 'soon' || s === 'late' || s === 'priceLow' || s === 'priceHigh') setSort(s);
+    // Old bookmarked ?sort=priceLow/priceHigh URLs fall back to the default.
+    if (s === 'level' || s === 'soon' || s === 'late') setSort(s);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -135,7 +142,7 @@ export function BatchesBrowser({ rows, styles, studios, whatsappNumber, instagra
     (Object.keys(sel) as FacetKey[]).forEach((k) => {
       if (sel[k].size) q.set(k, [...sel[k]].join(','));
     });
-    if (sort !== 'soon') q.set('sort', sort);
+    if (sort !== 'level') q.set('sort', sort);
     const qs = q.toString();
     const url = qs ? `?${qs}` : window.location.pathname;
     window.history.replaceState(null, '', url);
@@ -164,8 +171,7 @@ export function BatchesBrowser({ rows, styles, studios, whatsappNumber, instagra
   const filtered = useMemo(() => {
     const out = enriched.filter((e) => passesExcept(e, null));
     out.sort((a, b) => {
-      if (sort === 'priceLow') return a.priceN - b.priceN;
-      if (sort === 'priceHigh') return b.priceN - a.priceN;
+      if (sort === 'level') return compareByLevel(a.row.batch, b.row.batch);
       const cmp = a.row.batch.startDate.localeCompare(b.row.batch.startDate);
       return sort === 'late' ? -cmp : cmp;
     });
@@ -237,7 +243,7 @@ export function BatchesBrowser({ rows, styles, studios, whatsappNumber, instagra
   ];
 
   const presets: { label: string; p: Partial<Record<FacetKey, string[]>> }[] = [
-    { label: '🔰 Beginner-friendly', p: { level: ['Foundation'] } },
+    { label: '🔰 Never danced? Start here', p: { level: ['Foundation'] } },
     { label: '🗓️ Weekend classes', p: { days: ['Weekend'] } },
     { label: '🌙 Evening classes', p: { tod: ['Evening'] } },
     { label: '⚡ Starting soon', p: { starting: ['This month', 'Next 30 days'] } },
@@ -359,10 +365,9 @@ export function BatchesBrowser({ rows, styles, studios, whatsappNumber, instagra
               onChange={(e) => setSort(e.target.value as typeof sort)}
               className="rounded-full bg-cream/5 border border-cream/15 px-3 py-1.5 text-cream/85 text-sm outline-none focus:border-ember-500"
             >
+              <option value="level">Beginner → advanced</option>
               <option value="soon">Soonest first</option>
               <option value="late">Latest first</option>
-              <option value="priceLow">Price: low → high</option>
-              <option value="priceHigh">Price: high → low</option>
             </select>
           </label>
         </div>
@@ -390,7 +395,14 @@ export function BatchesBrowser({ rows, styles, studios, whatsappNumber, instagra
                 >
                   <div className="lg:col-span-3">
                     <p className="display text-xl font-bold">{row.styleName}</p>
-                    <p className="text-cream/60 text-sm">{b.level}</p>
+                    <p className="text-cream/60 text-sm">
+                      {b.level}
+                      {b.level === 'Foundation' ? (
+                        <span className="pill ml-2 bg-ember-500/15 text-ember-400">
+                          first-timers welcome
+                        </span>
+                      ) : null}
+                    </p>
                   </div>
                   <div className="lg:col-span-3">
                     <p className="text-cream">{row.branchName}</p>

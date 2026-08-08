@@ -8,6 +8,8 @@ export type EnquirySource =
   | 'style_card'
   | 'branch_card'
   | 'style_finder'
+  | 'quick_enroll'
+  | 'sticky_bar'
   | 'footer';
 
 export type EnquiryChannel = 'whatsapp' | 'instagram';

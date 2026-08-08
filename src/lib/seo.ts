@@ -198,6 +198,100 @@ export function breadcrumbLd(items: { name: string; path: string }[]) {
   };
 }
 
+// ---------------------------------------------------------------------------
+// SERP fitting.
+//
+// Google truncates titles around 60 characters / 561 pixels and descriptions
+// around 155 characters / 985 pixels. Both limits were being blown by content
+// the admin edits, not by anything hardcoded — so these helpers enforce the fit
+// at render time instead of relying on whoever writes the next story title to
+// remember. Budgets sit under the thresholds because the real limit is pixels,
+// and a wide string hits it before the character count does.
+// ---------------------------------------------------------------------------
+
+const TITLE_CHARS = 57;
+const TITLE_PX = 520;
+const DESC_PX = 920;
+const DESC_MIN = 75;
+
+/**
+ * Approximate rendered width in a SERP, in pixels.
+ *
+ * Both limits Google actually applies are pixel limits, and a character count
+ * is a poor proxy for them — "mmm" is over three times the width of "iii". A
+ * 142-character description of ordinary prose measures ~1000px and gets cut;
+ * the same character count in narrow text fits fine. These advances approximate
+ * Arial 13px, the same way the audit tools do.
+ */
+function serpPixels(s: string): number {
+  let w = 0;
+  for (const ch of s) {
+    if (" iljt.,;:!|'`[](){}I".includes(ch)) w += 4;
+    else if ('mwMW@%'.includes(ch)) w += 13;
+    else if (ch >= 'A' && ch <= 'Z') w += 10;
+    else w += 8;
+  }
+  return w;
+}
+
+/** Trim to a pixel budget on a word boundary, with a trailing ellipsis. */
+function truncateToPixels(text: string, maxPx: number): string {
+  const clean = text.replace(/\s+/g, ' ').trim();
+  if (serpPixels(clean) <= maxPx) return clean;
+  const budget = maxPx - serpPixels('…');
+  let out = '';
+  for (const word of clean.split(' ')) {
+    const next = out ? `${out} ${word}` : word;
+    if (serpPixels(next) > budget) break;
+    out = next;
+  }
+  return `${(out || clean.slice(0, 40)).trimEnd()}…`;
+}
+
+/**
+ * Fit `title` plus as much brand suffix as the budget allows.
+ *
+ * The layout template appends " · Furor — Dance Hyderabad" — 26 characters —
+ * which by itself pushed eight pages over the limit. Rather than drop the
+ * brand everywhere, spend what's left: full brand, then short brand, then none.
+ * Returns the shape `metadata.title` wants for an absolute (un-templated) title.
+ */
+export function fitTitle(title: string, brand: string): { absolute: string } {
+  const clean = title.replace(/\s+/g, ' ').trim();
+  // "Furor — Dance Hyderabad" -> "Furor". Derived, so it keeps working if the
+  // admin renames the site.
+  const short = brand.split(/[—–|·-]/)[0].trim() || brand;
+  for (const suffix of [` · ${brand}`, ` · ${short}`]) {
+    const candidate = clean + suffix;
+    if (candidate.length <= TITLE_CHARS && serpPixels(candidate) <= TITLE_PX) {
+      return { absolute: candidate };
+    }
+  }
+  // Bare title still over budget: trim rather than ship a title the SERP cuts
+  // at an arbitrary character. Nothing in the content hits this today.
+  return { absolute: truncateToPixels(clean.length <= 60 ? clean : clean.slice(0, 60), TITLE_PX) };
+}
+
+/**
+ * Fit a meta description into the band that actually renders in a SERP.
+ *
+ * Under ~70 characters wastes the snippet; over ~155 gets cut mid-sentence.
+ * `primary` is the admin-written copy and always wins when it is substantial
+ * enough to stand alone. When it is too thin, `support` is appended rather than
+ * substituted — the editor's words stay, they just stop being the whole thing.
+ */
+export function fitDescription(primary: string | null | undefined, support: string): string {
+  const p = (primary ?? '').replace(/\s+/g, ' ').trim();
+  const s = support.replace(/\s+/g, ' ').trim();
+  if (!p) return truncateToPixels(s, DESC_PX);
+  if (p.length >= DESC_MIN) return truncateToPixels(p, DESC_PX);
+  // Admin leads do not reliably end in punctuation ("…managed by VASISHTHA
+  // ENTERPRISES "), and running the two straight together produced a snippet
+  // that read as one broken sentence.
+  const joined = /[.!?…:—]$/.test(p) ? `${p} ${s}` : `${p}. ${s}`;
+  return truncateToPixels(joined, DESC_PX);
+}
+
 // Meta descriptions: Google displays ~160 chars. Cut on a word boundary —
 // a mid-word cut ("Puerto R…") reads broken in the SERP snippet.
 export function truncateAtWord(text: string, max = 160): string {

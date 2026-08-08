@@ -8,6 +8,7 @@
 // Uploads:
 //   data/site-content.json      -> site-content.json
 //   data/audit.json             -> audit.json            (if present)
+//   data/payment-events.json    -> payment-events.json   (if present)
 //   data/versions/*.json        -> versions/<name>
 //   public/uploads/*            -> uploads/<name>  (with correct content-type)
 import { execFileSync } from 'node:child_process';
@@ -39,6 +40,7 @@ function add(localPath, key) {
 
 add('data/site-content.json', 'site-content.json');
 add('data/audit.json', 'audit.json');
+add('data/payment-events.json', 'payment-events.json');
 if (existsSync('data/versions')) {
   for (const f of readdirSync('data/versions')) {
     if (f.endsWith('.json')) add(path.join('data/versions', f), `versions/${f}`);

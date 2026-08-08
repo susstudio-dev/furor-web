@@ -15,8 +15,10 @@ interface Props {
   instagramHandle?: string;
   ctx: EnquiryContext;
   channel?: EnquiryChannel;
-  variant?: 'primary' | 'secondary' | 'batch-row';
+  variant?: 'primary' | 'secondary' | 'batch-row' | 'link' | 'icon';
   label?: string;
+  /** Required for the icon variant, which renders no visible text. */
+  ariaLabel?: string;
   className?: string;
 }
 
@@ -27,6 +29,7 @@ export function EnquiryCTA({
   channel = 'whatsapp',
   variant = 'primary',
   label,
+  ariaLabel,
   className,
 }: Props) {
   const onClick = useCallback(
@@ -85,6 +88,12 @@ export function EnquiryCTA({
       ? 'btn-primary'
       : variant === 'secondary'
       ? 'btn-secondary'
+      : variant === 'link'
+      ? // The demoted-but-always-present second path: text weight, one visual
+        // tier below the filled trial button it sits beside.
+        'inline-flex min-h-[44px] items-center gap-1.5 text-sm text-cream/75 underline decoration-cream/30 underline-offset-4 transition hover:text-cream hover:decoration-cream/60'
+      : variant === 'icon'
+      ? 'grid h-12 w-12 shrink-0 place-items-center rounded-full border border-cream/25 text-cream/85 transition hover:border-ember-500/60 hover:text-cream'
       : 'inline-flex min-h-[44px] items-center gap-2 rounded-full bg-ember-500/15 px-4 py-2 text-sm font-medium text-ember-400 transition hover:bg-ember-500/25';
 
   const text =
@@ -101,10 +110,11 @@ export function EnquiryCTA({
       target={channel === 'whatsapp' ? '_blank' : undefined}
       rel={channel === 'whatsapp' ? 'noopener noreferrer' : undefined}
       onClick={onClick}
+      aria-label={ariaLabel}
       className={`${cls} ${className ?? ''}`.trim()}
     >
       {channel === 'whatsapp' ? <WhatsAppGlyph /> : <InstagramGlyph />}
-      {text}
+      {variant === 'icon' ? null : text}
     </a>
   );
 }

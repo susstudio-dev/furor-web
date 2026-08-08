@@ -71,7 +71,10 @@ export function StylesEditor({ initial }: { initial: SiteContent }) {
   function move(idx: number, dir: -1 | 1) {
     const target = idx + dir;
     if (target < 0 || target >= c.danceStyles.length) return;
-    const next = c.danceStyles.slice();
+    // .slice() is shallow, so renumbering in place would mutate the very
+    // objects the loaded document still points at — a diff against that base
+    // would then see no change and drop the reorder entirely.
+    const next = c.danceStyles.map((s) => ({ ...s }));
     [next[idx], next[target]] = [next[target], next[idx]];
     next.forEach((s, i) => (s.displayOrder = i + 1));
     setC((prev) => ({ ...prev, danceStyles: next }));

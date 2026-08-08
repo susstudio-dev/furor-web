@@ -24,7 +24,7 @@ npm run dev
 
 Open http://localhost:3000
 
-The first time anything reads content, the seed at `src/data/site-content.seed.json` is copied to `data/site-content.json`. The first time anyone hits `/admin/login`, the seed owner from `.env.local` is created in `data/users.json`.
+The first time anything reads content, the seed at `src/data/site-content.seed.json` is copied to `data/site-content.json`. The owner account comes straight from `.env.local` (`ADMIN_OWNER_EMAIL` + `ADMIN_OWNER_INITIAL_PASSWORD`) — no file is created for it. Additional accounts are invited from `/admin/users` and live in the `users.json` store (local `data/`, R2 in production).
 
 ## Editing content (the workflow)
 
@@ -50,7 +50,7 @@ Pulling teammate content changes is automatic: `git pull`, then on next request 
 ## Admin
 
 - Login: http://localhost:3000/admin/login
-- Default credentials come from `ADMIN_OWNER_EMAIL` / `ADMIN_OWNER_INITIAL_PASSWORD` in `.env.local`. The owner record is seeded into `data/users.json` on first successful sign-in. To change the password later, delete `data/users.json` and update the env var, then sign in again.
+- Owner credentials come from `ADMIN_OWNER_EMAIL` / `ADMIN_OWNER_INITIAL_PASSWORD` (or `ADMIN_OWNER_PASSWORD_HASH`) in `.env.local` — change the env var to change them. Everyone else is invited from `/admin/users`: the invite generates a one-time temporary password, and the person picks their own on first sign-in.
 - Editor sections in the sidebar:
   - **Site & socials** — title, tagline, WhatsApp/Instagram, footer, socials, notice banner, "Tonight" tile, Why Furor
   - **Hero** — headline, sub, poster image, video URLs

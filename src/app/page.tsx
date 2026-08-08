@@ -1,9 +1,9 @@
 import Link from 'next/link';
-import { getContent, nextBatchPerStyle, formatBatchDate, formatInr, batchStyleLabel } from '@/lib/content';
-import { truncateAtWord } from '@/lib/seo';
+import { getPublicContent, nextBatchPerStyle, visibleBatches, formatBatchDate, formatInr, batchStyleLabel } from '@/lib/content';
+import { fitDescription, fitTitle } from '@/lib/seo';
 
 export async function generateMetadata() {
-  const c = await getContent();
+  const c = await getPublicContent();
   const styleNames = c.danceStyles
     .slice()
     .sort((a, b) => a.displayOrder - b.displayOrder)
@@ -12,14 +12,19 @@ export async function generateMetadata() {
     styleNames.length > 1
       ? `${styleNames.slice(0, -1).join(', ')} & ${styleNames[styleNames.length - 1]}`
       : styleNames[0] || 'Dance';
+  // Two lead styles, not all three. "Furor — Dance Hyderabad | Salsa, Bachata
+  // & West Coast Swing Classes" ran to 71 characters — a SERP shows ~60, so the
+  // city was being cut off, which is the one word this page most needs to rank
+  // for. West Coast Swing has its own page and stays in the description.
+  const lead = styleNames.slice(0, 2).join(' & ') || 'Dance';
   return {
-    // The layout default title is brand-only; the homepage must also say what
-    // we sell ("… Classes") for queries like "dance classes in Hyderabad".
-    // `absolute` opts out of the layout's "%s · brand" template.
-    title: { absolute: `${c.site.title} | ${classes} Classes` },
+    title: fitTitle(`${lead} Classes in Hyderabad`, c.site.title),
     // The hero sub-headline carries the service+city phrasing ("Learn Salsa,
     // Bachata… Jubilee Hills, Hyderabad") — the highest-value local query.
-    description: truncateAtWord(c.hero.subHeadline || c.site.tagline),
+    description: fitDescription(
+      c.hero.subHeadline || c.site.tagline,
+      `${classes} classes in Jubilee Hills, Hyderabad.`,
+    ),
     alternates: { canonical: '/' },
   };
 }
@@ -34,6 +39,7 @@ import { Img } from '@/components/Img';
 import { Accentuate } from '@/components/Accentuate';
 import { Reveal } from '@/components/Reveal';
 import { QuickEnroll } from '@/components/QuickEnroll';
+import { StickyTrialBar } from '@/components/StickyTrialBar';
 import { BatchActions } from '@/components/BatchActions';
 
 // Render per request so admin edits show immediately and no stale/blip HTML is
@@ -42,18 +48,27 @@ import { BatchActions } from '@/components/BatchActions';
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  const content = await getContent();
+  const content = await getPublicContent();
   const sortedStyles = content.danceStyles.slice().sort((a, b) => a.displayOrder - b.displayOrder);
   const sortedStudios = content.studios.slice().sort((a, b) => a.displayOrder - b.displayOrder);
   const nextPerStyle = nextBatchPerStyle(content);
   const h = content.pages.home;
+  const bookable = visibleBatches(content);
+  const trialFrom = bookable.length ? Math.min(...bookable.map((b) => b.reservationInr)) : null;
+  const trialLabel = `Book my first class${trialFrom != null ? ` · ${formatInr(trialFrom)}` : ''}`;
 
   return (
     <>
       <Hero content={content} />
 
       {/* Fast lane: join a real batch before the brochure even starts. */}
-      <QuickEnroll content={content} />
+      <QuickEnroll content={content} trialFrom={trialFrom} />
+
+      {/* The After-Band wrapper: everything below the board shares a container
+          whose LAST child is the mobile sticky trial bar — sticky clamping
+          makes the bar appear only after the visitor scrolls past the board,
+          with zero JS. See StickyTrialBar. */}
+      <div className="relative">
 
       <KineticStrip styles={sortedStyles} />
 
@@ -272,12 +287,18 @@ export default async function HomePage() {
             <p className="mt-3 text-on-ember max-w-xl text-lg">{h.closingCta.body}</p>
           ) : null}
           <div className="mt-8 flex flex-wrap gap-3">
+            <a
+              href="#start-this-week"
+              className="btn-primary !bg-ink-950 !text-cream hover:!bg-ink-800 magnetic"
+            >
+              {trialLabel}
+            </a>
             <EnquiryCTA
               whatsappNumber={content.site.whatsappNumber}
               ctx={{ source: 'primary' }}
-              variant="primary"
-              label="Chat on WhatsApp"
-              className="!bg-ink-950 !text-cream hover:!bg-ink-800 magnetic"
+              variant="secondary"
+              label="or chat on WhatsApp"
+              className="!border-on-ember/45 !text-on-ember hover:!border-on-ember magnetic"
             />
             <EnquiryCTA
               whatsappNumber={content.site.whatsappNumber}
@@ -395,6 +416,9 @@ export default async function HomePage() {
           </div>
         </section>
       ) : null}
+
+      <StickyTrialBar whatsappNumber={content.site.whatsappNumber} label={trialLabel} />
+      </div>
     </>
   );
 }

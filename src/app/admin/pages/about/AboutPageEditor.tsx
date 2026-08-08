@@ -7,12 +7,17 @@ import { Field, EditorStyles } from '@/components/admin/fields';
 import { PageIntroFields } from '@/components/admin/PageIntroFields';
 import { ImageGalleryEditor } from '@/components/admin/ImageUploader';
 import { saveSiteContent } from '@/lib/admin-save';
+import { useAutosave } from '@/lib/autosave';
+import { AutosaveBanner } from '@/components/admin/AutosaveBanner';
 
 type AboutPage = Pages['about'];
 
 export function AboutPageEditor({ initial }: { initial: SiteContent }) {
   const [c, setC] = useState<SiteContent>(initial);
   const [dirty, setDirty] = useState(false);
+  // Subtree only: stashing the whole document meant a restore reverted every
+  // section this tab happened to hold stale copies of.
+  const autosave = useAutosave('pages.about', c.pages.about, dirty);
 
   function patchAbout(patch: Partial<AboutPage>) {
     setC((prev) => ({
@@ -27,10 +32,25 @@ export function AboutPageEditor({ initial }: { initial: SiteContent }) {
   async function save() {
     await saveSiteContent(c);
     setDirty(false);
+    autosave.clear();
   }
 
   return (
     <>
+      {autosave.stash ? (
+        <AutosaveBanner
+          savedAt={autosave.stash.savedAt}
+          matchesVersion={autosave.stashMatchesVersion}
+          onRestore={() => {
+            const about = autosave.stash!.value;
+            setC((prev) => ({ ...prev, pages: { ...prev.pages, about } }));
+            setDirty(true);
+            autosave.clear();
+          }}
+          onDiscard={autosave.clear}
+        />
+      ) : null}
+
       <div className="mt-8 grid gap-5">
         <Section title="Header">
           <PageIntroFields value={a.intro} onChange={(v) => patchAbout({ intro: v })} />
@@ -142,7 +162,7 @@ export function AboutPageEditor({ initial }: { initial: SiteContent }) {
         <Section title="Stats strip">
           <p className="text-xs text-cream/50">Up to 4 stat cards. The big number is the &ldquo;value&rdquo;, the small line below is the &ldquo;label&rdquo;.</p>
           {a.stats.map((s, i) => (
-            <div key={i} className="grid grid-cols-[140px_1fr_auto] gap-2 items-end">
+            <div key={i} className="grid grid-cols-1 sm:grid-cols-[140px_1fr_auto] gap-2 items-end">
               <Field label="Number">
                 <input
                   value={s.k}
@@ -206,7 +226,7 @@ export function AboutPageEditor({ initial }: { initial: SiteContent }) {
           </Field>
           {a.timeline.milestones.map((m, i) => (
             <div key={i} className="rounded-xl border border-cream/10 p-3 grid gap-2">
-              <div className="grid grid-cols-[110px_1fr_auto] gap-2 items-end">
+              <div className="grid grid-cols-1 sm:grid-cols-[110px_1fr_auto] gap-2 items-end">
                 <Field label="Year">
                   <input
                     value={m.year}

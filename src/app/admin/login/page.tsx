@@ -27,12 +27,17 @@ export default function LoginPage() {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
+      const j = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        mustChangePassword?: boolean;
+      };
       if (!res.ok) {
-        const j = await res.json().catch(() => ({}));
         setError(j.error || 'Sign-in failed');
         return;
       }
-      router.push(next);
+      // A freshly invited account signs in with a temp password shown once to
+      // the inviter — it must be replaced before anything else happens.
+      router.push(j.mustChangePassword ? '/admin/change-password' : next);
       router.refresh();
     } finally {
       setBusy(false);

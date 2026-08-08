@@ -28,6 +28,8 @@ Prereqs: a Cloudflare account (free) and `npx wrangler login` once locally.
    npx wrangler secret put ADMIN_OWNER_EMAIL           # the studio's login email
    npm run hash-password -- 'the-strong-password'      # prints a pbkdf2$... string
    npx wrangler secret put ADMIN_OWNER_PASSWORD_HASH   # paste that string
+   npx wrangler secret put ADMIN_OWNER_TOKEN_EPOCH     # any string; change it to sign the owner out everywhere
+   npx wrangler secret put PREVIEW_SECRET              # optional; draft-preview signing key (defaults to a key derived from JWT_SECRET)
    ```
 
    Notes:
@@ -80,11 +82,11 @@ If the Worker is also connected to a git repo in the Cloudflare dashboard
 to the GitHub Actions workflow above. Its defaults are a build command of
 `npm run build` and a deploy command of `npx wrangler versions upload`.
 
-`npm run build` is plain `next build` on purpose — the GitHub Pages export and
-the quality gate both need it — and it does **not** emit
-`.open-next/worker.js`, which `wrangler.jsonc` points `main` at. `wrangler
-deploy` papers over that by detecting an OpenNext project and delegating to the
-OpenNext CLI, but `wrangler versions upload` does not, so it would fail with:
+`npm run build` is plain `next build` on purpose — the quality gate needs it —
+and it does **not** emit `.open-next/worker.js`, which `wrangler.jsonc` points
+`main` at. `wrangler deploy` papers over that by detecting an OpenNext project
+and delegating to the OpenNext CLI, but `wrangler versions upload` does not, so
+it would fail with:
 
 ```
 ✘ [ERROR] The entry-point file at ".open-next/worker.js" was not found.
@@ -150,18 +152,17 @@ Two things worth knowing about this build:
 ## Notes / limits (v1)
 
 - **Owner is secret-managed in production.** One owner account. Editor
-  invites + in-app password change are dev-only; multi-user needs a real
-  user store (R2 is fine) — that's the v1.1 gap.
+  invites + in-app password change work in production: accounts live in the
+  `users.json` document in the same private R2 bucket, invited from
+  /admin/users with a one-time temp password (send it over WhatsApp).
 - To rotate the prod password: `npm run hash-password -- '<new>'` →
   `npx wrangler secret put ADMIN_OWNER_PASSWORD_HASH` → redeploy.
 - Login rate limiting is per-isolate on Workers (each PoP counts its own
   5-per-10-min window). Combined with the KDF and the 300 ms response floor
   this is proportionate for a single-admin site; a KV-backed limiter is the
   upgrade path if it ever matters.
-- GitHub Pages mirror stays static & read-only (no `/admin`) and is
-  **noindexed** — it builds from the git seed, so it lags prod edits until
-  `npm run sync-seed` + push. The real site is the Cloudflare one.
 - Dev is unchanged: no bucket → filesystem (`data/`, `public/uploads/`),
-  `data/users.json` owner seeded from env on first run.
+  the owner account is env-based and never stored; invited accounts live in
+  the `users.json` store.
 - Local `npm run preview` (Windows): if the OpenNext build misbehaves on
   Windows, run it in WSL or lean on CI — known adapter rough edges.

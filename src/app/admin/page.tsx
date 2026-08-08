@@ -1,9 +1,16 @@
 import Link from 'next/link';
+import { listDrafts } from '@/lib/drafts';
 import { getContent, visibleBatches } from '@/lib/content';
+import { requireSubject } from '@/lib/guard';
 
 export default async function AdminDashboard() {
+  await requireSubject();
   const c = await getContent();
+  const openDrafts = (await listDrafts()).filter((d) => d.status === 'open').length;
   const stats = [
+    ...(openDrafts > 0
+      ? [{ label: 'Drafts waiting for review', value: openDrafts, href: '/admin/drafts' }]
+      : []),
     { label: 'Dance styles', value: c.danceStyles.length, href: '/admin/styles' },
     { label: 'Studios', value: c.studios.length, href: '/admin/studios' },
     { label: 'Open batches', value: visibleBatches(c).length, href: '/admin/batches' },

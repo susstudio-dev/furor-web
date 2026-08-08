@@ -19,7 +19,7 @@
   },
   "hero": {
     "headline": "The night was made for *dancing*.",
-    "subHeadline": "Learn Salsa, Bachata and West Coast Swing with India's most loved Latin dance school. Our home is in Jubilee Hills, Hyderabad. Beginner-friendly. Register with a small token, try a class and then dive in for the full program. Whisper a yes — we'll take it from there on WhatsApp.",
+    "subHeadline": "Learn Salsa, Bachata and West Coast Swing with India's most loved Latin dance school — Jubilee Hills & HUDA Colony, Hyderabad. Never danced a step? Foundation is built for exactly you. ₹500 books your first class — feel the music once, then decide on the full program.",
     "videoMp4Url": "",
     "videoWebmUrl": "",
     "posterImage": "/photos/DSC_0166.jpg"
@@ -39,7 +39,7 @@
     "body": "Open Salsa, Bachata and West Coast Swing batches every Saturday and Sunday. Beginner-friendly. No partner needed.",
     "when": "Sat & Sun · Jubilee Hills",
     "ctaLabel": "See weekend batches",
-    "ctaHref": "/batches?days=Weekend",
+    "ctaHref": "/batches",
     "whatsappLabel": "Or chat on WhatsApp",
     "ctaContext": "a weekend Salsa or Bachata class",
     "footnote": ""
@@ -862,7 +862,7 @@
       "intro": {
         "eyebrow": "Dance Styles",
         "headline": "The dances we teach. The reasons people stay.",
-        "lead": ""
+        "lead": "Three partner dances, taught from the ground up in Jubilee Hills, Hyderabad. Salsa for the social floor, Bachata for musicality and connection, West Coast Swing for improvisers. No partner needed — we rotate partners in every class."
       }
     },
     "batches": {

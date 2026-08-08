@@ -3,7 +3,7 @@ import type { MetadataRoute } from 'next';
 export const dynamic = 'force-static';
 
 // Set only by the GH Pages workflow — the mirror serves under /furor-web.
-const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
+const BASE = '';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {

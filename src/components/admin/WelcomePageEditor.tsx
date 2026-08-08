@@ -5,6 +5,8 @@ import type { SiteContent, Welcome, WelcomeTrack } from '@/lib/content-schema';
 import { SaveBar } from '@/components/admin/SaveBar';
 import { Field, Select, EditorStyles } from '@/components/admin/fields';
 import { saveSiteContent } from '@/lib/admin-save';
+import { useAutosave } from '@/lib/autosave';
+import { AutosaveBanner } from '@/components/admin/AutosaveBanner';
 
 function slugify(s: string): string {
   return s
@@ -19,6 +21,8 @@ function slugify(s: string): string {
 export function WelcomePageEditor({ initial }: { initial: SiteContent }) {
   const [c, setC] = useState<SiteContent>(initial);
   const [dirty, setDirty] = useState(false);
+  // Subtree only - see AboutPageEditor.
+  const autosave = useAutosave('welcome', c.welcome, dirty);
 
   const w = c.welcome;
 
@@ -74,6 +78,7 @@ export function WelcomePageEditor({ initial }: { initial: SiteContent }) {
     await saveSiteContent(cleaned);
     setC(cleaned);
     setDirty(false);
+    autosave.clear();
   }
 
   // Small typed helpers to cut repetition across the many copy fields.
@@ -103,6 +108,20 @@ export function WelcomePageEditor({ initial }: { initial: SiteContent }) {
 
   return (
     <>
+      {autosave.stash ? (
+        <AutosaveBanner
+          savedAt={autosave.stash.savedAt}
+          matchesVersion={autosave.stashMatchesVersion}
+          onRestore={() => {
+            const welcome = autosave.stash!.value;
+            setC((prev) => ({ ...prev, welcome }));
+            setDirty(true);
+            autosave.clear();
+          }}
+          onDiscard={autosave.clear}
+        />
+      ) : null}
+
       <div className="mt-8 grid gap-5">
         <Section title="Confirmation header">
           {txt('Badge', 'confirmedBadge')}

@@ -7,6 +7,8 @@ import {
   verifyCredentials,
 } from '@/lib/auth';
 import { audit } from '@/lib/audit';
+import { bustSubjectCache } from '@/lib/subject';
+import { readUserStore, writeUserStore } from '@/lib/users';
 import { sameOrigin } from '@/lib/request-guards';
 
 // Every login response takes at least this long, success or failure — masks
@@ -71,10 +73,36 @@ export async function POST(req: Request) {
     }
 
     clearAttempts(ip);
-    const token = await createSessionToken(user);
+    // Best-effort bookkeeping: the Users screen answers "which invite is
+    // dormant?" from this. A write failure must never fail a valid login.
+    if (!user.breakGlass) {
+      try {
+        const state = await readUserStore();
+        const i = state?.users.findIndex((u) => u.id === user.uid) ?? -1;
+        if (state && i !== -1) {
+          const users = [...state.users];
+          users[i] = { ...users[i], lastLoginAt: new Date().toISOString() };
+          await writeUserStore(users, state.version);
+        }
+      } catch {
+        /* ignore */
+      }
+    }
+    const token = await createSessionToken({
+      uid: user.uid,
+      email: user.email,
+      roles: user.roles,
+      sv: user.sessionVersion,
+      brk: user.breakGlass,
+    });
     await setSessionCookie(token);
+    // A stale cached null (e.g. from a visit while disabled) must not bounce a
+    // freshly valid login back to the sign-in page.
+    bustSubjectCache();
     await audit({ actor: user.email, action: 'login' });
-    return respond({ ok: true, role: user.role });
+    // The role is not returned: the client has no use for it, and every
+    // decision is made from the server-resolved subject anyway.
+    return respond({ ok: true, mustChangePassword: user.mustChangePassword });
   } catch (err) {
     // Controlled failure instead of an opaque 500 — logged server-side,
     // generic to the client.

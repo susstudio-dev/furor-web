@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
-import { getSession } from '@/lib/auth';
+import { resolveMutationSubject } from '@/lib/subject';
 import { audit } from '@/lib/audit';
 import { StorageUnavailableError, writeBinary } from '@/lib/storage';
 import { contentLengthWithin, sameOrigin } from '@/lib/request-guards';
@@ -32,8 +32,13 @@ function sniffImageType(bytes: Uint8Array): string | null {
 }
 
 export async function POST(req: Request) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // Store-backed, fresh, temp-password-refusing — this route writes bytes
+  // that are served from the public origin, so it must honor revocation like
+  // every other admin write (it previously trusted the bare JWT, which kept a
+  // DISABLED account uploading for the full 14-day token life).
+  const gate = await resolveMutationSubject();
+  if (!gate.ok) return NextResponse.json({ error: gate.error }, { status: gate.status });
+  const session = gate.subject;
   if (!sameOrigin(req)) {
     return NextResponse.json({ error: 'Cross-origin request rejected' }, { status: 403 });
   }

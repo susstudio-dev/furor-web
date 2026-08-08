@@ -29,3 +29,6 @@ cloudflare-env.d.ts
 # Local tooling artifacts
 .playwright-mcp/
 furor-home.png
+
+# CAS sidecars for versioned documents (dev/filesystem backend only)
+data/.meta/

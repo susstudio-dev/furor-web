@@ -37,7 +37,29 @@ repository. Please do not open public issues for vulnerabilities.
 
 ## Known limitations (accepted for v1)
 
-- Sessions are 14-day JWTs with no server-side revocation; logout clears the
+- Store-backed accounts carry a `sessionVersion`: disabling an account or
+  changing its password bumps it, which invalidates that user's outstanding
+  tokens within the subject cache window (~5 s) on every admin surface —
+  pages and all mutating API routes, uploads included. The env-configured
+  owner has its own lever — set or bump `ADMIN_OWNER_TOKEN_EPOCH` (a wrangler
+  secret, any string) to invalidate its outstanding tokens.
+- A temp-password account (fresh invite) can reach exactly two things until
+  it sets its own password: the change-password screen and the self-service
+  endpoint that performs the change. Every mutating API refuses it.
+- Draft preview uses its own 15-minute token (separate issuer/audience and a
+  domain-separated secret — an admin session cookie replayed into the preview
+  cookie does not verify). While it is set, public responses are
+  private/no-store/noindex and the site is frameable by ITSELF only, for the
+  admin's side-by-side review. The overlay applies to public renders only;
+  admin editors, the save pipeline and the sitemap always read published
+  content.
+- Residual gaps, stated plainly: admin READ access is all-or-nothing — any
+  signed-in admin session can view the whole content document and the
+  payments log regardless of write grants; and the env break-glass owner
+  bypasses policy entirely, including the id-immutability deny — it is the
+  recovery account, and recovery means unconditional. Last sign-in times are
+  best-effort (a storage blip may skip one).
+- The env owner's sessions are otherwise 14-day JWTs; logout clears the
   cookie only. Rotating `JWT_SECRET` invalidates everything.
 - The rate limiter and content cache are per-isolate on Workers.
 - CSP allows `'unsafe-inline'` scripts (Next.js inline bootstrap); a

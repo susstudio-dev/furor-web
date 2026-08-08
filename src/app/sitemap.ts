@@ -5,10 +5,9 @@ import { getContent } from '@/lib/content';
 const BASE = 'https://www.dancehyderabad.com';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  // On Workers, render per-request so admin-published stories/custom pages
-  // appear without a redeploy. The GH Pages export stays build-time static
-  // (the mirror is noindexed anyway).
-  if (process.env.GH_PAGES !== 'true') await connection();
+  // Render per-request so admin-published stories/custom pages appear
+  // without a redeploy.
+  await connection();
   const c = await getContent();
   const fixed: MetadataRoute.Sitemap = [
     { url: `${BASE}/`, changeFrequency: 'weekly', priority: 1 },

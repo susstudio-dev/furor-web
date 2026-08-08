@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { requireSubject } from '@/lib/guard';
 
 const PAGES = [
   { href: '/admin/pages/home', label: 'Home', desc: '"What we teach", "How it works", closing CTA, "Visit us"' },
@@ -15,7 +16,8 @@ const PAGES = [
   { href: '/admin/pages/custom', label: 'Custom pages', desc: 'Create / edit your own pages at /p/<slug>' },
 ];
 
-export default function PagesIndex() {
+export default async function PagesIndex() {
+  await requireSubject();
   return (
     <div className="p-6 sm:p-10 max-w-5xl">
       <p className="display text-sm uppercase tracking-widest text-ember-400">Pages</p>

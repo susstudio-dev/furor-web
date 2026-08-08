@@ -18,9 +18,18 @@ export const config = {
   matcher: ['/admin/:path*'],
 };
 
+// Server components cannot read the pathname directly, and the admin layout
+// wraps the login page too — so it needs to know which route it is rendering
+// in order to exempt the pages an unauthenticated visitor must still reach.
+function withPath(req: NextRequest) {
+  const headers = new Headers(req.headers);
+  headers.set('x-admin-path', req.nextUrl.pathname);
+  return NextResponse.next({ request: { headers } });
+}
+
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  if (pathname === '/admin/login') return NextResponse.next();
+  if (pathname === '/admin/login') return withPath(req);
 
   const toLogin = () => {
     const url = req.nextUrl.clone();
@@ -33,12 +42,17 @@ export async function middleware(req: NextRequest) {
   const secret = getSecret();
   if (!token || !secret) return toLogin();
   try {
+    // Signature, issuer and audience only. Middleware deliberately makes no
+    // authorization decision: it runs on every /admin navigation, a store read
+    // here would cost CPU and a subrequest each time, and the claims it could
+    // read are a 14-day-old snapshot anyway. Enforcement lives in the layout
+    // and in each page's guard, where the subject is resolved for real.
     await jwtVerify(token, secret, {
       algorithms: ['HS256'],
       issuer: 'furor-web',
       audience: 'furor-admin',
     });
-    return NextResponse.next();
+    return withPath(req);
   } catch {
     return toLogin();
   }

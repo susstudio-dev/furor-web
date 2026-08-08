@@ -40,7 +40,14 @@ export function FloatingTalkToUs({
           onClick={() => setOpen(false)}
         />
       ) : null}
-      <div className="fixed bottom-5 right-5 z-50 flex flex-col items-end gap-3 sm:bottom-6 sm:right-6">
+      {/* On the home route the mobile StickyTrialBar owns the bottom edge —
+          two floating elements stacking on a phone reads as broken. Hidden
+          below sm there; everywhere else (and on desktop) unchanged. */}
+      <div
+        className={`fixed bottom-5 right-5 z-50 flex-col items-end gap-3 sm:bottom-6 sm:right-6 ${
+          pathname === '/' ? 'hidden sm:flex' : 'flex'
+        }`}
+      >
         {open ? (
           <div className="w-[min(20rem,calc(100vw-2.5rem))] rounded-3xl border border-cream/10 bg-ink-900/95 p-4 shadow-2xl backdrop-blur animate-fade-up">
             <p className="display text-sm uppercase tracking-widest text-cream/60">Talk to us</p>

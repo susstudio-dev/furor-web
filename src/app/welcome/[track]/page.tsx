@@ -1,9 +1,10 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import type { Batch } from '@/lib/content-schema';
-import { getContent } from '@/lib/content';
+import { getPublicContent } from '@/lib/content';
 import { visibleBatches } from '@/lib/content-helpers';
 import { formatBatchDate } from '@/lib/format';
+import { resolveWelcomeState } from '@/lib/welcome-confirm';
 import { WelcomeView, type BatchBundle } from './WelcomeView';
 
 // Post-payment landing page, one per track. Set the matching URL as the
@@ -16,6 +17,16 @@ import { WelcomeView, type BatchBundle } from './WelcomeView';
 //   /welcome/latin?d=2026-07-12   (the batch's start date — easiest to set)
 //   /welcome/latin?b=batch-007    (the batch id)
 // With no param we fall back to the next upcoming batch for the track.
+//
+// Confirmation: Payment PAGES (pages.razorpay.com) redirect with NO query
+// params on success, so a bare visit here IS the success case. The failure
+// layout appears for any razorpay_payment_link_status other than
+// paid/partially_paid (Payment LINKS append the status; unknown values are
+// deliberately unconfirmed so a status we don't recognise never reads as
+// money received). Preview the failure state with
+// ?razorpay_payment_link_status=cancelled. The decision is made SERVER-side
+// from searchParams so a cancelled payment never flashes the confirmation
+// hero and needs no JavaScript to show the right state.
 // noindex — this is a post-registration confirmation, not a public/SEO page.
 
 // Tracks are admin-managed (added/edited in /admin/pages/welcome → Blob), so the
@@ -31,7 +42,7 @@ export async function generateMetadata({
   params: Promise<{ track: string }>;
 }): Promise<Metadata> {
   const { track } = await params;
-  const content = await getContent();
+  const content = await getPublicContent();
   const cfg = content.welcome.tracks.find((t) => t.key === track);
   return {
     title: 'You’re in — Furor Hyderabad',
@@ -116,9 +127,24 @@ function icsEscape(text: string): string {
     .replace(/\n/g, '\\n');
 }
 
-export default async function WelcomePage({ params }: { params: Promise<{ track: string }> }) {
+export default async function WelcomePage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ track: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const { track } = await params;
-  const content = await getContent();
+  const sp = await searchParams;
+  const query = new URLSearchParams();
+  for (const [k, v] of Object.entries(sp)) {
+    const value = Array.isArray(v) ? v[0] : v;
+    if (typeof value === 'string') query.set(k, value);
+  }
+  // Decided here, on the server, so a cancelled payment never paints the
+  // confirmation hero first — and a no-JS visitor still sees the right state.
+  const paymentState = resolveWelcomeState(query);
+  const content = await getPublicContent();
   const cfg = content.welcome.tracks.find((t) => t.key === track);
   if (!cfg) notFound();
 
@@ -230,6 +256,7 @@ export default async function WelcomePage({ params }: { params: Promise<{ track:
       vcardHref={vcardHref}
       defaultBundle={defaultBundle}
       options={options}
+      paymentState={paymentState}
     />
   );
 }

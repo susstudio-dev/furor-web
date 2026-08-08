@@ -157,8 +157,15 @@ Expected: typecheck passes, build succeeds, grep prints `clean`.
 
 - [ ] **Step 6: Commit**
 
+**Stage explicit paths only.** The working tree contains unrelated in-progress changes belonging
+to someone else (`src/components/Hero.tsx`, `src/components/QuickEnroll.tsx`, untracked `.jpeg`
+files). `git add -A` would sweep them into your commit. This applies to **every** task in this
+plan.
+
 ```bash
-git add -A
+git add next.config.mjs src/app/layout.tsx src/app/sitemap.ts \
+        src/components/BrandMark.tsx src/components/Img.tsx
+git add -u .github/workflows/deploy-pages.yml src/lib/base-path.ts
 git commit -m "chore: retire the GitHub Pages mirror
 
 It was noindexed and robots-disallowed, froze schedules and theme at CI
@@ -1060,9 +1067,18 @@ describe('authorize', () => {
       { op: 'set', path: 'batches[id=b_5].branchSlug', value: 'jubilee-hills' },
       { op: 'set', path: 'batches[id=b_5].razorpayLink', value: 'https://pay.attacker.example' },
     ]);
-    const result = authorize(ravi, changes, { branchScoped: true });
+    // No options argument: branch scoping must engage automatically from the
+    // subject's attrs, because the production pipeline calls authorize() with
+    // two arguments and would otherwise never apply it.
+    const result = authorize(ravi, changes);
     expect(result.ok).toBe(false);
     expect(result.denied[0].path).toContain('b_5');
+  });
+
+  it('leaves a branch-scoped subject free on records with no branch', () => {
+    const ravi = sub({ roleIds: ['editor'], attrs: { sections: ['stories'], branchSlugs: ['jubilee-hills'] } });
+    const changes = expandOps(doc(), [{ op: 'set', path: 'stories[id=s_1].title', value: 'ok' }]);
+    expect(authorize(ravi, changes).ok).toBe(true);
   });
 
   it('requires an explicit allow on the new value for a create', () => {
@@ -1110,10 +1126,10 @@ export interface AuthzResult {
   mayPublish: boolean;
 }
 
-export interface AuthzOptions {
-  /** Additionally constrain records to the subject's branchSlugs. */
-  branchScoped?: boolean;
-}
+// Branch scoping is NOT an option the caller passes — it engages automatically
+// whenever the subject carries branchSlugs. An opt-in flag would be dead code:
+// the pipeline calls authorize(subject, changes) and would never set it.
+type Record_Branch = { branchSlug?: unknown };
 
 type Record_ = Record<string, unknown> | null | undefined;
 
@@ -1143,7 +1159,7 @@ function rulesFor(subject: Subject): { rules: Rule[]; requiresApproval: boolean 
   return { rules, requiresApproval };
 }
 
-function allows(rules: Rule[], subject: Subject, path: string, record: Record_, opts: AuthzOptions): boolean {
+function allows(rules: Rule[], subject: Subject, path: string, record: Record_): boolean {
   let allowed = false;
   for (const rule of rules) {
     if (!rule.paths.some((p) => matchPath(p, path))) continue;
@@ -1156,14 +1172,17 @@ function allows(rules: Rule[], subject: Subject, path: string, record: Record_, 
     }
     if (conditionsHold) allowed = true;
   }
-  if (allowed && opts.branchScoped && record && typeof record === 'object' && 'branchSlug' in record) {
-    const branches = subject.attrs.branchSlugs ?? [];
-    return typeof record.branchSlug === 'string' && branches.includes(record.branchSlug);
+  // A subject carrying branchSlugs is confined to those branches on any record
+  // that HAS a branchSlug. Records without one are unaffected.
+  const branches = subject.attrs.branchSlugs;
+  if (allowed && branches?.length && record && typeof record === 'object' && 'branchSlug' in record) {
+    const slug = (record as Record_Branch).branchSlug;
+    return typeof slug === 'string' && branches.includes(slug);
   }
   return allowed;
 }
 
-export function authorize(subject: Subject, changes: LeafChange[], opts: AuthzOptions = {}): AuthzResult {
+export function authorize(subject: Subject, changes: LeafChange[]): AuthzResult {
   if (subject.breakGlass) return { ok: true, denied: [], mayPublish: true };
 
   const { rules, requiresApproval } = rulesFor(subject);
@@ -1174,17 +1193,17 @@ export function authorize(subject: Subject, changes: LeafChange[], opts: AuthzOp
     let ok: boolean;
 
     if (change.kind === 'create') {
-      ok = allows(rules, subject, path, change.after as Record_, opts);
+      ok = allows(rules, subject, path, change.after as Record_);
     } else if (change.kind === 'delete') {
-      ok = allows(rules, subject, path, change.before as Record_, opts);
+      ok = allows(rules, subject, path, change.before as Record_);
     } else if (change.kind === 'reorder') {
-      ok = allows(rules, subject, change.collection, null, opts);
+      ok = allows(rules, subject, change.collection, null);
     } else {
       // An update must be permitted against BOTH states, so a patch cannot move
       // a record into the subject's scope and then edit it in the same request.
       const beforeRecord = (change.collection ? recordOf(change, 'before') : null) as Record_;
       const afterRecord = (change.collection ? recordOf(change, 'after') : null) as Record_;
-      ok = allows(rules, subject, path, beforeRecord, opts) && allows(rules, subject, path, afterRecord, opts);
+      ok = allows(rules, subject, path, beforeRecord) && allows(rules, subject, path, afterRecord);
     }
     if (!ok) denied.push({ path, reason: 'not permitted for this account' });
   }
@@ -1353,27 +1372,48 @@ returns `null` on mismatch. Single-process dev accepts the residual race.
 
 - [ ] **Step 3: Write the failing test (dev backend)**
 
-`src/lib/storage-version.test.ts` exercises the sidecar path only — the R2 branch needs a Worker:
+`src/lib/storage-version.test.ts` exercises the sidecar decision only — the R2 branch needs a
+Worker:
 
 ```ts
 import { describe, expect, it } from 'vitest';
-import { compareAndSwap } from './storage-version-core';
+import { hashOf, mayWrite } from './storage-version-core';
 
-describe('compareAndSwap', () => {
-  it('accepts a write whose expected hash matches', () => {
-    expect(compareAndSwap('current', { hash: hashOf('current') })).toBe(true);
+describe('mayWrite', () => {
+  it('accepts a write whose expected hash matches the current bytes', () => {
+    expect(mayWrite('current', { hash: hashOf('current') })).toBe(true);
   });
-  it('rejects a write whose expected hash is stale', () => {
-    expect(compareAndSwap('current', { hash: hashOf('older') })).toBe(false);
+
+  it('rejects a write based on stale bytes', () => {
+    expect(mayWrite('current', { hash: hashOf('older') })).toBe(false);
+  });
+
+  it('accepts the first write when there is no sidecar yet', () => {
+    expect(mayWrite('current', null)).toBe(true);
+  });
+
+  it('hashes deterministically and distinguishes content', () => {
+    expect(hashOf('a')).toBe(hashOf('a'));
+    expect(hashOf('a')).not.toBe(hashOf('b'));
   });
 });
 ```
 
-Extract the pure decision into `src/lib/storage-version-core.ts` so it is testable without fs:
+Extract the pure decision into `src/lib/storage-version-core.ts` so it is testable without fs.
+Use `node:crypto` — it is available in Node and in workerd under `nodejs_compat`, which this
+project already enables:
 
 ```ts
-export function compareAndSwap(currentText: string, expected: { hash: string }): boolean {
-  return hashOf(currentText) === expected.hash;
+import { createHash } from 'node:crypto';
+
+export function hashOf(text: string): string {
+  return createHash('sha256').update(text, 'utf8').digest('base64');
+}
+
+/** Dev-backend compare-and-swap: the write proceeds only when the bytes on disk
+ *  still hash to what the caller read. `null` = no sidecar yet (first write). */
+export function mayWrite(currentText: string, expected: { hash: string } | null): boolean {
+  return expected === null || hashOf(currentText) === expected.hash;
 }
 ```
 
@@ -1511,7 +1551,7 @@ git commit -m "feat: id/slug uniqueness invariant, story authorId, and NEVER_SEE
 
 **Interfaces:**
 - Consumes: `applyOps` (4), `expandOps` (5), `authorize` (6), `SiteContentSchema` (8)
-- Produces: `applyAndAuthorize(doc, subject, ops, opts): PipelineResult`
+- Produces: `applyAndAuthorize(doc, subject, ops): PipelineResult`
 
 - [ ] **Step 1: Write the failing test**
 
@@ -1888,8 +1928,12 @@ changed paths and the new rev.
 
 - [ ] **Step 5: Commit**
 
+Stage explicit paths only — see the note in Task 1 Step 6.
+
 ```bash
-git add -A
+git add src/lib/content-write.ts src/lib/audit.ts \
+        src/app/api/admin/restore/route.ts \
+        src/app/admin/versions/page.tsx src/app/admin/json/page.tsx
 git commit -m "feat: restore through the authorizer, CAS audit writes, gate versions and raw JSON"
 ```
 

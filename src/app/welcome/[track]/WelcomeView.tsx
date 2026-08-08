@@ -4,6 +4,7 @@ import { Fragment, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Reveal } from '@/components/Reveal';
 import type { Welcome } from '@/lib/content-schema';
+import type { WelcomeState } from '@/lib/welcome-confirm';
 
 // Everything the page shows for one batch, precomputed server-side. The client
 // picks the right one from the ?d=/?b= redirect param.
@@ -29,6 +30,9 @@ interface Props {
   vcardHref: string;
   defaultBundle: BatchBundle;
   options: BatchBundle[];
+  /** Decided server-side from the redirect params (welcome-confirm.ts), so a
+   *  failed payment never flashes the confirmation hero. */
+  paymentState: WelcomeState;
 }
 
 // Renders an admin-editable copy template, replacing {placeholders} with live
@@ -60,11 +64,6 @@ function Filled({
   );
 }
 
-interface Payment {
-  status: string | null;
-  paymentId: string | null;
-}
-
 export function WelcomeView({
   track,
   trackLabel,
@@ -74,13 +73,11 @@ export function WelcomeView({
   vcardHref,
   defaultBundle,
   options,
+  paymentState,
 }: Props) {
-  // Razorpay appends its result to the redirect URL
-  // (razorpay_payment_link_status, razorpay_payment_id, …), and the redirect
-  // may also pin a specific batch with ?d=<startDate> or ?b=<batchId>. We read
-  // both on the client so this works on the server deployment and the static
-  // (GitHub Pages) export alike.
-  const [payment, setPayment] = useState<Payment | null>(null);
+  // The confirmed/unconfirmed decision arrived from the server (see the page
+  // component) — this effect only pins the ?d=/?b= batch bundle and fires the
+  // analytics event, which mirrors the same server decision exactly.
   const [bundle, setBundle] = useState<BatchBundle>(defaultBundle);
 
   useEffect(() => {
@@ -93,32 +90,23 @@ export function WelcomeView({
       (b && options.find((o) => o.id === b)) || (d && options.find((o) => o.startDate === d));
     if (picked) setBundle(picked);
 
-    const status = q.get('razorpay_payment_link_status');
-    const paymentId = q.get('razorpay_payment_id');
-    setPayment({ status, paymentId });
-
-    const ok = !status || status.toLowerCase() === 'paid';
     const w = window as unknown as { gtag?: (...args: unknown[]) => void };
     if (w.gtag) {
-      w.gtag('event', ok ? 'registration_confirmed' : 'registration_unconfirmed', {
-        track,
-        status: status ?? 'none',
-        payment_id: paymentId ?? null,
-      });
+      w.gtag(
+        'event',
+        paymentState.confirmed ? 'registration_confirmed' : 'registration_unconfirmed',
+        {
+          track,
+          status: q.get('razorpay_payment_link_status') ?? 'none',
+          payment_id: paymentState.paymentId ?? null,
+        },
+      );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [track]);
 
-  // Before the effect runs (SSR + first client render) stay optimistic so the
-  // common Razorpay-redirect case doesn't flash. After mount, confirmation
-  // requires actual redirect params: status=paid, or a payment id when the
-  // link omits status. A bare /welcome/<track> visit (no params) is NOT
-  // treated as a confirmed payment — anyone can type that URL.
-  const confirmed =
-    payment === null ||
-    payment.status?.toLowerCase() === 'paid' ||
-    (!payment.status && !!payment.paymentId);
-  const paymentId = payment?.paymentId ?? null;
+  const confirmed = paymentState.confirmed;
+  const paymentId = paymentState.paymentId;
 
   const { intakeDate, whenDays, whenTime, arriveBy, venue, mapUrl, gcalUrl, icsHref } = bundle;
 

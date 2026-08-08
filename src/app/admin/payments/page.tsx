@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getSession } from '@/lib/auth';
 import { readJSON } from '@/lib/storage';
+import { requireCapability } from '@/lib/guard';
 
 // Razorpay webhook ([/api/razorpay/webhook](src/app/api/razorpay/webhook/route.ts))
 // persists every payment event here. This page surfaces them so failed /
@@ -38,6 +39,7 @@ function statusTone(status: string): string {
 }
 
 export default async function Page({ searchParams }: { searchParams: Promise<{ filter?: string }> }) {
+  await requireCapability('versions.restore');
   const session = await getSession();
   if (!session) redirect('/admin/login');
 

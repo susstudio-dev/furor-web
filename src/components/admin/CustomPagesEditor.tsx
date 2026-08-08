@@ -7,6 +7,8 @@ import { Field, Select, EditorStyles } from '@/components/admin/fields';
 import { PageIntroFields } from '@/components/admin/PageIntroFields';
 import { ImageUploader } from '@/components/admin/ImageUploader';
 import { saveSiteContent } from '@/lib/admin-save';
+import { useAutosave } from '@/lib/autosave';
+import { AutosaveBanner } from '@/components/admin/AutosaveBanner';
 
 // Pages created before the block builder existed stored their body as text-only
 // `sections`. Convert those to equivalent heading/text blocks the first time the
@@ -59,6 +61,8 @@ export function CustomPagesEditor({ initial }: { initial: SiteContent }) {
   const [c, setC] = useState<SiteContent>(() => migrateBlocks(initial));
   const [dirty, setDirty] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  // Subtree only - see AboutPageEditor.
+  const autosave = useAutosave('customPages', c.customPages, dirty);
 
   const pages = c.customPages;
 
@@ -108,7 +112,9 @@ export function CustomPagesEditor({ initial }: { initial: SiteContent }) {
     const i = pages.findIndex((p) => p.id === id);
     const j = i + dir;
     if (i < 0 || j < 0 || j >= pages.length) return;
-    const next = pages.slice();
+    // Shallow copy + in-place renumbering would mutate the loaded document's
+    // own objects, so a diff against that base would drop the reorder.
+    const next = pages.map((p) => ({ ...p }));
     [next[i], next[j]] = [next[j], next[i]];
     next.forEach((p, idx) => (p.displayOrder = idx));
     patchList(next);
@@ -126,6 +132,7 @@ export function CustomPagesEditor({ initial }: { initial: SiteContent }) {
     await saveSiteContent(cleaned);
     setC(cleaned);
     setDirty(false);
+    autosave.clear();
   }
 
   // Slug collision check — surfaces in the row.
@@ -138,6 +145,20 @@ export function CustomPagesEditor({ initial }: { initial: SiteContent }) {
   return (
     <>
       <EditorStyles />
+      {autosave.stash ? (
+        <AutosaveBanner
+          savedAt={autosave.stash.savedAt}
+          matchesVersion={autosave.stashMatchesVersion}
+          onRestore={() => {
+            const customPages = autosave.stash!.value;
+            setC((prev) => ({ ...prev, customPages }));
+            setDirty(true);
+            autosave.clear();
+          }}
+          onDiscard={autosave.clear}
+        />
+      ) : null}
+
       <div className="mt-8 grid gap-4">
         <div className="flex items-center justify-between">
           <p className="text-sm text-cream/70">

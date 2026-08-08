@@ -1,13 +1,17 @@
 import Link from 'next/link';
-import { getContent } from '@/lib/content';
+import { getPublicContent } from '@/lib/content';
+import { fitDescription } from '@/lib/seo';
 
 export async function generateMetadata() {
-  const c = await getContent();
+  const c = await getPublicContent();
   return {
     title: 'Stories',
-    description:
-      c.pages.stories.intro.lead ||
-      'Stories from the Furor floor — festivals, showcases and student journeys.',
+    description: fitDescription(
+      c.pages.stories.intro.lead,
+      // Deliberately does not repeat the lead's words — appending an echo of
+      // it produced "festivals, socials, bootcamps" twice in one snippet.
+      'Read what a night on the Furor floor actually looks like.',
+    ),
     alternates: { canonical: '/stories' },
   };
 }
@@ -16,7 +20,7 @@ export async function generateMetadata() {
 export const dynamic = 'force-dynamic';
 
 export default async function StoriesIndex() {
-  const content = await getContent();
+  const content = await getPublicContent();
   const intro = content.pages.stories.intro;
   const stories = content.stories.slice().sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
   return (
@@ -46,7 +50,10 @@ export default async function StoriesIndex() {
                 <p className="text-cream/70 text-xs uppercase tracking-widest">
                   {new Date(s.publishedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
                 </p>
-                <p className="mt-2 display text-xl font-bold group-hover:text-ember-400 transition">{s.title}</p>
+                {/* An h2, not a p: the story title is this card's heading, and
+                    rendering it as body text left the whole listing with no h2
+                    at all. Classes are unchanged, so nothing moves visually. */}
+                <h2 className="mt-2 display text-xl font-bold group-hover:text-ember-400 transition">{s.title}</h2>
                 {s.excerpt ? <p className="mt-2 text-cream/70 text-sm leading-relaxed">{s.excerpt}</p> : null}
                 <p className="mt-auto pt-4 text-ember-400 text-sm">Read →</p>
               </Link>

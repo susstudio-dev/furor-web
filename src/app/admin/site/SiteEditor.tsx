@@ -158,12 +158,12 @@ export function SiteEditor({ initial }: { initial: SiteContent }) {
               </Field>
               <Field
                 label="Primary CTA link"
-                hint="Internal path like /batches?days=Weekend. Leave blank to make WhatsApp the primary action."
+                hint="Internal path like /batches or /dance-styles/salsa. Avoid ?query= links — search engines treat them as separate, duplicate URLs. Leave blank to make WhatsApp the primary action."
               >
                 <input
                   value={c.trial.ctaHref}
                   onChange={(e) => patchTrial({ ctaHref: e.target.value })}
-                  placeholder="/batches?days=Weekend"
+                  placeholder="/batches"
                   className="input"
                 />
               </Field>
