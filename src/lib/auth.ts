@@ -160,7 +160,7 @@ function breakGlassPrincipal(email: string): AuthenticatedPrincipal {
 export async function verifyCredentials(
   email: string,
   password: string,
-): Promise<AuthenticatedPrincipal | null> {
+): Promise<User | null> {
   // Trim the typed email too — mobile keyboards append a space on
   // autocomplete. (The password is NOT trimmed: whitespace there is legal.)
   const lower = email.trim().toLowerCase();
@@ -171,12 +171,12 @@ export async function verifyCredentials(
     const hash = (process.env.ADMIN_OWNER_PASSWORD_HASH || '').trim();
     if (hash) {
       const ok = await verifyAgainstStoredHash(password, hash);
-      return ok ? breakGlassPrincipal(ownerEmail) : null;
+      return ok ? { email: ownerEmail, passwordHash: '', role: 'owner', createdAt: '' } : null;
     }
     const plain = (process.env.ADMIN_OWNER_INITIAL_PASSWORD || '').trim();
     if (plain) {
       const ok = await timingSafeStringEqual(password, plain);
-      return ok ? breakGlassPrincipal(ownerEmail) : null;
+      return ok ? { email: ownerEmail, passwordHash: '', role: 'owner', createdAt: '' } : null;
     }
     return null;
   }
@@ -271,4 +271,32 @@ export async function getSession(): Promise<SessionClaims | null> {
   } catch {
     return null;
   }
+}
+
+export async function listUsers(): Promise<User[]> {
+  if (await isRemoteStorage()) {
+    const ownerEmail = envOwnerEmail();
+    return ownerEmail
+      ? [{ email: ownerEmail, passwordHash: '', role: 'owner', createdAt: '' }]
+      : [];
+  }
+  const { users } = await readUsers();
+  return users;
+}
+
+export async function inviteEditor(email: string, password: string): Promise<void> {
+  if (await isRemoteStorage()) {
+    throw new Error('In production the owner is managed via environment secrets.');
+  }
+  const file = await readUsers();
+  const lower = email.toLowerCase();
+  if (file.users.some((u) => u.email === lower)) throw new Error('User already exists');
+  const bcrypt = (await import('bcryptjs')).default;
+  file.users.push({
+    email: lower,
+    passwordHash: await bcrypt.hash(password, 10),
+    role: 'editor',
+    createdAt: new Date().toISOString(),
+  });
+  await writeUsers(file);
 }
