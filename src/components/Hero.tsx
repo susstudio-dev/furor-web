@@ -127,9 +127,11 @@ export function Hero({ content }: { content: SiteContent }) {
               label="or chat first on WhatsApp"
             />
           </div>
+          {/* No refund promise here: the trial fee is non-refundable
+              (owner, 2026-08-08). The reassurance is the small commitment
+              itself — one class, not a package — not money back. */}
           <p className="mt-2.5 text-sm text-cream/65">
-            One real class. No partner needed.
-            {trialFrom != null ? ` Not for you? Your ${formatInr(trialFrom)} back.` : ' Then you decide.'}
+            One real class. No partner needed. Then you decide.
           </p>
         </div>
         {/* No scroll cue here: the QuickEnroll card overlaps this space and its

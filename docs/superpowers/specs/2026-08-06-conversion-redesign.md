@@ -116,11 +116,11 @@ material — reducing it is separate work worth scheduling).
 1. **Does the ₹500 count toward the program fee?** **No** (owner-confirmed). The credit line
    is NOT shipped, and no shipped copy claims it — cards say "decide after class one", which
    stays true either way.
-2. **Refund experiment**: **Yes** (owner-confirmed). Shipped, amount derived from batch data:
-   the hero click-trigger ("Not for you? Your ₹500 back.") and the board's count-8
-   ("Nothing to lose. If the first class isn't for you, your ₹500 comes back — just tell us
-   on WhatsApp."). Deliberately not repeated on every /batches row — the promise lives at the
-   two decision points the conversion test measured. The studio must honor it on request.
+2. **Refund experiment**: ~~Yes~~ **REVERSED 2026-08-08** — the owner confirmed the paid trial
+   is **non-refundable**. Both refund lines are removed from the code: the hero click-trigger
+   now ends "Then you decide.", and the board's count-8 is "One class, not a course." (the
+   commitment is small, not reversible). No shipped surface may promise the token back, and
+   the Terms "Refunds" section states the trial fee is non-refundable.
 3. The Intermediate Salsa "booking link" is a Google Form, not a payment page — replace with
    a real Razorpay link or expect its button to behave differently from its label.
 4. PRODUCT.md still says "no payments on the site" — out of date since Razorpay landed;

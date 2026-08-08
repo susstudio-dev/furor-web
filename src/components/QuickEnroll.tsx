@@ -28,9 +28,11 @@ function pickBoard(content: SiteContent): Batch[] {
   return sorted.slice(0, 4);
 }
 
-// Items 5-7 are backed by live site copy (FAQ / hero); item 8's refund promise
-// was confirmed by the owner on 2026-08-06 — the truth constraint on this
-// codebase is absolute, so none of these lines ship unverified.
+// Items 5-7 are backed by live site copy (FAQ / hero) — the truth constraint on
+// this codebase is absolute, so none of these lines ship unverified. Item 8 used
+// to promise the trial fee back; the owner corrected that on 2026-08-08 — the
+// paid trial is NON-REFUNDABLE, so the risk-reversal is now the size of the
+// commitment (one class, no package), never money back.
 function countIn(trialPrice: string | null): { count: string; title: string; body: string }[] {
   return [
     { count: '5', title: 'Come alone.', body: 'No partner needed — partners rotate all class, so you’ll dance with everyone.' },
@@ -38,10 +40,10 @@ function countIn(trialPrice: string | null): { count: string; title: string; bod
     { count: '7', title: 'Wear anything.', body: 'Anything comfortable you can move in — fresh socks or smooth soles beat fancy shoes.' },
     {
       count: '8',
-      title: 'Nothing to lose.',
+      title: 'One class, not a course.',
       body: trialPrice
-        ? `If the first class isn’t for you, your ${trialPrice} comes back — just tell us on WhatsApp.`
-        : 'If the first class isn’t for you, your token comes back — just tell us on WhatsApp.',
+        ? `${trialPrice} books a single class — no package, no sign-up. You decide on the full program after.`
+        : 'The token books a single class — no package, no sign-up. You decide on the full program after.',
     },
   ];
 }
@@ -53,7 +55,7 @@ export function QuickEnroll({
   content: SiteContent;
   /** Cheapest trial across ALL visible batches — computed once in the page so
    *  the hero, the sticky bar and this board can never print two different
-   *  refund amounts on one screen. */
+   *  trial prices on one screen. */
   trialFrom: number | null;
 }) {
   const batches = pickBoard(content);
