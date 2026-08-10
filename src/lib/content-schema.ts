@@ -525,6 +525,122 @@ const WelcomeSchema = z
   })
   .default({});
 
+// ─── Cross-cutting labels ──────────────────────────────────────────────────
+// The 56 strings that recur across many components and have no natural owning
+// section: CTA verbs, nav items, badge labels, empty states, screen-reader
+// text. Section-specific headings and body copy do NOT live here — they go on
+// their own page/section object, following the ctaLabel / whatsappLabel
+// convention already used above (TrialSchema).
+//
+// FLAT on purpose. Every public request runs a full SiteContentSchema.parse
+// under the Workers free-plan 10ms CPU cap, and Zod cost scales with node
+// count: 56 string leaves in one object is linear growth; the same 56 split
+// across nested groups is not. Flat also lets /admin/labels render as one
+// searchable grid instead of a stack of accordions.
+//
+// Every default is the exact literal shipping today, with two documented
+// exceptions. (1) The four ariaSocial* labels have no render site yet — they
+// exist so the header/footer social icons consume an editable string instead
+// of hardcoding a fresh one. (2) welcomeParking, welcomeReachUs and
+// welcomeCallPhone have no render site yet either: the welcome page has no
+// parking line, no "Reach us" block and no call link today. Plan 3 adds those
+// three rows, so the defaults here are the literals PLAN 3 RENDERS, not
+// literals lifted from the current file. The other two welcome keys are lifted
+// from the current file (WelcomeView.tsx:254 and :265).
+//
+// A REQUIRED field here would fail validation on read and serve the bundled
+// seed site-wide, so defaults are what make this a no-migration change.
+export const LabelsSchema = z
+  .object({
+    // — Calls to action —
+    ctaChatWhatsapp: z.string().default('Chat on WhatsApp'),
+    ctaEnquireWhatsapp: z.string().default('Enquire on WhatsApp'),
+    ctaDmInstagram: z.string().default('DM on Instagram'),
+    ctaBookFoundation: z.string().default('Book my first class'),
+    ctaBookTrial: z.string().default('Book my trial class'),
+    ctaChatFirst: z.string().default('or chat first'),
+    ctaChatFirstWhatsapp: z.string().default('or chat first on WhatsApp'),
+    ctaChatOnWhatsapp: z.string().default('or chat on WhatsApp'),
+    ctaEnquire: z.string().default('Enquire'),
+    ctaNotifyWhatsapp: z.string().default('Notify me on WhatsApp'),
+    ctaGrabSeatWhatsapp: z.string().default('Grab a seat on WhatsApp'),
+    ctaTalkToUs: z.string().default('Talk to us'),
+    ctaSeeAllBatches: z.string().default('See all batches'),
+    ctaAllStyles: z.string().default('All styles'),
+    ctaExplore: z.string().default('Explore →'),
+    ctaGetDirections: z.string().default('Get directions'),
+    ctaCall: z.string().default('Call'),
+    ctaWhatsapp: z.string().default('WhatsApp'),
+
+    // — Navigation —
+    navHome: z.string().default('Home'),
+    navAbout: z.string().default('About'),
+    navDanceStyles: z.string().default('Dance Styles'),
+    navInstructors: z.string().default('Instructors'),
+    navBatches: z.string().default('Batches & Pricing'),
+    navBlog: z.string().default('Blog'),
+    navFaqs: z.string().default('FAQs'),
+    navContact: z.string().default('Contact'),
+    navExplore: z.string().default('Explore'),
+    navPrivacy: z.string().default('Privacy'),
+    navTerms: z.string().default('Terms'),
+
+    // — Empty states —
+    emptyNoBatches: z
+      .string()
+      .default(
+        "No batches match these filters yet. Chat with us — we'll tell you when one opens.",
+      ),
+    emptyNextBatchSoon: z.string().default('Next {style} batch coming soon.'),
+    emptyNewBatchesTitle: z.string().default('New batches drop every week.'),
+    emptyNewBatchesBody: z
+      .string()
+      .default("Tell us your style — we'll hold you a seat in the next one."),
+    emptyNoFinderBatch: z
+      .string()
+      .default(
+        'No upcoming {track} beginner batch listed yet — chat with us and we’ll tell you when the next one starts.',
+      ),
+
+    // — Badges. These are DISPLAY labels for the status enum; the enum VALUES
+    //   are live URL state in BatchesBrowser and never change.
+    badgeFillingFast: z.string().default('Filling fast'),
+    badgeOpen: z.string().default('Open'),
+    badgeClosed: z.string().default('Closed'),
+    badgeBookingOpen: z.string().default('Booking open'),
+    badgeFirstTimersWelcome: z.string().default('first-timers welcome'),
+    badgeFoundationStartHere: z.string().default('Foundation · start here'),
+
+    // — Screen-reader / icon-only controls —
+    ariaHome: z.string().default('Furor — Dance Hyderabad home'),
+    ariaPrimaryNav: z.string().default('Primary'),
+    ariaToggleMenu: z.string().default('Toggle menu'),
+    ariaMenu: z.string().default('Menu'),
+    ariaOpenTalkToUs: z.string().default('Open talk to us'),
+    ariaCloseTalkToUs: z.string().default('Close talk to us'),
+    ariaClose: z.string().default('Close'),
+    // No render site yet. These four exist so the header and footer social
+    // icons have an editable label to consume the day they ship.
+    ariaSocialInstagram: z.string().default('Furor on Instagram'),
+    ariaSocialFacebook: z.string().default('Furor on Facebook'),
+    ariaSocialYoutube: z.string().default('Furor on YouTube'),
+    ariaSocialWhatsapp: z.string().default('Furor on WhatsApp'),
+
+    // — Post-payment (the /welcome/[track] page) —
+    //   welcomeWhereHeading and welcomeOpenMap are the literals shipping in
+    //   WelcomeView.tsx today (:254 and :265). The other three have no render
+    //   site yet — Plan 3 adds the parking line, the "Reach us" block and the
+    //   call link, and these are the exact strings it renders. Do NOT rename
+    //   welcomeOpenMap to welcomeGetDirections: the map link reads "Open map →"
+    //   today, and a "Get directions →" default would rewrite live copy.
+    welcomeWhereHeading: z.string().default('Where'),
+    welcomeOpenMap: z.string().default('Open map →'),
+    welcomeParking: z.string().default('Parking: {notes}'),
+    welcomeReachUs: z.string().default('Reach us'),
+    welcomeCallPhone: z.string().default('Call {phone}'),
+  })
+  .default({});
+
 export const SiteContentSchema = z.object({
   version: z.literal(1),
   site: SiteSettingsSchema,
@@ -583,3 +699,4 @@ export type CustomPage = z.infer<typeof CustomPageSchema>;
 export type CustomBlock = z.infer<typeof CustomBlockSchema>;
 export type Welcome = z.infer<typeof WelcomeSchema>;
 export type WelcomeTrack = z.infer<typeof WelcomeTrackSchema>;
+export type Labels = z.infer<typeof LabelsSchema>;
