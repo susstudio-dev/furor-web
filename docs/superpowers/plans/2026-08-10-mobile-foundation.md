@@ -10,6 +10,10 @@
 
 **Execution order:** Plan 2 of 4. Runs after `docs/superpowers/plans/2026-08-10-labels-foundation.md` and before `docs/superpowers/plans/2026-08-10-post-payment-batches.md`. Labels must land first because this plan rewrites the header, the footer and the hero poster block — the three surfaces that would otherwise ship brand-new hardcoded `aria-label`s and strand `hero.posterAlt`; running second means every string this plan touches is already editable and this plan only has to **consume** `label()`.
 
+> **⚠️ BEFORE RUNNING THIS PLAN — resolve the seed drift.** Found while executing Plan 1 (2026-08-10): the gitignored `data/site-content.json` has drifted from the tracked seed via manual `/admin` QA edits made Aug 7–10 (studio reorder, a testimonial `authorId`, a headline period — visible in `data/audit.json`), so `npm run sync-seed -- --check` fails today. **This plan runs `npm run sync-seed`, which would bake that drift into the shipped seed.** Decide deliberately what to keep first, or those QA edits ship as product defaults.
+>
+> Also note: `data/site-content.json` is **gitignored** (`.gitignore:8-9`). It can never appear in a commit — a `git add data/site-content.json` step silently no-ops. `src/data/site-content.seed.json` is the tracked artifact and the fallback the app serves on a fresh clone or in CI.
+
 ## Global Constraints
 
 - **R1 — Every edit is anchored on unique TEXT, never on a line number.** Four plans edit `Hero.tsx`, `Header.tsx`, `Footer.tsx`, `src/app/page.tsx` and the seed. Line numbers cited here are **orientation only** ("currently around :89"); the instruction is always "find this exact string". If an anchor string is not found verbatim, STOP and report — do not guess a location.
