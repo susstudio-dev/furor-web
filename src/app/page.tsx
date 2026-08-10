@@ -34,6 +34,7 @@ import { TrialBanner } from '@/components/TrialBanner';
 import { StyleFinder } from '@/components/StyleFinder';
 import { EnquiryCTA } from '@/components/EnquiryCTA';
 import { label } from '@/lib/labels';
+import { bookLabel } from '@/lib/book-label';
 import { TonightTile } from '@/components/TonightTile';
 import { RhythmSignature } from '@/components/RhythmSignature';
 import { Img } from '@/components/Img';
@@ -56,7 +57,9 @@ export default async function HomePage() {
   const h = content.pages.home;
   const bookable = visibleBatches(content);
   const trialFrom = bookable.length ? Math.min(...bookable.map((b) => b.reservationInr)) : null;
-  const trialLabel = `Book my first class${trialFrom != null ? ` · ${formatInr(trialFrom)}` : ''}`;
+  const trialLabel = `${bookLabel('Foundation', content.labels)}${
+    trialFrom != null ? ` · ${formatInr(trialFrom)}` : ''
+  }`;
 
   return (
     <>

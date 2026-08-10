@@ -7,6 +7,7 @@ import { compareByLevel } from '@/lib/batch-order';
 import { EnquiryCTA } from './EnquiryCTA';
 import { BatchActions } from './BatchActions';
 import { type Labels } from '@/lib/labels';
+import { statusLabel } from '@/lib/book-label';
 
 export interface BatchRow {
   batch: Batch;
@@ -222,7 +223,7 @@ export function BatchesBrowser({
 
   const activeChips: { k: FacetKey; v: string; label: string }[] = [];
   (Object.keys(sel) as FacetKey[]).forEach((k) =>
-    sel[k].forEach((v) => activeChips.push({ k, v, label: labelFor(k, v, styles, studios) })),
+    sel[k].forEach((v) => activeChips.push({ k, v, label: labelFor(k, v, styles, studios, labels) })),
   );
   const anyActive = activeChips.length > 0;
 
@@ -248,7 +249,7 @@ export function BatchesBrowser({
     { key: 'days', label: 'Days', options: present(['Weekend', 'Weekday'], (e) => e.days).map((v) => ({ v, label: v === 'Weekend' ? 'Weekends' : 'Weekdays' })) },
     { key: 'starting', label: 'Starting', options: present(STARTING_ORDER, (e) => e.starting).map((v) => ({ v, label: v })) },
     { key: 'price', label: 'Price', options: priceVals.map((v) => ({ v, label: formatInr(Number(v)) })) },
-    { key: 'status', label: 'Availability', options: present(['Filling Fast', 'Open'], (e) => e.status).map((v) => ({ v, label: v === 'Filling Fast' ? 'Filling fast' : 'Open' })) },
+    { key: 'status', label: 'Availability', options: present(['Filling Fast', 'Open'], (e) => e.status).map((v) => ({ v, label: statusLabel(v, labels) })) },
   ];
 
   const presets: { label: string; p: Partial<Record<FacetKey, string[]>> }[] = [
@@ -256,7 +257,7 @@ export function BatchesBrowser({
     { label: '🗓️ Weekend classes', p: { days: ['Weekend'] } },
     { label: '🌙 Evening classes', p: { tod: ['Evening'] } },
     { label: '⚡ Starting soon', p: { starting: ['This month', 'Next 30 days'] } },
-    { label: '🔥 Filling fast', p: { status: ['Filling Fast'] } },
+    { label: `🔥 ${statusLabel('Filling Fast', labels)}`, p: { status: ['Filling Fast'] } },
   ];
 
   return (
@@ -429,15 +430,17 @@ export function BatchesBrowser({
                   </div>
                   <div className="lg:col-span-2 flex flex-wrap gap-2 justify-start lg:justify-end items-center">
                     {b.status === 'Filling Fast' ? (
-                      <span className="pill bg-gold-500/15 text-gold-400">Filling fast</span>
+                      <span className="pill bg-gold-500/15 text-gold-400">
+                        {statusLabel(b.status, labels)}
+                      </span>
                     ) : null}
                     <BatchActions
                       batch={b}
                       style={{ slug: row.styleSlugs[0], name: row.styleName }}
                       branch={{ slug: row.branchSlug, name: row.branchName }}
                       whatsappNumber={whatsappNumber}
-                      primaryLabelWhenNoLink="Enquire"
                       labels={labels}
+                      primaryLabelWhenNoLink="Enquire"
                     />
                   </div>
                 </div>
@@ -455,11 +458,12 @@ function labelFor(
   v: string,
   styles: { slug: string; name: string }[],
   studios: { slug: string; name: string }[],
+  labels: Labels,
 ): string {
   if (k === 'style') return styles.find((s) => s.slug === v)?.name ?? v;
   if (k === 'branch') return studios.find((s) => s.slug === v)?.name ?? v;
   if (k === 'price') return formatInr(Number(v));
   if (k === 'days') return v === 'Weekend' ? 'Weekends' : 'Weekdays';
-  if (k === 'status') return v === 'Filling Fast' ? 'Filling fast' : v;
+  if (k === 'status') return statusLabel(v, labels);
   return v;
 }

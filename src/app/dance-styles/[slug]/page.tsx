@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { getPublicContent, batchesForStyle, formatBatchDate, formatInr, styleBySlug, batchStyleLabel } from '@/lib/content';
 import { EnquiryCTA } from '@/components/EnquiryCTA';
 import { BatchActions } from '@/components/BatchActions';
+import { statusLabel } from '@/lib/book-label';
 import { JsonLd } from '@/components/JsonLd';
 import { Img } from '@/components/Img';
 import { breadcrumbLd, courseLd, fitDescription, fitTitle } from '@/lib/seo';
@@ -155,7 +156,7 @@ export default async function StylePage({ params }: { params: Promise<{ slug: st
                     <p className="text-cream/70 text-sm">
                       {b.daysOfWeek.join('–')} · {b.time} · starts {formatBatchDate(b.startDate)}
                     </p>
-                    <p className="text-cream/70 text-sm">{formatInr(b.priceInr)} {b.status === 'Filling Fast' ? <span className="pill ml-2 bg-gold-500/15 text-gold-400">Filling fast</span> : null}</p>
+                    <p className="text-cream/70 text-sm">{formatInr(b.priceInr)} {b.status === 'Filling Fast' ? <span className="pill ml-2 bg-gold-500/15 text-gold-400">{statusLabel(b.status, content.labels)}</span> : null}</p>
                   </div>
                   <div className="flex gap-2 flex-wrap items-center">
                     <BatchActions

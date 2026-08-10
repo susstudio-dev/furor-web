@@ -7,6 +7,8 @@ import { formatInr } from '@/lib/format';
 import { EnquiryCTA } from './EnquiryCTA';
 import { Img } from './Img';
 import { CinematicHeadline } from './CinematicHeadline';
+import { bookLabel } from '@/lib/book-label';
+import { label } from '@/lib/labels';
 
 export function Hero({ content }: { content: SiteContent }) {
   const [allowVideo, setAllowVideo] = useState(false);
@@ -118,14 +120,15 @@ export function Hero({ content }: { content: SiteContent }) {
         <div className="mt-8 hero-fade" style={{ animationDelay: '1.15s' }}>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
             <a href="#start-this-week" className="btn-primary magnetic downbeat">
-              Book my first class{trialFrom != null ? ` · ${formatInr(trialFrom)}` : ''}
+              {bookLabel('Foundation', content.labels)}
+              {trialFrom != null ? ` · ${formatInr(trialFrom)}` : ''}
             </a>
             <EnquiryCTA
               whatsappNumber={content.site.whatsappNumber}
               ctx={{ source: 'primary' }}
               variant="link"
-              label="or chat first on WhatsApp"
               labels={content.labels}
+              label={label(content.labels, 'ctaChatFirstWhatsapp')}
             />
           </div>
           {/* No refund promise here: the trial fee is non-refundable

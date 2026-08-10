@@ -2,7 +2,8 @@ import type { Batch } from '@/lib/content-schema';
 import { formatInr } from '@/lib/format';
 import { BookTrialLink } from './BookTrialLink';
 import { EnquiryCTA } from './EnquiryCTA';
-import type { Labels } from '@/lib/labels';
+import { label, type Labels } from '@/lib/labels';
+import { bookLabel } from '@/lib/book-label';
 
 // One source of truth for a batch row's actions — on /batches, on
 // /dance-styles/[slug], and on the home Next-batches strip. The paid trial is
@@ -16,8 +17,8 @@ export function BatchActions({
   style,
   branch,
   whatsappNumber,
-  primaryLabelWhenNoLink = 'Enquire on WhatsApp',
-  whatsappLabelWhenLink = 'or chat first',
+  primaryLabelWhenNoLink,
+  whatsappLabelWhenLink,
   labels,
 }: {
   batch: Batch;
@@ -34,7 +35,11 @@ export function BatchActions({
     branch,
     batch,
   };
-  const bookLabel = batch.level === 'Foundation' ? 'Book my first class' : 'Book my trial class';
+  // The former hardcoded defaults are now the label document's defaults, so an
+  // edit in /admin/labels reaches every batch row on the site.
+  const book = bookLabel(batch.level, labels);
+  const noLinkLabel = primaryLabelWhenNoLink ?? label(labels, 'ctaEnquireWhatsapp');
+  const chatLabel = whatsappLabelWhenLink ?? label(labels, 'ctaChatFirst');
 
   if (batch.razorpayLink) {
     return (
@@ -47,13 +52,13 @@ export function BatchActions({
           source="batch_row"
           className="inline-flex min-h-[44px] items-center gap-2 rounded-full bg-ember-600 text-on-ember px-4 py-2 text-sm font-semibold hover:bg-ember-700 transition"
         >
-          {bookLabel} · {formatInr(batch.reservationInr)}
+          {book} · {formatInr(batch.reservationInr)}
         </BookTrialLink>
         <EnquiryCTA
           whatsappNumber={whatsappNumber}
           ctx={ctx}
           variant="link"
-          label={whatsappLabelWhenLink}
+          label={chatLabel}
           labels={labels}
         />
       </div>
@@ -65,7 +70,7 @@ export function BatchActions({
       whatsappNumber={whatsappNumber}
       ctx={ctx}
       variant="batch-row"
-      label={primaryLabelWhenNoLink}
+      label={noLinkLabel}
       labels={labels}
     />
   );

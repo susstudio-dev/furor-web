@@ -5,6 +5,7 @@ import { compareByLevel } from '@/lib/batch-order';
 import { BookTrialLink } from './BookTrialLink';
 import { EnquiryCTA } from './EnquiryCTA';
 import { label } from '@/lib/labels';
+import { bookLabel, statusLabel } from '@/lib/book-label';
 
 // The booking board — the conversion surface, styled like the lineup board
 // outside a club, overlapping the hero so its lit edge peeks above the fold.
@@ -126,7 +127,7 @@ export function QuickEnroll({
                   // the beginner's default the way a follow spot lands on a
                   // dancer.
                   const spotlit = i === 0 && foundation;
-                  const bookLabel = foundation ? 'Book my first class' : 'Book my trial class';
+                  const book = bookLabel(b.level, content.labels);
                   return (
                     <div
                       key={b.id}
@@ -163,7 +164,7 @@ export function QuickEnroll({
                             filling ? 'bg-ember-500/20 text-ember-400' : 'bg-gold-500/15 text-gold-400'
                           }`}
                         >
-                          {b.status}
+                          {statusLabel(b.status, content.labels)}
                         </span>
                       </div>
 
@@ -214,7 +215,7 @@ export function QuickEnroll({
                               source="quick_enroll"
                               className="magnetic inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-full bg-ember-600 px-4 py-2 text-sm font-semibold text-on-ember transition hover:bg-ember-700"
                             >
-                              {bookLabel} · {formatInr(b.reservationInr)}
+                              {book} · {formatInr(b.reservationInr)}
                             </BookTrialLink>
                             <div className="mt-1 text-center">
                               <EnquiryCTA
@@ -227,7 +228,7 @@ export function QuickEnroll({
                                 }}
                                 variant="link"
                                 labels={content.labels}
-                                label="or chat first"
+                                label={label(content.labels, 'ctaChatFirst')}
                                 className="!min-h-[36px] text-xs"
                               />
                             </div>
@@ -243,7 +244,7 @@ export function QuickEnroll({
                             }}
                             variant="batch-row"
                             labels={content.labels}
-                            label={`${bookLabel} on WhatsApp`}
+                            label={`${book} on WhatsApp`}
                             className="w-full justify-center magnetic"
                           />
                         )}
