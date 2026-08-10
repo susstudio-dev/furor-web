@@ -428,9 +428,12 @@ currently ships **1,454,235 bytes of images**.
 `images: { unoptimized: true }` because there is no optimizer on the Workers free plan.
 Verified in the installed Next 15.5.22 source — `generateImgAttrs` in
 `next/dist/shared/lib/get-img-props.js:96-103` returns early when `unoptimized` is set,
-discarding `srcSet` **and** `sizes` before either reaches the element. **All ten `sizes=`
-props in this codebase are dead code.** A 375px phone downloads the identical 2000×1335 file
-a 4K desktop does.
+discarding `srcSet` **and** `sizes` before either reaches the element. **Every `sizes` prop in
+this codebase is dead code** — 10 occurrences: 7 on public surfaces (`Hero.tsx:45`,
+`PhotoCarousel.tsx:39`, `page.tsx:127`, `page.tsx:406`, `dance-styles/[slug]/page.tsx:69`,
+`dance-styles/page.tsx:60`, `instructors/page.tsx:73`), 2 in the admin `ImageUploader`, and 1
+pass-through prop in `Img.tsx:47`. A 375px phone downloads the identical 2000×1335 file a 4K
+desktop does.
 
 **2. The photos are ~5–12× oversized for every slot they appear in.** All ten
 `public/photos/*.jpg` are the same 2000×1335 (2.7 MP) landscape master. Hero: 5.3× linear
@@ -475,7 +478,7 @@ contributes nothing but `decoding="async"` under `unoptimized`, the LCP element 
 `<picture>` with AVIF and WebP `<source>`s (which must precede the `<img>`) plus a JPEG
 fallback, `fetchpriority="high"`, and a hand-written matching `<link rel="preload">` — a bare
 AVIF preload would be wasted on a browser that picks WebP. Also removes the competing
-`priority` on `BrandMark.tsx:28`. Delete the ten dead `sizes` props.
+`priority` on `BrandMark.tsx:28`. Delete the dead `sizes` props (§7.1 lists all 10).
 
 **M3 — Header, per §6.1.** Must land before any social icon ships, or the primary surface
 scrolls sideways.
