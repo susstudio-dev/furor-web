@@ -1,16 +1,22 @@
-import { LabelsSchema } from './content-schema';
+import { LABEL_DEFAULT_LITERALS } from './label-defaults';
 import type { Labels } from './content-schema';
 
 export type { Labels };
 
 /**
- * The literals shipping today, derived from the schema rather than restated.
- *
- * A hand-maintained second copy of 56 strings is a drift bug waiting to
- * happen. Parsing an empty object through LabelsSchema yields exactly the
- * defaults, once per isolate at module load.
+ * The literals shipping today. Sourced from ./label-defaults, NOT from
+ * `LabelsSchema.parse({})` — this file is value-imported by public
+ * 'use client' components (EnquiryCTA, FloatingTalkToUs), and content-schema.ts
+ * value-imports zod. A hand-maintained second copy of 56 strings would be a
+ * drift bug waiting to happen, so this isn't a restatement: LabelsSchema's own
+ * `.default(...)` values are pulled from the exact same ./label-defaults
+ * object, so the two can never diverge. Only the `Labels` *type* is imported
+ * from content-schema.ts here (erased at compile time — types never reach the
+ * client bundle); no value from that module, and therefore no zod, is ever
+ * imported by this file. See content-schema.ts's comment above LabelsSchema
+ * for the full chain this avoids.
  */
-export const LABEL_DEFAULTS: Labels = LabelsSchema.parse({});
+export const LABEL_DEFAULTS: Labels = LABEL_DEFAULT_LITERALS;
 
 export type LabelKey = keyof typeof LABEL_DEFAULTS;
 

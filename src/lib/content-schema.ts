@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { LABEL_DEFAULT_LITERALS as L } from './label-defaults';
 
 // zod's .url() only checks `new URL()` parseability, so javascript:, data: and
 // vbscript: URIs pass it — and several of these fields are rendered as raw
@@ -550,81 +551,82 @@ const WelcomeSchema = z
 //
 // A REQUIRED field here would fail validation on read and serve the bundled
 // seed site-wide, so defaults are what make this a no-migration change.
+//
+// The literal values below (imported as `L`) live in ./label-defaults, NOT
+// inline, and that split is load-bearing, not style: labels.ts's exported
+// LABEL_DEFAULTS is value-imported by public 'use client' components
+// (EnquiryCTA, FloatingTalkToUs — the latter mounted in the root layout, so
+// on every route), and label-defaults.ts has zero imports, in particular no
+// zod. If these defaults were inlined here instead, labels.ts would have to
+// value-import THIS module to read them, and this module value-imports zod —
+// dragging zod and the rest of this 700+ line schema into the client bundle
+// on every route. Keep it that way: never import zod, or anything that
+// imports zod, into label-defaults.ts.
 export const LabelsSchema = z
   .object({
     // — Calls to action —
-    ctaChatWhatsapp: z.string().default('Chat on WhatsApp'),
-    ctaEnquireWhatsapp: z.string().default('Enquire on WhatsApp'),
-    ctaDmInstagram: z.string().default('DM on Instagram'),
-    ctaBookFoundation: z.string().default('Book my first class'),
-    ctaBookTrial: z.string().default('Book my trial class'),
-    ctaChatFirst: z.string().default('or chat first'),
-    ctaChatFirstWhatsapp: z.string().default('or chat first on WhatsApp'),
-    ctaChatOnWhatsapp: z.string().default('or chat on WhatsApp'),
-    ctaEnquire: z.string().default('Enquire'),
-    ctaNotifyWhatsapp: z.string().default('Notify me on WhatsApp'),
-    ctaGrabSeatWhatsapp: z.string().default('Grab a seat on WhatsApp'),
-    ctaTalkToUs: z.string().default('Talk to us'),
-    ctaSeeAllBatches: z.string().default('See all batches'),
-    ctaAllStyles: z.string().default('All styles'),
-    ctaExplore: z.string().default('Explore →'),
-    ctaGetDirections: z.string().default('Get directions'),
-    ctaCall: z.string().default('Call'),
-    ctaWhatsapp: z.string().default('WhatsApp'),
+    ctaChatWhatsapp: z.string().default(L.ctaChatWhatsapp),
+    ctaEnquireWhatsapp: z.string().default(L.ctaEnquireWhatsapp),
+    ctaDmInstagram: z.string().default(L.ctaDmInstagram),
+    ctaBookFoundation: z.string().default(L.ctaBookFoundation),
+    ctaBookTrial: z.string().default(L.ctaBookTrial),
+    ctaChatFirst: z.string().default(L.ctaChatFirst),
+    ctaChatFirstWhatsapp: z.string().default(L.ctaChatFirstWhatsapp),
+    ctaChatOnWhatsapp: z.string().default(L.ctaChatOnWhatsapp),
+    ctaEnquire: z.string().default(L.ctaEnquire),
+    ctaNotifyWhatsapp: z.string().default(L.ctaNotifyWhatsapp),
+    ctaGrabSeatWhatsapp: z.string().default(L.ctaGrabSeatWhatsapp),
+    ctaTalkToUs: z.string().default(L.ctaTalkToUs),
+    ctaSeeAllBatches: z.string().default(L.ctaSeeAllBatches),
+    ctaAllStyles: z.string().default(L.ctaAllStyles),
+    ctaExplore: z.string().default(L.ctaExplore),
+    ctaGetDirections: z.string().default(L.ctaGetDirections),
+    ctaCall: z.string().default(L.ctaCall),
+    ctaWhatsapp: z.string().default(L.ctaWhatsapp),
 
     // — Navigation —
-    navHome: z.string().default('Home'),
-    navAbout: z.string().default('About'),
-    navDanceStyles: z.string().default('Dance Styles'),
-    navInstructors: z.string().default('Instructors'),
-    navBatches: z.string().default('Batches & Pricing'),
-    navBlog: z.string().default('Blog'),
-    navFaqs: z.string().default('FAQs'),
-    navContact: z.string().default('Contact'),
-    navExplore: z.string().default('Explore'),
-    navPrivacy: z.string().default('Privacy'),
-    navTerms: z.string().default('Terms'),
+    navHome: z.string().default(L.navHome),
+    navAbout: z.string().default(L.navAbout),
+    navDanceStyles: z.string().default(L.navDanceStyles),
+    navInstructors: z.string().default(L.navInstructors),
+    navBatches: z.string().default(L.navBatches),
+    navBlog: z.string().default(L.navBlog),
+    navFaqs: z.string().default(L.navFaqs),
+    navContact: z.string().default(L.navContact),
+    navExplore: z.string().default(L.navExplore),
+    navPrivacy: z.string().default(L.navPrivacy),
+    navTerms: z.string().default(L.navTerms),
 
     // — Empty states —
-    emptyNoBatches: z
-      .string()
-      .default(
-        "No batches match these filters yet. Chat with us — we'll tell you when one opens.",
-      ),
-    emptyNextBatchSoon: z.string().default('Next {style} batch coming soon.'),
-    emptyNewBatchesTitle: z.string().default('New batches drop every week.'),
-    emptyNewBatchesBody: z
-      .string()
-      .default("Tell us your style — we'll hold you a seat in the next one."),
-    emptyNoFinderBatch: z
-      .string()
-      .default(
-        'No upcoming {track} beginner batch listed yet — chat with us and we’ll tell you when the next one starts.',
-      ),
+    emptyNoBatches: z.string().default(L.emptyNoBatches),
+    emptyNextBatchSoon: z.string().default(L.emptyNextBatchSoon),
+    emptyNewBatchesTitle: z.string().default(L.emptyNewBatchesTitle),
+    emptyNewBatchesBody: z.string().default(L.emptyNewBatchesBody),
+    emptyNoFinderBatch: z.string().default(L.emptyNoFinderBatch),
 
     // — Badges. These are DISPLAY labels for the status enum; the enum VALUES
     //   are live URL state in BatchesBrowser and never change.
-    badgeFillingFast: z.string().default('Filling fast'),
-    badgeOpen: z.string().default('Open'),
-    badgeClosed: z.string().default('Closed'),
-    badgeBookingOpen: z.string().default('Booking open'),
-    badgeFirstTimersWelcome: z.string().default('first-timers welcome'),
-    badgeFoundationStartHere: z.string().default('Foundation · start here'),
+    badgeFillingFast: z.string().default(L.badgeFillingFast),
+    badgeOpen: z.string().default(L.badgeOpen),
+    badgeClosed: z.string().default(L.badgeClosed),
+    badgeBookingOpen: z.string().default(L.badgeBookingOpen),
+    badgeFirstTimersWelcome: z.string().default(L.badgeFirstTimersWelcome),
+    badgeFoundationStartHere: z.string().default(L.badgeFoundationStartHere),
 
     // — Screen-reader / icon-only controls —
-    ariaHome: z.string().default('Furor — Dance Hyderabad home'),
-    ariaPrimaryNav: z.string().default('Primary'),
-    ariaToggleMenu: z.string().default('Toggle menu'),
-    ariaMenu: z.string().default('Menu'),
-    ariaOpenTalkToUs: z.string().default('Open talk to us'),
-    ariaCloseTalkToUs: z.string().default('Close talk to us'),
-    ariaClose: z.string().default('Close'),
+    ariaHome: z.string().default(L.ariaHome),
+    ariaPrimaryNav: z.string().default(L.ariaPrimaryNav),
+    ariaToggleMenu: z.string().default(L.ariaToggleMenu),
+    ariaMenu: z.string().default(L.ariaMenu),
+    ariaOpenTalkToUs: z.string().default(L.ariaOpenTalkToUs),
+    ariaCloseTalkToUs: z.string().default(L.ariaCloseTalkToUs),
+    ariaClose: z.string().default(L.ariaClose),
     // No render site yet. These four exist so the header and footer social
     // icons have an editable label to consume the day they ship.
-    ariaSocialInstagram: z.string().default('Furor on Instagram'),
-    ariaSocialFacebook: z.string().default('Furor on Facebook'),
-    ariaSocialYoutube: z.string().default('Furor on YouTube'),
-    ariaSocialWhatsapp: z.string().default('Furor on WhatsApp'),
+    ariaSocialInstagram: z.string().default(L.ariaSocialInstagram),
+    ariaSocialFacebook: z.string().default(L.ariaSocialFacebook),
+    ariaSocialYoutube: z.string().default(L.ariaSocialYoutube),
+    ariaSocialWhatsapp: z.string().default(L.ariaSocialWhatsapp),
 
     // — Post-payment (the /welcome/[track] page) —
     //   welcomeWhereHeading and welcomeOpenMap are the literals shipping in
@@ -633,11 +635,11 @@ export const LabelsSchema = z
     //   call link, and these are the exact strings it renders. Do NOT rename
     //   welcomeOpenMap to welcomeGetDirections: the map link reads "Open map →"
     //   today, and a "Get directions →" default would rewrite live copy.
-    welcomeWhereHeading: z.string().default('Where'),
-    welcomeOpenMap: z.string().default('Open map →'),
-    welcomeParking: z.string().default('Parking: {notes}'),
-    welcomeReachUs: z.string().default('Reach us'),
-    welcomeCallPhone: z.string().default('Call {phone}'),
+    welcomeWhereHeading: z.string().default(L.welcomeWhereHeading),
+    welcomeOpenMap: z.string().default(L.welcomeOpenMap),
+    welcomeParking: z.string().default(L.welcomeParking),
+    welcomeReachUs: z.string().default(L.welcomeReachUs),
+    welcomeCallPhone: z.string().default(L.welcomeCallPhone),
   })
   .default({});
 
