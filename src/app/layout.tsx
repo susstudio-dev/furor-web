@@ -122,6 +122,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <FloatingTalkToUs
           whatsappNumber={content.site.whatsappNumber}
           instagramHandle={content.site.instagramHandle}
+          labels={content.labels}
         />
       </body>
     </html>

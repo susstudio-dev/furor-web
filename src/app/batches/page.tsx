@@ -104,6 +104,7 @@ export default async function BatchesPage() {
         studios={studios}
         whatsappNumber={content.site.whatsappNumber}
         instagramHandle={content.site.instagramHandle}
+        labels={content.labels}
       />
 
       {courseLd.map((d, i) => (

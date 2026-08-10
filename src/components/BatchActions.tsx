@@ -2,6 +2,7 @@ import type { Batch } from '@/lib/content-schema';
 import { formatInr } from '@/lib/format';
 import { BookTrialLink } from './BookTrialLink';
 import { EnquiryCTA } from './EnquiryCTA';
+import type { Labels } from '@/lib/labels';
 
 // One source of truth for a batch row's actions — on /batches, on
 // /dance-styles/[slug], and on the home Next-batches strip. The paid trial is
@@ -17,6 +18,7 @@ export function BatchActions({
   whatsappNumber,
   primaryLabelWhenNoLink = 'Enquire on WhatsApp',
   whatsappLabelWhenLink = 'or chat first',
+  labels,
 }: {
   batch: Batch;
   style: { slug: string; name: string };
@@ -24,6 +26,7 @@ export function BatchActions({
   whatsappNumber: string;
   primaryLabelWhenNoLink?: string;
   whatsappLabelWhenLink?: string;
+  labels: Labels;
 }) {
   const ctx = {
     source: 'batch_row' as const,
@@ -51,6 +54,7 @@ export function BatchActions({
           ctx={ctx}
           variant="link"
           label={whatsappLabelWhenLink}
+          labels={labels}
         />
       </div>
     );
@@ -62,6 +66,7 @@ export function BatchActions({
       ctx={ctx}
       variant="batch-row"
       label={primaryLabelWhenNoLink}
+      labels={labels}
     />
   );
 }

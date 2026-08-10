@@ -222,7 +222,7 @@ export default async function InstructorsPage() {
               whatsappNumber={content.site.whatsappNumber}
               ctx={{ source: 'primary' }}
               variant="primary"
-              label="Chat on WhatsApp"
+              labels={content.labels}
             />
             <EnquiryCTA
               whatsappNumber={content.site.whatsappNumber}
@@ -230,7 +230,7 @@ export default async function InstructorsPage() {
               ctx={{ source: 'primary' }}
               channel="instagram"
               variant="secondary"
-              label="DM on Instagram"
+              labels={content.labels}
             />
           </div>
         </div>

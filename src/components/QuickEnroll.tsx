@@ -4,6 +4,7 @@ import { visibleBatches, formatBatchDate, formatInr, batchStyleLabel } from '@/l
 import { compareByLevel } from '@/lib/batch-order';
 import { BookTrialLink } from './BookTrialLink';
 import { EnquiryCTA } from './EnquiryCTA';
+import { label } from '@/lib/labels';
 
 // The booking board — the conversion surface, styled like the lineup board
 // outside a club, overlapping the hero so its lit edge peeks above the fold.
@@ -225,6 +226,7 @@ export function QuickEnroll({
                                   batch: b,
                                 }}
                                 variant="link"
+                                labels={content.labels}
                                 label="or chat first"
                                 className="!min-h-[36px] text-xs"
                               />
@@ -240,6 +242,7 @@ export function QuickEnroll({
                               batch: b,
                             }}
                             variant="batch-row"
+                            labels={content.labels}
                             label={`${bookLabel} on WhatsApp`}
                             className="w-full justify-center magnetic"
                           />
@@ -330,7 +333,8 @@ export function QuickEnroll({
                     'Hi! I want to join a dance batch — please let me know the next start dates.',
                 }}
                 variant="primary"
-                label="Grab a seat on WhatsApp"
+                labels={content.labels}
+                label={label(content.labels, 'ctaGrabSeatWhatsapp')}
                 className="magnetic"
               />
             </div>

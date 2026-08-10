@@ -52,6 +52,7 @@ export function TrialBanner({ content }: { content: SiteContent }) {
                     whatsappNumber={content.site.whatsappNumber}
                     ctx={{ source: 'primary', customNote: t.ctaContext }}
                     variant="batch-row"
+                    labels={content.labels}
                     label={t.whatsappLabel || 'Or chat on WhatsApp'}
                   />
                 ) : null}
@@ -61,6 +62,7 @@ export function TrialBanner({ content }: { content: SiteContent }) {
                 whatsappNumber={content.site.whatsappNumber}
                 ctx={{ source: 'primary', customNote: t.ctaContext }}
                 variant="primary"
+                labels={content.labels}
                 label={t.ctaLabel || 'Chat on WhatsApp'}
               />
             )}

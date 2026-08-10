@@ -172,7 +172,7 @@ export default async function ContactPage() {
               whatsappNumber={content.site.whatsappNumber}
               ctx={{ source: 'primary' }}
               variant="primary"
-              label="Chat on WhatsApp"
+              labels={content.labels}
               className="!bg-ink-950 !text-cream hover:!bg-ink-800"
             />
             <EnquiryCTA
@@ -181,7 +181,7 @@ export default async function ContactPage() {
               ctx={{ source: 'primary' }}
               channel="instagram"
               variant="secondary"
-              label="DM on Instagram"
+              labels={content.labels}
               className="!border-on-ember/45 !text-on-ember hover:!border-on-ember"
             />
           </div>

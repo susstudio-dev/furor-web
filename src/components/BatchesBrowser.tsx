@@ -6,6 +6,7 @@ import { formatBatchDate, formatInr } from '@/lib/format';
 import { compareByLevel } from '@/lib/batch-order';
 import { EnquiryCTA } from './EnquiryCTA';
 import { BatchActions } from './BatchActions';
+import { type Labels } from '@/lib/labels';
 
 export interface BatchRow {
   batch: Batch;
@@ -22,6 +23,7 @@ interface Props {
   studios: { slug: string; name: string }[];
   whatsappNumber: string;
   instagramHandle: string;
+  labels: Labels;
 }
 
 // ── derived attributes ──────────────────────────────────────────────────────
@@ -76,7 +78,14 @@ const STARTING_ORDER = ['This month', 'Next 30 days', 'Later'];
 const TOD_ORDER = ['Morning', 'Afternoon', 'Evening'];
 const LEVEL_ORDER = ['Foundation', 'Intermediate', 'Advanced'];
 
-export function BatchesBrowser({ rows, styles, studios, whatsappNumber, instagramHandle }: Props) {
+export function BatchesBrowser({
+  rows,
+  styles,
+  studios,
+  whatsappNumber,
+  instagramHandle,
+  labels,
+}: Props) {
   const [now] = useState(() => new Date());
   const multiBranch = studios.length > 1;
 
@@ -380,7 +389,7 @@ export function BatchesBrowser({ rows, styles, studios, whatsappNumber, instagra
               No batches match these filters yet. Chat with us — we&apos;ll tell you when one opens.
             </p>
             <div className="mt-4 flex gap-3">
-              <EnquiryCTA whatsappNumber={whatsappNumber} instagramHandle={instagramHandle} ctx={{ source: 'primary' }} variant="primary" label="Chat on WhatsApp" />
+              <EnquiryCTA whatsappNumber={whatsappNumber} instagramHandle={instagramHandle} ctx={{ source: 'primary' }} variant="primary" labels={labels} />
               <button onClick={clearAll} className="btn-secondary">Clear filters</button>
             </div>
           </div>
@@ -428,6 +437,7 @@ export function BatchesBrowser({ rows, styles, studios, whatsappNumber, instagra
                       branch={{ slug: row.branchSlug, name: row.branchName }}
                       whatsappNumber={whatsappNumber}
                       primaryLabelWhenNoLink="Enquire"
+                      labels={labels}
                     />
                   </div>
                 </div>

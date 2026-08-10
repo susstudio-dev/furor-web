@@ -146,7 +146,7 @@ export function StyleFinder({ content }: { content: SiteContent }) {
                   },
                 }}
                 variant="primary"
-                label="Chat on WhatsApp"
+                labels={content.labels}
               />
               <EnquiryCTA
                 whatsappNumber={content.site.whatsappNumber}
@@ -162,7 +162,7 @@ export function StyleFinder({ content }: { content: SiteContent }) {
                 }}
                 channel="instagram"
                 variant="secondary"
-                label="DM on Instagram"
+                labels={content.labels}
               />
             </div>
           </div>

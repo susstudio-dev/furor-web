@@ -33,6 +33,7 @@ import { KineticStrip } from '@/components/KineticStrip';
 import { TrialBanner } from '@/components/TrialBanner';
 import { StyleFinder } from '@/components/StyleFinder';
 import { EnquiryCTA } from '@/components/EnquiryCTA';
+import { label } from '@/lib/labels';
 import { TonightTile } from '@/components/TonightTile';
 import { RhythmSignature } from '@/components/RhythmSignature';
 import { Img } from '@/components/Img';
@@ -196,6 +197,7 @@ export default async function HomePage() {
                         style={{ slug: s.slug, name: s.name }}
                         branch={{ slug: branch.slug, name: branch.name }}
                         whatsappNumber={content.site.whatsappNumber}
+                        labels={content.labels}
                       />
                     </div>
                   </>
@@ -212,7 +214,8 @@ export default async function HomePage() {
                           style: { slug: s.slug, name: s.name },
                         }}
                         variant="batch-row"
-                        label="Notify me on WhatsApp"
+                        labels={content.labels}
+                        label={label(content.labels, 'ctaNotifyWhatsapp')}
                       />
                     </div>
                   </>
@@ -297,7 +300,8 @@ export default async function HomePage() {
               whatsappNumber={content.site.whatsappNumber}
               ctx={{ source: 'primary' }}
               variant="secondary"
-              label="or chat on WhatsApp"
+              labels={content.labels}
+              label={label(content.labels, 'ctaChatOnWhatsapp')}
               className="!border-on-ember/45 !text-on-ember hover:!border-on-ember magnetic"
             />
             <EnquiryCTA
@@ -306,7 +310,7 @@ export default async function HomePage() {
               ctx={{ source: 'primary' }}
               channel="instagram"
               variant="secondary"
-              label="DM on Instagram"
+              labels={content.labels}
               className="!border-on-ember/45 !text-on-ember hover:!border-on-ember magnetic"
             />
           </div>
@@ -417,7 +421,11 @@ export default async function HomePage() {
         </section>
       ) : null}
 
-      <StickyTrialBar whatsappNumber={content.site.whatsappNumber} label={trialLabel} />
+      <StickyTrialBar
+        whatsappNumber={content.site.whatsappNumber}
+        label={trialLabel}
+        labels={content.labels}
+      />
       </div>
     </>
   );

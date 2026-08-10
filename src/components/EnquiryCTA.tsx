@@ -9,6 +9,7 @@ import {
   type EnquiryChannel,
   type EnquiryContext,
 } from '@/lib/enquiry';
+import { enquiryDefaultLabel, type Labels } from '@/lib/labels';
 
 interface Props {
   whatsappNumber: string;
@@ -20,6 +21,10 @@ interface Props {
   /** Required for the icon variant, which renders no visible text. */
   ariaLabel?: string;
   className?: string;
+  /** The content document's labels. Required: every render site is reachable
+   *  from the document, and an optional prop would let a call site silently
+   *  opt out of /admin/labels. */
+  labels: Labels;
 }
 
 export function EnquiryCTA({
@@ -31,6 +36,7 @@ export function EnquiryCTA({
   label,
   ariaLabel,
   className,
+  labels,
 }: Props) {
   const onClick = useCallback(
     async (e: React.MouseEvent<HTMLAnchorElement>) => {
@@ -96,13 +102,7 @@ export function EnquiryCTA({
       ? 'grid h-12 w-12 shrink-0 place-items-center rounded-full border border-cream/25 text-cream/85 transition hover:border-ember-500/60 hover:text-cream'
       : 'inline-flex min-h-[44px] items-center gap-2 rounded-full bg-ember-500/15 px-4 py-2 text-sm font-medium text-ember-400 transition hover:bg-ember-500/25';
 
-  const text =
-    label ??
-    (channel === 'whatsapp'
-      ? variant === 'batch-row'
-        ? 'Enquire on WhatsApp'
-        : 'Chat on WhatsApp'
-      : 'DM on Instagram');
+  const text = label ?? enquiryDefaultLabel(channel, variant, labels);
 
   return (
     <a

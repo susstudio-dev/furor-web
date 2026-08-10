@@ -83,7 +83,7 @@ export default async function FaqsPage() {
                 whatsappNumber={content.site.whatsappNumber}
                 ctx={{ source: 'primary' }}
                 variant="primary"
-                label="Chat on WhatsApp"
+                labels={content.labels}
               />
               <EnquiryCTA
                 whatsappNumber={content.site.whatsappNumber}
@@ -91,7 +91,7 @@ export default async function FaqsPage() {
                 ctx={{ source: 'primary' }}
                 channel="instagram"
                 variant="secondary"
-                label="DM on Instagram"
+                labels={content.labels}
               />
             </div>
           </div>

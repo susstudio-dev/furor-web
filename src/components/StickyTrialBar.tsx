@@ -1,4 +1,7 @@
 import { EnquiryCTA } from './EnquiryCTA';
+// Aliased: this component already has a prop called `label` (the button text),
+// which would shadow the resolver inside the function body.
+import { label as labelText, type Labels } from '@/lib/labels';
 
 // The After-Band: a mobile-only booking bar that appears once the visitor has
 // scrolled PAST the booking board and rides the bottom edge through the
@@ -17,9 +20,11 @@ import { EnquiryCTA } from './EnquiryCTA';
 export function StickyTrialBar({
   whatsappNumber,
   label,
+  labels,
 }: {
   whatsappNumber: string;
   label: string;
+  labels: Labels;
 }) {
   return (
     <div className="sticky bottom-0 z-30 sm:hidden">
@@ -38,7 +43,8 @@ export function StickyTrialBar({
           whatsappNumber={whatsappNumber}
           ctx={{ source: 'sticky_bar' }}
           variant="icon"
-          ariaLabel="Chat on WhatsApp"
+          labels={labels}
+          ariaLabel={labelText(labels, 'ctaChatWhatsapp')}
         />
       </div>
     </div>

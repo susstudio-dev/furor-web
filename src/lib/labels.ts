@@ -47,3 +47,23 @@ export const PILL_KEYS: ReadonlySet<LabelKey> = new Set<LabelKey>([
 
 /** Roughly what fits in a pill at 375px without clipping the sibling text. */
 export const PILL_CHAR_LIMIT = 24;
+
+/**
+ * The label an EnquiryCTA shows when the call site does not name one.
+ *
+ * `labels` is required. Every render site is reachable from the content
+ * document — an optional parameter here would let a future call site opt out
+ * of editability with no error anywhere, and /admin/labels would quietly stop
+ * being the source of truth it claims to be. The unions are written inline
+ * rather than imported so this module keeps a single dependency (the schema).
+ */
+export function enquiryDefaultLabel(
+  channel: 'whatsapp' | 'instagram',
+  variant: 'primary' | 'secondary' | 'batch-row' | 'link' | 'icon',
+  labels: Labels,
+): string {
+  if (channel === 'instagram') return label(labels, 'ctaDmInstagram');
+  return variant === 'batch-row'
+    ? label(labels, 'ctaEnquireWhatsapp')
+    : label(labels, 'ctaChatWhatsapp');
+}

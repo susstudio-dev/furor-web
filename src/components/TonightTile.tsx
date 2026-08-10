@@ -28,6 +28,7 @@ export function TonightTile({ content }: { content: SiteContent }) {
               whatsappNumber={content.site.whatsappNumber}
               ctx={{ source: 'primary', customNote: t.ctaContext }}
               variant="primary"
+              labels={content.labels}
               label={t.ctaLabel || 'WhatsApp to RSVP'}
             />
           </div>

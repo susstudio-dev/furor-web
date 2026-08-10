@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { LabelsSchema, type Labels } from './content-schema';
-import { LABEL_DEFAULTS, label, PILL_CHAR_LIMIT, PILL_KEYS } from './labels';
+import {
+  enquiryDefaultLabel,
+  LABEL_DEFAULTS,
+  label,
+  PILL_CHAR_LIMIT,
+  PILL_KEYS,
+} from './labels';
 
 const labels = (over: Partial<Labels> = {}): Labels => LabelsSchema.parse(over);
 
@@ -118,5 +124,35 @@ describe('PILL_KEYS', () => {
 
   it('pins the pill budget the admin hint counts against', () => {
     expect(PILL_CHAR_LIMIT).toBe(24);
+  });
+});
+
+// The exact resolution EnquiryCTA performs, lifted out as a pure function so
+// the chokepoint has a test even though no test in this repo renders a
+// component. This one function is what removes "Chat on WhatsApp" from ten
+// render sites and "DM on Instagram" from eight.
+describe('enquiryDefaultLabel', () => {
+  it('gives the batch-row variant its own WhatsApp verb', () => {
+    expect(enquiryDefaultLabel('whatsapp', 'batch-row', labels())).toBe('Enquire on WhatsApp');
+  });
+
+  it('gives every other WhatsApp variant the shared verb', () => {
+    expect(enquiryDefaultLabel('whatsapp', 'primary', labels())).toBe('Chat on WhatsApp');
+    expect(enquiryDefaultLabel('whatsapp', 'secondary', labels())).toBe('Chat on WhatsApp');
+    expect(enquiryDefaultLabel('whatsapp', 'link', labels())).toBe('Chat on WhatsApp');
+    expect(enquiryDefaultLabel('whatsapp', 'icon', labels())).toBe('Chat on WhatsApp');
+  });
+
+  it('gives Instagram its own verb regardless of variant', () => {
+    expect(enquiryDefaultLabel('instagram', 'primary', labels())).toBe('DM on Instagram');
+    expect(enquiryDefaultLabel('instagram', 'batch-row', labels())).toBe('DM on Instagram');
+  });
+
+  it('follows an edited label across every WhatsApp render site at once', () => {
+    const edited = labels({ ctaChatWhatsapp: 'Message us on WhatsApp' });
+    expect(enquiryDefaultLabel('whatsapp', 'primary', edited)).toBe('Message us on WhatsApp');
+    expect(enquiryDefaultLabel('whatsapp', 'link', edited)).toBe('Message us on WhatsApp');
+    // batch-row keeps its own key, so one edit cannot silently rewrite two.
+    expect(enquiryDefaultLabel('whatsapp', 'batch-row', edited)).toBe('Enquire on WhatsApp');
   });
 });

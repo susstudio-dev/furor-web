@@ -125,6 +125,7 @@ export function Hero({ content }: { content: SiteContent }) {
               ctx={{ source: 'primary' }}
               variant="link"
               label="or chat first on WhatsApp"
+              labels={content.labels}
             />
           </div>
           {/* No refund promise here: the trial fee is non-refundable
