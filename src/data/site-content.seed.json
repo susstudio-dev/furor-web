@@ -143,27 +143,6 @@
   ],
   "studios": [
     {
-      "id": "studio-g2e0ls",
-      "slug": "pup-unleash-huda-colony",
-      "name": "PUP Unleash - HUDA Colony",
-      "neighborhood": "Jubilee Hills",
-      "address": "PUP – Paws Unleash Play, HUDA Enclave, Jubilee Hills, Hyderabad, Telangana 500110",
-      "geo": {
-        "lat": 17.426,
-        "lng": 78.4005
-      },
-      "hours": "Mon–Fri 9 AM–6 PM · Sat–Sun 12:00 PM–6:00 PM",
-      "telephone": "+91 88860 72572",
-      "photos": [],
-      "parkingNotes": "Free - Valet parking",
-      "styleSlugs": [
-        "salsa",
-        "bachata",
-        "west-coast-swing"
-      ],
-      "displayOrder": 2
-    },
-    {
       "id": "studio-jubilee-hills",
       "slug": "jubilee-hills",
       "name": "Jubilee Hills",
@@ -187,6 +166,27 @@
         "west-coast-swing"
       ],
       "displayOrder": 1
+    },
+    {
+      "id": "studio-g2e0ls",
+      "slug": "pup-unleash-huda-colony",
+      "name": "PUP Unleash - HUDA Colony",
+      "neighborhood": "Jubilee Hills",
+      "address": "PUP – Paws Unleash Play, HUDA Enclave, Jubilee Hills, Hyderabad, Telangana 500110",
+      "geo": {
+        "lat": 17.426,
+        "lng": 78.4005
+      },
+      "hours": "Mon–Fri 9 AM–6 PM · Sat–Sun 12:00 PM–6:00 PM",
+      "telephone": "+91 88860 72572",
+      "photos": [],
+      "parkingNotes": "Free - Valet parking",
+      "styleSlugs": [
+        "salsa",
+        "bachata",
+        "west-coast-swing"
+      ],
+      "displayOrder": 2
     }
   ],
   "batches": [
@@ -504,6 +504,7 @@
       "id": "story-chennai-2025",
       "slug": "2nd-runner-up-chennai-salsa-festival",
       "title": "2nd Runner-up at Chennai Salsa Festival — Kalpana & Karthik",
+      "authorId": "",
       "publishedAt": "2025-07-11",
       "heroImage": "",
       "excerpt": "Kalpana and Karthik take home second runner-up at the Chennai Salsa Festival open challenge — Hyderabad represents.",
@@ -513,6 +514,7 @@
       "id": "story-taste-of-salsa",
       "slug": "taste-of-salsa",
       "title": "Taste of Salsa — Free Demo & Workshop",
+      "authorId": "",
       "publishedAt": "2025-07-11",
       "heroImage": "",
       "excerpt": "A free demo for anyone curious about Salsa. No partner needed. No prior dance experience required.",
@@ -522,6 +524,7 @@
       "id": "story-la-rumba-xmas-2022",
       "slug": "la-rumba-christmas-ball-2022",
       "title": "La Rumba Christmas Ball — 24th December 2022",
+      "authorId": "",
       "publishedAt": "2022-12-24",
       "heroImage": "",
       "excerpt": "An elegant Christmas Ball. Daytime workshops, evening red-carpet social. The biggest La Rumba of the year.",
@@ -531,6 +534,7 @@
       "id": "story-social-etiquette",
       "slug": "social-dancing-etiquette",
       "title": "Social Dancing Etiquette",
+      "authorId": "",
       "publishedAt": "2025-07-11",
       "heroImage": "",
       "excerpt": "A short guide to surviving — and shining at — your first social. Bright clothes, confidence, and a few things nobody tells you.",
@@ -540,6 +544,7 @@
       "id": "story-pool-party-2019",
       "slug": "la-rumba-latin-pool-party-2019",
       "title": "La Rumba Latin Pool Party — 23rd November 2019",
+      "authorId": "",
       "publishedAt": "2019-11-23",
       "heroImage": "",
       "excerpt": "Workshops, poolside dancing and a sunset social at Marriott Executive Apartments Gachibowli.",
@@ -549,6 +554,7 @@
       "id": "story-valentine-2021",
       "slug": "valentine-salsa-workshop-2021",
       "title": "Valentine Salsa Workshop — 14th February 2021",
+      "authorId": "",
       "publishedAt": "2021-02-14",
       "heroImage": "",
       "excerpt": "Two hours of partner dancing as a Valentine's gift — to yourself, or to someone else.",
@@ -558,6 +564,7 @@
       "id": "story-wow-feature",
       "slug": "wow-magazine-feature",
       "title": "Wow!",
+      "authorId": "",
       "publishedAt": "2018-01-01",
       "heroImage": "",
       "excerpt": "Wow Magazine covers our Saturday Salsa socials — and the people who make them what they are.",
@@ -567,6 +574,7 @@
       "id": "story-wcs-bootcamp",
       "slug": "west-coast-swing-christmas-bootcamp",
       "title": "West Coast Swing Christmas Bootcamp — 24–25 December",
+      "authorId": "",
       "publishedAt": "2025-05-15",
       "heroImage": "",
       "excerpt": "A 12-hour weekend bootcamp covering the full WCS beginner syllabus. Open level.",
@@ -613,7 +621,7 @@
     "about": {
       "intro": {
         "eyebrow": "About",
-        "headline": "Sixteen years. Five cities. One love letter to dance.",
+        "headline": "Sixteen years. Five cities. One love letter to dance",
         "lead": ""
       },
       "introParagraphs": [
