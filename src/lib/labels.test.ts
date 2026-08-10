@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { LabelsSchema, type Labels } from './content-schema';
+import { LABEL_DEFAULTS, label, PILL_CHAR_LIMIT, PILL_KEYS } from './labels';
 
 const labels = (over: Partial<Labels> = {}): Labels => LabelsSchema.parse(over);
 
@@ -57,5 +58,65 @@ describe('LabelsSchema', () => {
     const l = labels({ ctaChatWhatsapp: 'Message us' });
     expect(l.ctaChatWhatsapp).toBe('Message us');
     expect(l.ctaDmInstagram).toBe('DM on Instagram');
+  });
+});
+
+describe('LABEL_DEFAULTS', () => {
+  it('is derived from the schema, so it can never drift from it', () => {
+    expect(LABEL_DEFAULTS).toEqual(labels());
+  });
+});
+
+describe('label', () => {
+  it('returns the stored value when the studio has set one', () => {
+    expect(label(labels({ ctaChatWhatsapp: 'Message us' }), 'ctaChatWhatsapp')).toBe('Message us');
+  });
+
+  // The whole point of the fallback: clearing a field in the admin must
+  // restore the shipped copy, never render an empty button.
+  it('falls back to the shipped literal when the field is empty', () => {
+    expect(label(labels({ ctaChatWhatsapp: '' }), 'ctaChatWhatsapp')).toBe('Chat on WhatsApp');
+  });
+
+  it('treats a whitespace-only value as empty', () => {
+    expect(label(labels({ ctaBookTrial: '   ' }), 'ctaBookTrial')).toBe('Book my trial class');
+  });
+
+  it('every field falls back to its own shipped literal, not a shared one', () => {
+    const blank = Object.fromEntries(
+      Object.keys(LABEL_DEFAULTS).map((k) => [k, '']),
+    ) as Labels;
+    for (const key of Object.keys(LABEL_DEFAULTS) as (keyof typeof LABEL_DEFAULTS)[]) {
+      expect(label(blank, key)).toBe(LABEL_DEFAULTS[key]);
+    }
+  });
+
+  // Defence in depth, not theory: content.ts merges stored bytes with the seed
+  // before parsing, but a document hand-edited at /admin/json can still be
+  // short a key, and an empty button is a conversion bug.
+  it('survives a document missing the key entirely', () => {
+    expect(label({} as Labels, 'ctaEnquire')).toBe('Enquire');
+  });
+});
+
+describe('PILL_KEYS', () => {
+  // .pill is whitespace-nowrap (globals.css) and several call sites sit inside
+  // overflow-clip wrappers, so a long value razor-cuts itself with no warning
+  // to whoever typed it. The admin shows a character hint for exactly these.
+  it('names exactly the labels that render inside a .pill', () => {
+    expect([...PILL_KEYS].sort()).toEqual([
+      'badgeClosed',
+      'badgeFillingFast',
+      'badgeFirstTimersWelcome',
+      'badgeOpen',
+    ]);
+  });
+
+  it('every pill key is a real label key', () => {
+    for (const k of PILL_KEYS) expect(LABEL_DEFAULTS[k]).toBeTypeOf('string');
+  });
+
+  it('pins the pill budget the admin hint counts against', () => {
+    expect(PILL_CHAR_LIMIT).toBe(24);
   });
 });
