@@ -1,7 +1,8 @@
 import { EnquiryCTA } from './EnquiryCTA';
 // Aliased: this component already has a prop called `label` (the button text),
 // which would shadow the resolver inside the function body.
-import { label as labelText, type Labels } from '@/lib/labels';
+import { label as labelText } from '@/lib/labels';
+import type { Labels } from '@/lib/labels';
 
 // The After-Band: a mobile-only booking bar that appears once the visitor has
 // scrolled PAST the booking board and rides the bottom edge through the

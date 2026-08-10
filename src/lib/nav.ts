@@ -7,19 +7,17 @@ export interface NavItem {
   /** A route, not copy. Renaming it would break bookmarks and inbound links,
    *  so hrefs are deliberately not exposed in /admin. */
   href: string;
-  /** Fallback only, for an id with no mapped label key. */
-  defaultLabel: string;
 }
 
 export const NAV_ITEMS: readonly NavItem[] = [
-  { id: 'home', href: '/', defaultLabel: 'Home' },
-  { id: 'about', href: '/about', defaultLabel: 'About' },
-  { id: 'dance-styles', href: '/dance-styles', defaultLabel: 'Dance Styles' },
-  { id: 'instructors', href: '/instructors', defaultLabel: 'Instructors' },
-  { id: 'batches', href: '/batches', defaultLabel: 'Batches & Pricing' },
-  { id: 'blog', href: '/stories', defaultLabel: 'Blog' },
-  { id: 'faqs', href: '/faqs', defaultLabel: 'FAQs' },
-  { id: 'contact', href: '/contact', defaultLabel: 'Contact' },
+  { id: 'home', href: '/' },
+  { id: 'about', href: '/about' },
+  { id: 'dance-styles', href: '/dance-styles' },
+  { id: 'instructors', href: '/instructors' },
+  { id: 'batches', href: '/batches' },
+  { id: 'blog', href: '/stories' },
+  { id: 'faqs', href: '/faqs' },
+  { id: 'contact', href: '/contact' },
 ];
 
 // Kept off NavItem on purpose: deriving the key from the id by string
@@ -37,6 +35,5 @@ const NAV_LABEL_KEY: Record<string, LabelKey> = {
 };
 
 export function navLabel(item: NavItem, labels: Labels): string {
-  const key = NAV_LABEL_KEY[item.id];
-  return key ? label(labels, key) : item.defaultLabel;
+  return label(labels, NAV_LABEL_KEY[item.id]);
 }

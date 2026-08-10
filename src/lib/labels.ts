@@ -61,7 +61,10 @@ export const PILL_CHAR_LIMIT = 24;
  * document — an optional parameter here would let a future call site opt out
  * of editability with no error anywhere, and /admin/labels would quietly stop
  * being the source of truth it claims to be. The unions are written inline
- * rather than imported so this module keeps a single dependency (the schema).
+ * rather than imported so this module's only VALUE dependency stays
+ * ./label-defaults (see the comment on LABEL_DEFAULTS above) — `Labels` is a
+ * type-only import from content-schema.ts and is erased at compile time, so
+ * it never pulls zod along with it.
  */
 export function enquiryDefaultLabel(
   channel: 'whatsapp' | 'instagram',

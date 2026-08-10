@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { LABEL_DEFAULT_LITERALS as L } from './label-defaults';
+import { HERO_POSTER_ALT_DEFAULT } from './hero-defaults';
 
 // zod's .url() only checks `new URL()` parseability, so javascript:, data: and
 // vbscript: URIs pass it — and several of these fields are rendered as raw
@@ -42,11 +43,7 @@ export const HeroSchema = z.object({
   // Not decorative: this is the one photo that shows a visitor what a Furor
   // night actually looks like, so it gets a real description rather than the
   // alt="" an audit flagged as missing text.
-  posterAlt: z
-    .string()
-    .default(
-      'Couples dancing Salsa together on a busy social floor at a Furor Latin night in Hyderabad',
-    ),
+  posterAlt: z.string().default(HERO_POSTER_ALT_DEFAULT),
 });
 
 export const TonightSchema = z

@@ -9,6 +9,7 @@ import { Img } from './Img';
 import { CinematicHeadline } from './CinematicHeadline';
 import { bookLabel } from '@/lib/book-label';
 import { label } from '@/lib/labels';
+import { HERO_POSTER_ALT_DEFAULT } from '@/lib/hero-defaults';
 
 export function Hero({ content }: { content: SiteContent }) {
   const [allowVideo, setAllowVideo] = useState(false);
@@ -39,9 +40,10 @@ export function Hero({ content }: { content: SiteContent }) {
             // Not decorative: this is the one photo that shows a visitor what
             // a Furor night actually looks like, so it gets a real description
             // rather than the alt="" that an audit flagged as missing text.
-            // Editable at /admin/hero; the schema default is the literal that
-            // shipped here before.
-            alt={content.hero.posterAlt}
+            // Editable at /admin/hero; a blank field falls back to the shipped
+            // default rather than rendering alt="" — clearing the field must
+            // not silently turn this back into a decorative image.
+            alt={content.hero.posterAlt.trim() !== '' ? content.hero.posterAlt : HERO_POSTER_ALT_DEFAULT}
             seed="hero"
             label=""
             fill

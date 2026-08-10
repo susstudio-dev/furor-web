@@ -13,6 +13,10 @@ export default async function Page() {
         The short strings that repeat all over the site. Leave a field blank to keep the wording we
         ship — the grey text in each box is that default.
       </p>
+      <p className="mt-2 text-cream/70">
+        Most fields update the live site as soon as you save. A few are wired up in a later update —
+        if a change here doesn&apos;t show up right away, that&apos;s why.
+      </p>
       <LabelsEditor initial={c} />
     </div>
   );

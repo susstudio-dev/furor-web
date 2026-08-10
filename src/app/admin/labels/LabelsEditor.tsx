@@ -51,8 +51,26 @@ function isOverride(raw: string, key: LabelKey): boolean {
   return raw.trim() !== '' && raw !== LABEL_DEFAULTS[key];
 }
 
+// Any stored value that arrived byte-for-byte equal to its shipped default is
+// blanked ONCE, here, before it ever reaches component state — never on every
+// keystroke. Recomputing "is this blank?" from the live input value on each
+// render is exactly what used to make the box blank itself out mid-typing:
+// the instant a partial edit (e.g. "Call") matched the shipped default, the
+// controlled input's value flipped to '', and the next keystroke ( "u" of
+// "Call us") started from empty instead of continuing the word. Normalising
+// once at mount means the input can render `value={raw}` unconditionally
+// afterwards, so typing is never interrupted by what the text happens to
+// equal partway through.
+function normaliseInitialLabels(initial: SiteContent): SiteContent {
+  const labels: SiteContent['labels'] = { ...initial.labels };
+  for (const k of ALL_KEYS) {
+    if (labels[k] === LABEL_DEFAULTS[k]) labels[k] = '';
+  }
+  return { ...initial, labels };
+}
+
 export function LabelsEditor({ initial }: { initial: SiteContent }) {
-  const [c, setC] = useState<SiteContent>(initial);
+  const [c, setC] = useState<SiteContent>(() => normaliseInitialLabels(initial));
   const [dirty, setDirty] = useState(false);
   const [q, setQ] = useState('');
 
@@ -144,7 +162,7 @@ export function LabelsEditor({ initial }: { initial: SiteContent }) {
                       </span>
                       <div className="mt-1.5">
                         <input
-                          value={override ? raw : ''}
+                          value={raw}
                           onChange={(e) => patch(k, e.target.value)}
                           placeholder={LABEL_DEFAULTS[k]}
                           className="input"

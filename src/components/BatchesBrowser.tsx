@@ -6,7 +6,7 @@ import { formatBatchDate, formatInr } from '@/lib/format';
 import { compareByLevel } from '@/lib/batch-order';
 import { EnquiryCTA } from './EnquiryCTA';
 import { BatchActions } from './BatchActions';
-import { type Labels } from '@/lib/labels';
+import type { Labels } from '@/lib/labels';
 import { statusLabel } from '@/lib/book-label';
 
 export interface BatchRow {
