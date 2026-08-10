@@ -64,6 +64,10 @@ if (isOnOneDrive && !isVercel && process.platform === 'win32') {
 //   (real CPU cost on the Workers free plan). Everything else is locked down.
 // - frame-src must allow the Google Maps embeds on / and /contact.
 // - googletagmanager/google-analytics cover the GA4 loader (Analytics.tsx).
+// - static.cloudflareinsights.com / cloudflareinsights.com cover the Web
+//   Analytics beacon Cloudflare auto-injects into every HTML response at the
+//   edge; it never appears in our source. Without these the console shows a
+//   blocked beacon.min.js on every page.
 // Dev-only allowance so impeccable live mode can load. Guarded by NODE_ENV.
 const __impeccableLiveDev =
   process.env.NODE_ENV === 'development' ? ' http://localhost:8400' : '';
@@ -78,11 +82,11 @@ const CSP = [
   "object-src 'none'",
   "frame-ancestors 'none'",
   "form-action 'self'",
-  `script-src 'self' 'unsafe-inline'${__devEval} https://www.googletagmanager.com${__impeccableLiveDev}`,
+  `script-src 'self' 'unsafe-inline'${__devEval} https://www.googletagmanager.com https://static.cloudflareinsights.com${__impeccableLiveDev}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
-  `connect-src 'self' https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com${__impeccableLiveDev}`,
+  `connect-src 'self' https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com https://cloudflareinsights.com${__impeccableLiveDev}`,
   "media-src 'self' https:",
   'frame-src https://www.google.com https://maps.google.com',
   'upgrade-insecure-requests',
@@ -150,6 +154,11 @@ const nextConfig = {
       // not a hole — 'self' still bars every other origin from framing us, so
       // exploiting it would need an attacker page on our own origin, which
       // already implies an XSS foothold that defeats the CSP outright.
+      // BOTH sides of the embed need relaxing: frame-ancestors 'self' lets the
+      // framed site render inside us, and frame-src 'self' lets the admin page
+      // (the framing side) load a same-origin iframe at all — without it the
+      // browser blocks the load and the preview drawer / split review render
+      // an empty frame. The base CSP keeps frame-src Google-only on purpose.
       // Placement is load-bearing twice over, because later matching rules win
       // per header key: AFTER '/:path*' so it overrides DENY, and BEFORE the
       // furor_preview rule below so a draft preview's stricter no-store +
@@ -160,7 +169,13 @@ const nextConfig = {
         has: [{ type: 'cookie', key: 'furor_admin' }],
         headers: [
           { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
-          { key: 'Content-Security-Policy', value: CSP.replace("frame-ancestors 'none'", "frame-ancestors 'self'") },
+          {
+            key: 'Content-Security-Policy',
+            value: CSP.replace("frame-ancestors 'none'", "frame-ancestors 'self'").replace(
+              'frame-src',
+              "frame-src 'self'"
+            ),
+          },
           // Next's own Vary tokens are repeated here on purpose. A rule in this
           // block REPLACES a header by key rather than appending to it, so
           // `Vary: Cookie` alone silently dropped
