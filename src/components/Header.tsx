@@ -5,17 +5,10 @@ import { useEffect, useState } from 'react';
 import type { SiteContent } from '@/lib/content-schema';
 import { BrandMark } from './BrandMark';
 import { ThemeToggle } from './ThemeToggle';
+import { NAV_ITEMS, navLabel, type NavItem } from '@/lib/nav';
+import { label } from '@/lib/labels';
 
-const NAV: { label: string; href: string; children?: { label: string; href: string }[] }[] = [
-  { label: 'Home', href: '/' },
-  { label: 'About', href: '/about' },
-  { label: 'Dance Styles', href: '/dance-styles' },
-  { label: 'Instructors', href: '/instructors' },
-  { label: 'Batches & Pricing', href: '/batches' },
-  { label: 'Blog', href: '/stories' },
-  { label: 'FAQs', href: '/faqs' },
-  { label: 'Contact', href: '/contact' },
-];
+type NavWithChildren = NavItem & { children?: { label: string; href: string }[] };
 
 export function Header({ content }: { content: SiteContent }) {
   const [open, setOpen] = useState(false);
@@ -28,8 +21,11 @@ export function Header({ content }: { content: SiteContent }) {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  const navWithDropdowns = NAV.map((item) => {
-    if (item.label === 'Dance Styles') {
+  // The branch keys on the STABLE ID, not the rendered text. `item.label ===
+  // 'Dance Styles'` was one rename in /admin/labels away from emptying this
+  // dropdown with no error anywhere.
+  const navWithDropdowns: NavWithChildren[] = NAV_ITEMS.map((item) => {
+    if (item.id === 'dance-styles') {
       return {
         ...item,
         children: content.danceStyles
@@ -57,17 +53,17 @@ export function Header({ content }: { content: SiteContent }) {
       }`}
     >
       <div className="container-x flex h-16 items-center gap-3">
-        <Link href="/" aria-label="Furor — Dance Hyderabad home" className="shrink-0">
+        <Link href="/" aria-label={label(content.labels, 'ariaHome')} className="shrink-0">
           <BrandMark size={52} />
         </Link>
         <nav
           className="hidden lg:flex flex-1 items-center justify-center gap-1"
-          aria-label="Primary"
+          aria-label={label(content.labels, 'ariaPrimaryNav')}
         >
           {navWithDropdowns.map((item) => (
-            <div key={item.label} className="group relative">
+            <div key={item.id} className="group relative">
               <Link href={item.href} className="btn-ghost">
-                {item.label}
+                {navLabel(item, content.labels)}
                 {item.children ? <Caret /> : null}
               </Link>
               {item.children ? (
@@ -98,11 +94,11 @@ export function Header({ content }: { content: SiteContent }) {
           <button
             type="button"
             className="lg:hidden btn-ghost p-2"
-            aria-label="Toggle menu"
+            aria-label={label(content.labels, 'ariaToggleMenu')}
             aria-expanded={open}
             onClick={() => setOpen((v) => !v)}
           >
-            <span className="sr-only">Menu</span>
+            <span className="sr-only">{label(content.labels, 'ariaMenu')}</span>
             <Burger open={open} />
           </button>
         </div>
@@ -111,13 +107,13 @@ export function Header({ content }: { content: SiteContent }) {
         <div className="lg:hidden border-t border-cream/10 bg-ink-950/95 backdrop-blur">
           <div className="container-x py-4 space-y-1">
             {navWithDropdowns.map((item) => (
-              <div key={item.label} className="border-b border-cream/5 last:border-0">
+              <div key={item.id} className="border-b border-cream/5 last:border-0">
                 <Link
                   href={item.href}
                   onClick={() => setOpen(false)}
                   className="block py-3 text-base font-medium text-cream"
                 >
-                  {item.label}
+                  {navLabel(item, content.labels)}
                 </Link>
                 {item.children ? (
                   <div className="pb-3 pl-4 space-y-1">

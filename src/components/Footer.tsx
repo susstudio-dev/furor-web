@@ -2,6 +2,8 @@ import Link from 'next/link';
 import type { SiteContent } from '@/lib/content-schema';
 import { buildWhatsAppHref } from '@/lib/enquiry';
 import { BrandMark } from './BrandMark';
+import { NAV_ITEMS, navLabel } from '@/lib/nav';
+import { label } from '@/lib/labels';
 
 // `flush` drops the breathing room above the footer. On the public pages that
 // margin is the pause after the closing CTA; under the admin shell — which
@@ -52,10 +54,10 @@ export function Footer({ content, flush = false }: { content: SiteContent; flush
                 <p className="mt-2 text-xs text-cream/70">{s.hours}</p>
                 <div className="mt-3 flex gap-4 text-sm">
                   <a className="inline-block py-1 text-ember-400 hover:text-ember-300 transition-colors" href={`tel:${s.telephone.replace(/\s/g, '')}`}>
-                    Call
+                    {label(content.labels, 'ctaCall')}
                   </a>
                   <a className="inline-block py-1 text-ember-400 hover:text-ember-300 transition-colors" href={wa(s.slug, s.name)} target="_blank" rel="noopener noreferrer">
-                    WhatsApp
+                    {label(content.labels, 'ctaWhatsapp')}
                   </a>
                 </div>
               </div>
@@ -64,17 +66,22 @@ export function Footer({ content, flush = false }: { content: SiteContent; flush
 
           {/* More */}
           <div className="md:col-span-3">
-            <h3 className="display text-sm uppercase tracking-widest text-cream/70">Explore</h3>
+            <h3 className="display text-sm uppercase tracking-widest text-cream/70">
+              {label(content.labels, 'navExplore')}
+            </h3>
             <ul className="mt-3 space-y-2 text-sm text-cream/80">
-              <li><Link href="/about" className="inline-block py-1 hover:text-cream transition-colors">About</Link></li>
-              <li><Link href="/dance-styles" className="inline-block py-1 hover:text-cream transition-colors">Dance Styles</Link></li>
-              <li><Link href="/instructors" className="inline-block py-1 hover:text-cream transition-colors">Instructors</Link></li>
-              <li><Link href="/batches" className="inline-block py-1 hover:text-cream transition-colors">Batches &amp; Pricing</Link></li>
-              {content.stories.length > 0 ? (
-                <li><Link href="/stories" className="inline-block py-1 hover:text-cream transition-colors">Blog</Link></li>
-              ) : null}
-              <li><Link href="/faqs" className="inline-block py-1 hover:text-cream transition-colors">FAQs</Link></li>
-              <li><Link href="/contact" className="inline-block py-1 hover:text-cream transition-colors">Contact</Link></li>
+              {/* Same seven destinations, same order, one source of truth with
+                  the header. `home` is deliberately excluded — the brand mark
+                  above already links there. */}
+              {NAV_ITEMS.filter(
+                (i) => i.id !== 'home' && (i.id !== 'blog' || content.stories.length > 0),
+              ).map((i) => (
+                <li key={i.id}>
+                  <Link href={i.href} className="inline-block py-1 hover:text-cream transition-colors">
+                    {navLabel(i, content.labels)}
+                  </Link>
+                </li>
+              ))}
               {content.customPages
                 .filter((p) => p.published && p.showInFooter)
                 .sort((a, b) => a.displayOrder - b.displayOrder)
@@ -99,8 +106,8 @@ export function Footer({ content, flush = false }: { content: SiteContent; flush
         <div className="mt-14 flex flex-wrap items-center justify-between gap-4 border-t border-cream/10 pt-6 text-xs text-cream/70">
           <p>© {new Date().getFullYear()} Furor Dance Hyderabad. All rights reserved.</p>
           <div className="flex items-center gap-5 pr-12 sm:pr-28">
-            <Link href="/privacy" className="inline-block py-1.5 hover:text-cream transition-colors">Privacy</Link>
-            <Link href="/terms" className="inline-block py-1.5 hover:text-cream transition-colors">Terms</Link>
+            <Link href="/privacy" className="inline-block py-1.5 hover:text-cream transition-colors">{label(content.labels, 'navPrivacy')}</Link>
+            <Link href="/terms" className="inline-block py-1.5 hover:text-cream transition-colors">{label(content.labels, 'navTerms')}</Link>
             {/* No "Studio login" link here. robots.txt disallows /admin, so a
                 followed internal link to it made every crawl report a blocked
                 URL — and it invited bots to the login screen for no gain.
