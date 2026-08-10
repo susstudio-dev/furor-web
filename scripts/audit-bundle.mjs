@@ -9,8 +9,13 @@
 //
 // Method: read the two build manifests, take the union of rootMainFiles and
 // each app route's chunk list, and gzip the real bytes. The "framework floor"
-// is the set of chunks EVERY app route loads — i.e. what an empty route would
-// still cost. App-authored = route total minus floor.
+// is the set of chunks EVERY app route loads — including admin — i.e. what an
+// empty route would still cost. App-authored = route total minus floor, which
+// means site-shell code shared by most-but-not-all public routes (e.g. a
+// component only admin skips) is counted as "app-authored" on this route's
+// row, not carved out as a second shared tier. That is the right cost model
+// for "what does a fresh visitor to this route pay" but "app-authored" here
+// means "beyond the floor", not "unique to this page".
 //
 //   npm run build && npm run audit:bundle
 //   npm run audit:bundle -- --strict     # exit 1 on a breach
@@ -93,7 +98,13 @@ for (const r of rows) {
   const overTotal = !r.admin && r.total > TOTAL_BUDGET;
   const overApp = !r.admin && r.app > APP_BUDGET;
   if (overTotal || overApp) breaches++;
-  const flag = r.admin ? '   (admin)' : overTotal || overApp ? '   OVER' : '';
+  // Name the budget(s) actually breached — a route can be under one budget
+  // and over the other, and a reader should not have to do the arithmetic.
+  let flag = '';
+  if (r.admin) flag = '   (admin)';
+  else if (overTotal && overApp) flag = '   OVER total+app';
+  else if (overTotal) flag = '   OVER total';
+  else if (overApp) flag = '   OVER app';
   console.log(`  ${kb(r.total).padStart(10)} ${kb(r.app).padStart(10)}   ${r.route}${flag}`);
 }
 
