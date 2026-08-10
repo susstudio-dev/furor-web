@@ -684,6 +684,7 @@ export const SiteContentSchema = z.object({
   pages: PagesSchema,
   customPages: z.array(CustomPageSchema).default([]),
   welcome: WelcomeSchema,
+  labels: LabelsSchema,
 });
 
 export type SiteContent = z.infer<typeof SiteContentSchema>;

@@ -58,6 +58,7 @@ export const SECTION_PATHS: Record<string, string[]> = {
   pages: ['pages'],
   customPages: ['customPages'],
   welcome: ['welcome'],
+  labels: ['labels'],
 };
 
 // Ids are immutable once created — changing one silently re-points every

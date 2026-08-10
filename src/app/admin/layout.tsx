@@ -25,6 +25,7 @@ const NAV: NavItem[] = [
   { label: 'Dashboard', href: '/admin' },
   { label: 'Site & socials', href: '/admin/site' },
   { label: 'Hero', href: '/admin/hero' },
+  { label: 'Buttons & labels', href: '/admin/labels' },
 
   { label: 'Page copy', href: '/admin/pages', groupHeader: true },
   { label: '  Home page', href: '/admin/pages/home' },
@@ -65,6 +66,7 @@ const NAV: NavItem[] = [
 const SECTION_FOR_HREF: Record<string, string> = {
   '/admin/site': 'site',
   '/admin/hero': 'hero',
+  '/admin/labels': 'labels',
   '/admin/pages/home': 'pages',
   '/admin/pages/about': 'pages',
   '/admin/pages/faqs': 'pages',
