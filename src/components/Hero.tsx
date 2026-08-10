@@ -39,7 +39,9 @@ export function Hero({ content }: { content: SiteContent }) {
             // Not decorative: this is the one photo that shows a visitor what
             // a Furor night actually looks like, so it gets a real description
             // rather than the alt="" that an audit flagged as missing text.
-            alt="Couples dancing Salsa together on a busy social floor at a Furor Latin night in Hyderabad"
+            // Editable at /admin/hero; the schema default is the literal that
+            // shipped here before.
+            alt={content.hero.posterAlt}
             seed="hero"
             label=""
             fill

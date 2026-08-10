@@ -49,6 +49,16 @@ export function HeroEditor({ initial }: { initial: SiteContent }) {
           aspect="wide"
           hint="Used as the fallback image behind the hero video, and on mobile when the video doesn't autoplay."
         />
+        <Field
+          label="Poster image description"
+          hint="Read aloud by screen readers and shown if the photo fails to load. Describe what is happening in it."
+        >
+          <input
+            value={c.hero.posterAlt}
+            onChange={(e) => patch({ posterAlt: e.target.value })}
+            className="input"
+          />
+        </Field>
         <div className="grid sm:grid-cols-2 gap-3">
           <Field label="Hero video — MP4 URL" hint="Optional. Paste a hosted .mp4 URL.">
             <input

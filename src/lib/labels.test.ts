@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { LabelsSchema, type Labels } from './content-schema';
+import { HeroSchema, LabelsSchema, type Labels } from './content-schema';
 import {
   enquiryDefaultLabel,
   LABEL_DEFAULTS,
@@ -154,5 +154,22 @@ describe('enquiryDefaultLabel', () => {
     expect(enquiryDefaultLabel('whatsapp', 'link', edited)).toBe('Message us on WhatsApp');
     // batch-row keeps its own key, so one edit cannot silently rewrite two.
     expect(enquiryDefaultLabel('whatsapp', 'batch-row', edited)).toBe('Enquire on WhatsApp');
+  });
+});
+
+describe('HeroSchema.posterAlt', () => {
+  // Not decorative: this is the one photo that shows a visitor what a Furor
+  // night actually looks like, so it carries a real description rather than
+  // the alt="" an audit flagged. The default is the literal Hero.tsx ships.
+  it('defaults to the description shipping today', () => {
+    const h = HeroSchema.parse({ headline: 'x', subHeadline: 'y' });
+    expect(h.posterAlt).toBe(
+      'Couples dancing Salsa together on a busy social floor at a Furor Latin night in Hyderabad',
+    );
+  });
+
+  it('keeps an edited description', () => {
+    const h = HeroSchema.parse({ headline: 'x', subHeadline: 'y', posterAlt: 'Bachata class' });
+    expect(h.posterAlt).toBe('Bachata class');
   });
 });
