@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import type { SiteContent } from '@/lib/content-schema';
 import { SaveBar } from '@/components/admin/SaveBar';
 import { EditorStyles } from '@/components/admin/fields';
-import { LABEL_DEFAULTS, PILL_CHAR_LIMIT, PILL_KEYS, type LabelKey } from '@/lib/labels';
+import { LABEL_DEFAULTS, PILL_CHAR_LIMIT, PILL_KEYS, label, type LabelKey } from '@/lib/labels';
 import { saveSiteContent } from '@/lib/admin-save';
 
 // Grouped by name prefix only — deliberately not by nesting. The document key
@@ -39,6 +39,18 @@ function charCount(text: string): number {
   return n;
 }
 
+// A field only counts as overridden when it carries text that differs, byte
+// for byte, from what we ship. `getContent()` schema-defaults every key that
+// was never in the stored document, so on a fresh site every value ARRIVES
+// equal to LABEL_DEFAULTS[key] — treating that as "customized" would show a
+// live Reset button and bake the shipped literal into storage on first save,
+// silently orphaning that field from future default copy changes. Typing the
+// exact default is therefore indistinguishable from leaving the field blank,
+// on purpose.
+function isOverride(raw: string, key: LabelKey): boolean {
+  return raw.trim() !== '' && raw !== LABEL_DEFAULTS[key];
+}
+
 export function LabelsEditor({ initial }: { initial: SiteContent }) {
   const [c, setC] = useState<SiteContent>(initial);
   const [dirty, setDirty] = useState(false);
@@ -69,7 +81,18 @@ export function LabelsEditor({ initial }: { initial: SiteContent }) {
   }, [q, c.labels]);
 
   async function save() {
-    await saveSiteContent(c);
+    // Store only what the owner actually changed. A key that arrived
+    // schema-defaulted (or that got typed back to exactly the shipped copy)
+    // is written as '' so the resolver's blank-means-shipped-default fallback
+    // (label(), in @/lib/labels) keeps applying to it — including to any
+    // future change to that default in content-schema.ts.
+    const labels: SiteContent['labels'] = { ...c.labels };
+    for (const k of ALL_KEYS) {
+      if (!isOverride(labels[k] ?? '', k)) labels[k] = '';
+    }
+    const next: SiteContent = { ...c, labels };
+    await saveSiteContent(next);
+    setC(next);
     setDirty(false);
   }
 
@@ -98,14 +121,18 @@ export function LabelsEditor({ initial }: { initial: SiteContent }) {
               <p className="mt-1 text-xs text-cream/50">{g.blurb}</p>
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 {keys.map((k) => {
-                  const value = c.labels[k] ?? '';
-                  const shown = value.trim() === '' ? LABEL_DEFAULTS[k] : value;
+                  const raw = c.labels[k] ?? '';
+                  const override = isOverride(raw, k);
+                  // Same resolver public rendering uses (@/lib/labels) — confirmed here
+                  // rather than reimplemented, so the char-count hint always matches what
+                  // the live site would actually show for this field.
+                  const shown = label(c.labels, k);
                   const over = PILL_KEYS.has(k) && charCount(shown) > PILL_CHAR_LIMIT;
                   return (
                     <label key={k} className="block">
                       <span className="flex items-baseline justify-between gap-2">
                         <span className="text-xs uppercase tracking-widest text-cream/60">{k}</span>
-                        {value.trim() !== '' ? (
+                        {override ? (
                           <button
                             type="button"
                             onClick={() => patch(k, '')}
@@ -117,7 +144,7 @@ export function LabelsEditor({ initial }: { initial: SiteContent }) {
                       </span>
                       <div className="mt-1.5">
                         <input
-                          value={value}
+                          value={override ? raw : ''}
                           onChange={(e) => patch(k, e.target.value)}
                           placeholder={LABEL_DEFAULTS[k]}
                           className="input"
