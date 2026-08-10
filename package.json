@@ -9,6 +9,7 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "sync-seed": "node scripts/sync-seed.mjs",
+    "audit:images": "node scripts/audit-image-weight.mjs",
     "hash-password": "node scripts/hash-password.mjs",
     "migrate-to-r2": "node scripts/migrate-to-r2.mjs",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
