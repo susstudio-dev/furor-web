@@ -10,8 +10,9 @@ import { CinematicHeadline } from './CinematicHeadline';
 import { bookLabel } from '@/lib/book-label';
 import { label } from '@/lib/labels';
 import { HERO_POSTER_ALT_DEFAULT } from '@/lib/hero-defaults';
+import type { HeroPoster } from '@/lib/image-variants';
 
-export function Hero({ content }: { content: SiteContent }) {
+export function Hero({ content, poster }: { content: SiteContent; poster: HeroPoster | null }) {
   const [allowVideo, setAllowVideo] = useState(false);
   // The trial price comes from live batch data, never a hardcoded string —
   // if the studio changes the token in the admin, every button follows.
@@ -35,24 +36,81 @@ export function Hero({ content }: { content: SiteContent }) {
     <section className="relative isolate overflow-hidden">
       <div className="absolute inset-0 -z-10">
         <div className="relative h-full w-full">
-          <Img
-            src={content.hero.posterImage}
-            // Not decorative: this is the one photo that shows a visitor what
-            // a Furor night actually looks like, so it gets a real description
-            // rather than the alt="" that an audit flagged as missing text.
-            // Editable at /admin/hero; a blank field falls back to the shipped
-            // default rather than rendering alt="" — clearing the field must
-            // not silently turn this back into a decorative image.
-            alt={content.hero.posterAlt.trim() !== '' ? content.hero.posterAlt : HERO_POSTER_ALT_DEFAULT}
-            seed="hero"
-            label=""
-            fill
-            priority
-            sizes="100vw"
-            // On portrait phones the subject sits hard right so it's not
-            // permanently buried under the text block.
-            className="object-cover object-[78%_38%] sm:object-[center_30%] animate-kenburns"
-          />
+          {poster ? (
+            <>
+              {/* Preload the LCP image by hand. A bare AVIF preload would be
+                  wasted on a browser that ends up picking WebP, so each one
+                  carries the same `type` and `media` the matching <source>
+                  does — the browser skips a preload whose type it cannot
+                  decode and falls through to the <picture> negotiation. */}
+              <link
+                rel="preload"
+                as="image"
+                type="image/avif"
+                media="(max-width: 639px)"
+                imageSrcSet={poster.portrait.avif}
+                imageSizes="100vw"
+                fetchPriority="high"
+              />
+              <link
+                rel="preload"
+                as="image"
+                type="image/avif"
+                media="(min-width: 640px)"
+                imageSrcSet={poster.landscape.avif}
+                imageSizes="100vw"
+                fetchPriority="high"
+              />
+              {/* Order is load-bearing: a browser takes the FIRST <source>
+                  whose media and type it supports, and the <img> is the last
+                  resort — so every <source> must precede it, media-constrained
+                  ones first. The portrait crop exists because the render box is
+                  375x690 CSS px (aspect 0.543) against a 1.498 source:
+                  object-cover throws away 63.7% of the width, and a
+                  purpose-built crop stops paying for pixels never on screen. */}
+              <picture>
+                <source media="(min-width: 640px)" type="image/avif" srcSet={poster.landscape.avif} sizes="100vw" />
+                <source media="(min-width: 640px)" type="image/webp" srcSet={poster.landscape.webp} sizes="100vw" />
+                <source media="(min-width: 640px)" srcSet={poster.landscape.jpg} sizes="100vw" />
+                <source type="image/avif" srcSet={poster.portrait.avif} sizes="100vw" />
+                <source type="image/webp" srcSet={poster.portrait.webp} sizes="100vw" />
+                <img
+                  src={poster.portrait.jpgSrc}
+                  srcSet={poster.portrait.jpg}
+                  sizes="100vw"
+                  // Not decorative: this is the one photo that shows a visitor
+                  // what a Furor night actually looks like, so it gets a real
+                  // description rather than the alt="" that an audit flagged
+                  // as missing text. Editable at /admin/hero; a blank field
+                  // falls back to the shipped default rather than rendering
+                  // alt="" — clearing the field must not silently turn this
+                  // back into a decorative image. Reads the editable field,
+                  // never a local constant only.
+                  alt={content.hero.posterAlt.trim() !== '' ? content.hero.posterAlt : HERO_POSTER_ALT_DEFAULT}
+                  fetchPriority="high"
+                  decoding="async"
+                  // No width/height: the parent is absolute inset-0 and CSS
+                  // sizes both axes, so the intrinsic ratio never reaches
+                  // layout and a landscape source cannot shift anything.
+                  // On portrait phones the subject sits hard right so it is not
+                  // permanently buried under the text block.
+                  className="photo absolute inset-0 h-full w-full object-cover object-[78%_38%] sm:object-[center_30%] animate-kenburns"
+                />
+              </picture>
+            </>
+          ) : (
+            // The poster was replaced in the admin and `npm run build:images`
+            // has not been re-run. Serve the raw upload rather than nothing.
+            <Img
+              src={content.hero.posterImage}
+              alt={content.hero.posterAlt.trim() !== '' ? content.hero.posterAlt : HERO_POSTER_ALT_DEFAULT}
+              seed="hero"
+              label=""
+              fill
+              priority
+              className="object-cover object-[78%_38%] sm:object-[center_30%] animate-kenburns"
+            />
+          )}
           {allowVideo ? (
             <video
               ref={videoRef}

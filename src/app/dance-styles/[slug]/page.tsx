@@ -67,7 +67,6 @@ export default async function StylePage({ params }: { params: Promise<{ slug: st
             label={style.name}
             fill
             priority
-            sizes="100vw"
             // Anchor the subject hard right on portrait mobile so the dancer
             // isn't cropped to the centre of the frame.
             className="object-cover object-[78%_38%] sm:object-[center_30%] animate-kenburns"

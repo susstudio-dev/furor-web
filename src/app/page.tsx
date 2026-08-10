@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { getPublicContent, nextBatchPerStyle, visibleBatches, formatBatchDate, formatInr, batchStyleLabel } from '@/lib/content';
 import { fitDescription, fitTitle } from '@/lib/seo';
+import { heroPoster } from '@/lib/image-variants';
 
 export async function generateMetadata() {
   const c = await getPublicContent();
@@ -63,7 +64,10 @@ export default async function HomePage() {
 
   return (
     <>
-      <Hero content={content} />
+      {/* Resolved here, not inside Hero: Hero is a client component, and
+          importing the variant manifest there would ship it in the client
+          bundle for no reason. */}
+      <Hero content={content} poster={heroPoster(content.hero.posterImage)} />
 
       {/* Fast lane: join a real batch before the brochure even starts. */}
       <QuickEnroll content={content} trialFrom={trialFrom} />
@@ -128,7 +132,6 @@ export default async function HomePage() {
                   seed={`style-${s.slug}`}
                   label={s.name}
                   fill
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                   className="object-cover object-[center_30%] transition duration-700 group-hover:scale-[1.04]"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-ink-950 via-ink-950/30 to-transparent" />
@@ -410,7 +413,6 @@ export default async function HomePage() {
                             alt={`Inside ${s.name}`}
                             seed={`${s.slug}-${i}`}
                             fill
-                            sizes="(max-width: 768px) 100vw, 33vw"
                             className="object-cover transition duration-700 hover:scale-[1.04]"
                           />
                         </div>

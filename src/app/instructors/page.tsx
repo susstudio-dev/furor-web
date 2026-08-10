@@ -70,7 +70,6 @@ export default async function InstructorsPage() {
                     label={i.name}
                     variant={(idx % 4) as 0 | 1 | 2 | 3}
                     fill
-                    sizes="120px"
                     // Faces sit slightly above centre — anchor up so heads don't get cropped.
                     className="object-cover object-[center_25%]"
                   />

@@ -36,7 +36,6 @@ export function PhotoCarousel({
               alt={p.alt}
               seed={`carousel-${i}`}
               fill
-              sizes="(min-width: 1024px) 512px, (min-width: 640px) 432px, 320px"
               className="object-cover object-center transition-transform duration-700 group-hover/card:scale-105"
             />
             {/* subtle bottom vignette for depth */}

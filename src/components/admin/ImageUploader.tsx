@@ -56,7 +56,6 @@ export function ImageUploader({
               src={value}
               alt=""
               fill
-              sizes="160px"
               className="object-cover"
               unoptimized={value.startsWith('http')}
             />
@@ -194,7 +193,6 @@ export function ImageGalleryEditor({
                     src={src}
                     alt=""
                     fill
-                    sizes="(max-width: 768px) 50vw, 25vw"
                     className="object-cover"
                     unoptimized={src.startsWith('http')}
                   />

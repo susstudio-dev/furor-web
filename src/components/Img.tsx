@@ -15,7 +15,10 @@ interface Props {
   variant?: 0 | 1 | 2 | 3;
   /** Required when used with fill layout's parent — passes through. */
   fill?: boolean;
-  sizes?: string;
+  // No `sizes`: next.config.mjs sets images.unoptimized, and Next's
+  // generateImgAttrs returns before srcSet/sizes reach the element under that
+  // flag. A `sizes` prop here is dead weight that reads like responsive
+  // loading is happening when it is not (spec §7.1).
   priority?: boolean;
   width?: number;
   height?: number;
@@ -29,7 +32,6 @@ export function Img({
   label,
   variant,
   fill,
-  sizes,
   priority,
   width,
   height,
@@ -44,7 +46,6 @@ export function Img({
         src={src!}
         alt={alt}
         fill={fill}
-        sizes={sizes}
         priority={priority}
         width={fill ? undefined : width}
         height={fill ? undefined : height}
