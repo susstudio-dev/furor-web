@@ -39,7 +39,7 @@ All confirmed as true, binding claims (user-verified 2026-08-02):
 - All public copy renders from the single Zod-validated content document (`src/lib/content-schema.ts`) — never hardcode copy that staff should be able to edit.
 - Batches auto-hide when `startDate` is past.
 - Hosting: Cloudflare Workers **free plan** via OpenNext; content/versions/uploads in R2. Free-plan 10 ms CPU cap is a durable constraint (e.g. PBKDF2 not bcrypt for auth).
-- Performance budget (binding): LCP < 2.5 s, CLS < 0.1, INP < 200 ms on Lighthouse mobile; first-load JS < 100 KB gzip per route; hero image < 120 KB AVIF; hero video < 2 MB.
+- Performance budget (binding): LCP < 2.5 s, CLS < 0.1, INP < 200 ms on Lighthouse mobile; first-load JS **total < 115 KB gzip per route**, of which **app-authored client JS < 12 KB gzip per route** (the React/Next framework floor alone measures 100.14 KB gz, so a single sub-100 KB number was unreachable without leaving Next.js — home measures 117.34 KB total / 17.20 KB app-authored today, down from 123.60 / 23.46 KB before Plan 1 removed zod from the client bundle); LCP image < 45 KB AVIF; hero video < 2 MB. Check both with `npm run build && npm run audit:bundle`. **Three public routes currently breach this budget** — `/` and `/dance-styles` are over both limits (117.34/17.20 KB and 115.25/15.11 KB against 115/12); `/about` is over only the app-authored limit (14.14 KB vs. 12 KB; its 114.28 KB total is under 115) — re-run the same script to re-measure.
 
 ## Brand Commitments
 
