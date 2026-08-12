@@ -187,7 +187,7 @@ export function Hero({ content, poster }: { content: SiteContent; poster: HeroPo
               (owner, 2026-08-08). The reassurance is the small commitment
               itself — one class, not a package — not money back. */}
           <p className="mt-2.5 text-sm text-cream/65">
-            One real class. No partner needed. Then you decide.
+            One real class. No partner needed. You decide.
           </p>
         </div>
         {/* No scroll cue here: the QuickEnroll card overlaps this space and its
