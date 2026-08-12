@@ -154,7 +154,15 @@ const nextConfig = {
       // URI path not starting with /admin or /api, respecting origin
       // cache-control. Without that rule this change is inert but harmless.
       {
-        source: '/((?!admin|api|uploads).*)',
+        // Segment-anchored: (?!admin|...) alone is a string-prefix check, not
+        // a path-segment check — it would (a) wrongly exclude a real public
+        // route like /adminfoo (false match on the substring "admin") and
+        // (b) do nothing to stop a hypothetical deeper /foo/admin/bar from
+        // matching (the lookahead only ever inspects the very start of the
+        // string). Requiring a `/` or end-of-string after each name makes
+        // this an actual segment boundary, so the exclusion keeps holding if
+        // either assumption above ever changes.
+        source: '/((?!admin(?:/|$)|api(?:/|$)|uploads(?:/|$)).*)',
         missing: [
           { type: 'cookie', key: 'furor_admin' },
           { type: 'cookie', key: 'furor_preview' },
