@@ -143,8 +143,15 @@
        text (QuickEnroll.tsx, page.tsx x2, instructors/page.tsx, ...) — the
        clipping now happens inside the pill's own box, visibly, instead of
        escaping it. Every newly-editable label from Plan 1 that lands in a pill
-       would otherwise be a fresh instance of the same silent bug. */
-    @apply inline-flex max-w-full items-center gap-1 overflow-hidden text-ellipsis whitespace-nowrap rounded-full px-2.5 py-1 text-xs uppercase tracking-wider;
+       would otherwise be a fresh instance of the same silent bug.
+       shrink-0: overflow: hidden makes a flex item's automatic min-width
+       resolve to 0 instead of min-content (CSS flex spec), so without this a
+       pill sharing a nowrap flex row with a growing sibling — QuickEnroll's
+       "Open" status badge does exactly this — gets compressed below its own
+       content instead of the sibling yielding first. max-w-full still caps a
+       genuinely over-long string after flex sizing, so this restores the
+       pre-existing shrink behaviour without reopening the clipping bug. */
+    @apply inline-flex max-w-full shrink-0 items-center gap-1 overflow-hidden text-ellipsis whitespace-nowrap rounded-full px-2.5 py-1 text-xs uppercase tracking-wider;
   }
   .hairline {
     @apply border-t border-cream/10;
