@@ -4,6 +4,7 @@ import { useState } from 'react';
 import type { SiteContent } from '@/lib/content-schema';
 import { SaveBar } from '@/components/admin/SaveBar';
 import { saveSiteContent } from '@/lib/admin-save';
+import { SOCIAL_URL_HINT, socialUrlIssue, type SocialKey } from '@/lib/social-url';
 
 export function SiteEditor({ initial }: { initial: SiteContent }) {
   const [c, setC] = useState<SiteContent>(initial);
@@ -80,15 +81,39 @@ export function SiteEditor({ initial }: { initial: SiteContent }) {
         <Field label="Email (footer only)">
           <input value={c.site.email || ''} onChange={(e) => patchSite({ email: e.target.value })} className="input" />
         </Field>
+        {/* Format hints + a live shape warning (spec §6.1). The warning is
+            advisory; the authority is integrityIssues() on the save path, so a
+            malformed URL cannot be stored even by pasting into /admin/json. */}
         <div className="grid sm:grid-cols-3 gap-3">
-          <Field label="Instagram URL">
-            <input value={c.site.socials.instagram || ''} onChange={(e) => patchSite({ socials: { ...c.site.socials, instagram: e.target.value } })} className="input" />
+          <Field label="Instagram URL" hint={`Format: ${SOCIAL_URL_HINT.instagram}`}>
+            <input
+              value={c.site.socials.instagram || ''}
+              onChange={(e) => patchSite({ socials: { ...c.site.socials, instagram: e.target.value } })}
+              placeholder={SOCIAL_URL_HINT.instagram}
+              className="input"
+            />
+            <SocialUrlNote k="instagram" value={c.site.socials.instagram || ''} />
           </Field>
-          <Field label="Facebook URL">
-            <input value={c.site.socials.facebook || ''} onChange={(e) => patchSite({ socials: { ...c.site.socials, facebook: e.target.value } })} className="input" />
+          <Field label="Facebook URL" hint={`Format: ${SOCIAL_URL_HINT.facebook}`}>
+            <input
+              value={c.site.socials.facebook || ''}
+              onChange={(e) => patchSite({ socials: { ...c.site.socials, facebook: e.target.value } })}
+              placeholder={SOCIAL_URL_HINT.facebook}
+              className="input"
+            />
+            <SocialUrlNote k="facebook" value={c.site.socials.facebook || ''} />
           </Field>
-          <Field label="YouTube URL">
-            <input value={c.site.socials.youtube || ''} onChange={(e) => patchSite({ socials: { ...c.site.socials, youtube: e.target.value } })} className="input" />
+          <Field
+            label="YouTube URL"
+            hint={`Format: ${SOCIAL_URL_HINT.youtube} — a bare /name is not a channel and will 404. Leave blank to hide the icon.`}
+          >
+            <input
+              value={c.site.socials.youtube || ''}
+              onChange={(e) => patchSite({ socials: { ...c.site.socials, youtube: e.target.value } })}
+              placeholder={SOCIAL_URL_HINT.youtube}
+              className="input"
+            />
+            <SocialUrlNote k="youtube" value={c.site.socials.youtube || ''} />
           </Field>
         </div>
         <Field label="Footer copy">
@@ -285,6 +310,15 @@ export function SiteEditor({ initial }: { initial: SiteContent }) {
       `}</style>
     </>
   );
+}
+
+// Advisory only — the save path is the authority. Rendering the same message
+// the server would return means the admin sees it while typing rather than
+// after losing a save.
+function SocialUrlNote({ k, value }: { k: SocialKey; value: string }) {
+  const issue = socialUrlIssue(k, value.trim());
+  if (!issue) return null;
+  return <p className="mt-1 text-xs text-ember-400">{issue}</p>;
 }
 
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {

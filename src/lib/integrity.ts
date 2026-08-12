@@ -6,6 +6,8 @@
 // the ENTIRE public site — turning one bad record into a site-wide outage.
 // As a write-path check, the same violation merely refuses the save.
 
+import { SOCIAL_KEYS, socialUrlIssue } from './social-url';
+
 export interface IntegrityIssue {
   path: (string | number)[];
   message: string;
@@ -83,11 +85,30 @@ function references(doc: Doc, issues: IntegrityIssue[]): void {
   });
 }
 
+// Social URLs are shape-checked here, not in the schema: a Zod refine would
+// run on every read and a single malformed URL would make getContent() serve
+// the bundled seed for the whole public site. Note save-pipeline.ts only
+// rejects issues a patch INTRODUCED, so the already-stored bad YouTube URL
+// stays saveable — which matters, because /admin/site is where it gets fixed.
+function socials(doc: Doc, issues: IntegrityIssue[]): void {
+  const site = doc.site;
+  if (site == null || typeof site !== 'object') return;
+  const bag = (site as Row).socials;
+  if (bag == null || typeof bag !== 'object') return;
+  for (const key of SOCIAL_KEYS) {
+    const value = (bag as Row)[key];
+    if (typeof value !== 'string') continue;
+    const issue = socialUrlIssue(key, value.trim());
+    if (issue) issues.push({ path: ['site', 'socials', key], message: issue });
+  }
+}
+
 /** Every invariant violation in the document. Empty means consistent. */
 export function integrityIssues(doc: unknown): IntegrityIssue[] {
   if (doc == null || typeof doc !== 'object') return [];
   const issues: IntegrityIssue[] = [];
   duplicates(doc as Doc, issues);
+  socials(doc as Doc, issues);
   references(doc as Doc, issues);
   return issues;
 }
