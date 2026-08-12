@@ -1,6 +1,7 @@
 import 'server-only';
 import { revalidatePath } from 'next/cache';
 import type { SiteContent } from './content-schema';
+import { publicPathsFor } from './public-urls';
 
 // Shared by the save and restore routes. Public pages render per-request on
 // Cloudflare (see connection() in the root layout), so freshness doesn't
@@ -10,24 +11,7 @@ import type { SiteContent } from './content-schema';
 export function revalidatePublicPages(content: SiteContent): void {
   try {
     revalidatePath('/', 'layout');
-    for (const p of [
-      '/',
-      '/about',
-      '/faqs',
-      '/contact',
-      '/instructors',
-      '/stories',
-      '/dance-styles',
-      '/batches',
-      '/privacy',
-      '/terms',
-      '/sitemap.xml',
-    ]) {
-      revalidatePath(p);
-    }
-    for (const s of content.danceStyles) revalidatePath(`/dance-styles/${s.slug}`);
-    for (const s of content.stories) revalidatePath(`/stories/${s.slug}`);
-    for (const p of content.customPages) revalidatePath(`/p/${p.slug}`);
+    for (const p of publicPathsFor(content)) revalidatePath(p);
   } catch (err) {
     console.warn('revalidatePath failed (non-fatal):', err);
   }

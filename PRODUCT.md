@@ -30,7 +30,7 @@ All confirmed as true, binding claims (user-verified 2026-08-02):
 - Visitors arrive mostly on mobile, via Instagram (@furorhyd) and WhatsApp forwards.
 - Enquiry routing: WhatsApp primary (`wa.me/918886072572` with context-aware prefilled message per style/branch/batch), Instagram DM secondary (deep link + message copied to clipboard). Every CTA fires GA4 `enquiry_click`.
 - Two venues today: **Jubilee Hills** (2nd Floor, Alcazar Mall, Road No. 36) and **PUP Unleash — HUDA Colony**. (Older docs mention Kondapur; it is not current.) <!-- updated 2026-08-06 from live content -->
-- Staff edit content on the deployed `/admin`; edits appear on the public site within ~30 s (per-request rendering, no redeploy).
+- Staff edit content on the deployed `/admin`; edits appear on the public site within ~30 s (per-request rendering, no redeploy). Public routes carry a 60 s edge cache that is purged on every published save, so an owner edit is immediate; an anonymous visitor who arrives between an edit and the purge may see up to 60 s-old content.
 
 ## Capabilities and Constraints
 

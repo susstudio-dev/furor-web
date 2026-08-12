@@ -45,3 +45,17 @@
 
 /logo-mark.png
   Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+# Build-time image variants from scripts/build-images.mjs. The filenames carry
+# an 8-char hash of the SOURCE bytes, so a replaced photo is a replaced URL —
+# which is what makes `immutable` safe here and not on /photos/*. Deliberately
+# a separate path prefix from /photos so the two Cache-Control rules can never
+# both match one file.
+/img/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Filenames are server-generated UUIDs, so an upload's bytes never change under
+# its URL. In production these are served by src/app/uploads/[file]/route.ts,
+# which already sets the same value; this covers the dev/static path.
+/uploads/*
+  Cache-Control: public, max-age=31536000, immutable

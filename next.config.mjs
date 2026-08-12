@@ -143,6 +143,29 @@ const nextConfig = {
           { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
         ],
       },
+      // Public routes only, and only for a visitor holding neither the admin
+      // nor the preview cookie — those two variants must never enter a shared
+      // cache. /admin and /api keep no-store via the rules above; the negative
+      // lookahead keeps this rule off them entirely.
+      //
+      // DEPLOY STEP, not optional: Cloudflare does not cache HTML by default,
+      // so this header does nothing until a zone Cache Rule marks matching
+      // requests "Eligible for cache" — hostname = www.dancehyderabad.com AND
+      // URI path not starting with /admin or /api, respecting origin
+      // cache-control. Without that rule this change is inert but harmless.
+      {
+        source: '/((?!admin|api|uploads).*)',
+        missing: [
+          { type: 'cookie', key: 'furor_admin' },
+          { type: 'cookie', key: 'furor_preview' },
+        ],
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=0, s-maxage=60, stale-while-revalidate=600',
+          },
+        ],
+      },
       // Served uploads are opaque image bytes — lock them down harder
       // than the site CSP (later matching rules win per header key).
       {

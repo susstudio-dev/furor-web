@@ -9,6 +9,8 @@ import { readDocWithVersion, writeDocIfMatch, StorageUnavailableError } from '@/
 import { versionToken } from '@/lib/storage-version-core';
 import { contentLengthWithin, sameOrigin } from '@/lib/request-guards';
 import { revalidatePublicPages } from '@/lib/revalidate-public';
+import { purgeEdgeCache } from '@/lib/edge-purge';
+import { publicPathsFor } from '@/lib/public-urls';
 import { resolveMutationSubject } from '@/lib/subject';
 import { buildDraft } from '@/lib/drafts-core';
 import { newDraftId, writeDraft } from '@/lib/drafts';
@@ -183,6 +185,9 @@ export async function POST(req: Request) {
         detail: `rev ${written.rev} · ${result.changes.map((c) => c.path).join(', ')}`,
       });
       revalidatePublicPages(result.next);
+      // Public routes carry s-maxage=60; without this an owner edit would sit
+      // behind the edge for up to a minute. Never throws — see edge-purge.ts.
+      await purgeEdgeCache(publicPathsFor(result.next));
 
       return NextResponse.json({ ok: true, version: versionToken(written) });
     }
