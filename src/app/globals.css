@@ -160,7 +160,14 @@
     @apply font-display tracking-tight;
   }
   .accent {
-    font-family: var(--font-serif), Georgia, 'Times New Roman', serif;
+    /* var(--font-sans) rather than Georgia: next/font emits Inter WITH a
+       size-adjusted local fallback, so the glyph advances during the swap are
+       far closer to the real face than Georgia's are. The h1's second line has
+       only 8% headroom in a 335px column — a wide fallback pushes it to three
+       lines and swings the fold by ~40px, dwarfing every padding tweak in M4.
+       `serif` stays last so the italic still resolves to something serif on a
+       browser that has neither variable. */
+    font-family: var(--font-serif), var(--font-sans), serif;
     font-style: italic;
     font-weight: 500;
     letter-spacing: -0.01em;
@@ -650,7 +657,14 @@ html[data-theme='light'] .strip-light {
    .cine-w's padding) stay outside, or the layout changes with the setting. */
 @media (prefers-reduced-motion: no-preference) {
   .animate-marquee { animation: marquee calc(var(--bar) * 10) linear infinite }
-  .animate-kenburns { animation: kenburns calc(var(--bar) * 12) ease-in-out infinite alternate }
+  /* Phones only get stillness here: this drives an infinite compositor
+     animation over ~11.7 MB of GPU texture, for an effect that is hidden
+     behind an opaque .hero-scrim-x on light-theme mobile anyway (spec §7.1
+     finding 3). Nested inside the prefers-reduced-motion block above, so a
+     phone gets no animation and a reduced-motion desktop still gets none. */
+  @media (min-width: 640px) {
+    .animate-kenburns { animation: kenburns calc(var(--bar) * 12) ease-in-out infinite alternate }
+  }
   .animate-fade-up { animation: fadeUp var(--beat) ease-out both }
   .beat-dot { animation: beatPulse calc(var(--beat) * 2) ease-in-out infinite }
   .beat-dot--glyph { animation-name: beatGlow }
