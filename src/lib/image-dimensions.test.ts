@@ -36,6 +36,28 @@ function webpVp8x(width: number, height: number): Uint8Array {
   return b;
 }
 
+function webpVp8(width: number, height: number): Uint8Array {
+  const b = new Uint8Array(30);
+  b.set([0x52, 0x49, 0x46, 0x46], 0); // 'RIFF'
+  b.set([0x57, 0x45, 0x42, 0x50], 8); // 'WEBP'
+  b.set([0x56, 0x50, 0x38, 0x20], 12); // 'VP8 '
+  b.set([0x9d, 0x01, 0x2a], 23); // keyframe start code
+  new DataView(b.buffer).setUint16(26, width, true);
+  new DataView(b.buffer).setUint16(28, height, true);
+  return b;
+}
+
+function webpVp8l(width: number, height: number): Uint8Array {
+  const b = new Uint8Array(30);
+  b.set([0x52, 0x49, 0x46, 0x46], 0); // 'RIFF'
+  b.set([0x57, 0x45, 0x42, 0x50], 8); // 'WEBP'
+  b.set([0x56, 0x50, 0x38, 0x4c], 12); // 'VP8L'
+  b[20] = 0x2f; // lossless signature byte
+  const bits = (width - 1) | ((height - 1) << 14);
+  b.set([bits & 0xff, (bits >> 8) & 0xff, (bits >> 16) & 0xff, (bits >>> 24) & 0xff], 21);
+  return b;
+}
+
 describe('readImageSize', () => {
   it('reads dimensions from a PNG IHDR chunk', () => {
     expect(readImageSize(png(1600, 1200))).toEqual({ width: 1600, height: 1200 });
@@ -47,6 +69,32 @@ describe('readImageSize', () => {
 
   it('reads the canvas size from a WebP VP8X chunk', () => {
     expect(readImageSize(webpVp8x(4032, 3024))).toEqual({ width: 4032, height: 3024 });
+  });
+
+  it('reads the frame size from a WebP VP8 (lossy) keyframe header', () => {
+    expect(readImageSize(webpVp8(1280, 720))).toEqual({ width: 1280, height: 720 });
+  });
+
+  it('reads the canvas size from a WebP VP8L (lossless) bitstream header', () => {
+    expect(readImageSize(webpVp8l(640, 480))).toEqual({ width: 640, height: 480 });
+  });
+
+  it('bounds the JPEG marker walk against a hostile 8 MB fill-byte buffer', () => {
+    // Satisfies the route's own FF D8 FF sniff, then gives the marker walk
+    // nothing but fill bytes for the rest of an 8 MB buffer (the route's own
+    // byte cap). Unbounded, this forces a near-whole-buffer, one-byte-at-a-
+    // time scan: ~8.39M iterations, ~25-30ms measured — 2.5-3x the entire
+    // 10ms Workers CPU budget for the whole request.
+    const hostile = new Uint8Array(8 * 1024 * 1024).fill(0xff);
+    hostile[1] = 0xd8; // SOI; byte 0 and everything from byte 2 on stays 0xff
+    const start = performance.now();
+    const result = readImageSize(hostile);
+    const elapsed = performance.now() - start;
+    expect(result).toBe(null);
+    // Bounded to a 128 KB scan window this measures ~1-2ms locally; 5ms is
+    // generous for slower CI hardware while still catching a regression back
+    // toward the ~20-30ms whole-buffer scan by more than 3x.
+    expect(elapsed).toBeLessThan(5);
   });
 
   it('returns null for a format it does not parse', () => {

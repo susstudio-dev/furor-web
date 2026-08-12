@@ -24,6 +24,17 @@ const u24le = (b: Uint8Array, i: number) => b[i] | (b[i + 1] << 8) | (b[i + 2] <
 const ascii = (b: Uint8Array, i: number, n: number) =>
   String.fromCharCode(...b.subarray(i, i + n));
 
+// SOF markers land within the first few segments of any real JPEG (EXIF
+// blocks run tens of KB at most). A file that satisfies the route's own
+// FF D8 FF sniff but never resolves to a real marker — every byte a fill
+// byte, or a chain of bogus non-marker bytes — degenerates the walk below
+// into a near-whole-buffer byte scan otherwise: ~8.39M iterations on an 8 MB
+// upload, 2.5-3x the entire 10ms Workers CPU budget. Capping how far into
+// the buffer the walk may look bounds worst-case iterations to this limit
+// regardless of the byte pattern; past it we don't know the size, so return
+// null and let the 8 MB byte cap in the route decide instead.
+const JPEG_MARKER_SCAN_LIMIT = 128 * 1024;
+
 export function readImageSize(b: Uint8Array): ImageSize | null {
   // PNG: 8-byte signature, then IHDR is always the first chunk.
   if (b.length >= 24 && b[0] === 0x89 && ascii(b, 1, 3) === 'PNG' && ascii(b, 12, 4) === 'IHDR') {
@@ -33,7 +44,8 @@ export function readImageSize(b: Uint8Array): ImageSize | null {
   // JPEG: walk the marker chain to the first SOFn frame header.
   if (b.length >= 4 && b[0] === 0xff && b[1] === 0xd8) {
     let i = 2;
-    while (i + 9 < b.length) {
+    const scanEnd = Math.min(b.length, JPEG_MARKER_SCAN_LIMIT);
+    while (i + 9 < scanEnd) {
       if (b[i] !== 0xff) {
         i++;
         continue;
