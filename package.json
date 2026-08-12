@@ -11,6 +11,7 @@
     "sync-seed": "node scripts/sync-seed.mjs",
     "audit:images": "node scripts/audit-image-weight.mjs",
     "audit:bundle": "node scripts/audit-bundle.mjs",
+    "audit:parse-cost": "node scripts/audit-parse-cost.mjs",
     "build:images": "node scripts/build-images.mjs",
     "hash-password": "node scripts/hash-password.mjs",
     "migrate-to-r2": "node scripts/migrate-to-r2.mjs",
