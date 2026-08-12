@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react';
 import Image from 'next/image';
 import { Field } from './fields';
+import { downscaleImageFile, UPLOAD_MAX_EDGE_PX } from '@/lib/image-downscale';
 
 export function ImageUploader({
   label,
@@ -25,8 +26,11 @@ export function ImageUploader({
     setBusy(true);
     setError(null);
     try {
+      // Resize before the POST, not after: re-encoding in the Worker is
+      // seconds of CPU against a 10ms cap.
+      const shrunk = await downscaleImageFile(file);
       const fd = new FormData();
-      fd.append('file', file);
+      fd.append('file', shrunk);
       const res = await fetch('/api/admin/upload', { method: 'POST', body: fd });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(j.error || 'Upload failed');
@@ -45,7 +49,10 @@ export function ImageUploader({
   return (
     <Field
       label={label}
-      hint={hint || 'JPEG / PNG / WebP / AVIF · up to 8 MB. Or paste a URL.'}
+      hint={
+        hint ||
+        `JPEG / PNG / WebP / AVIF · resized to ${UPLOAD_MAX_EDGE_PX}px on the long edge · up to 8 MB. Or paste a URL.`
+      }
     >
       <div className="grid gap-3 sm:grid-cols-[160px_1fr]">
         <div
@@ -129,8 +136,9 @@ export function ImageGalleryEditor({
     const next: string[] = [...values];
     try {
       for (const file of Array.from(files)) {
+        const shrunk = await downscaleImageFile(file);
         const fd = new FormData();
-        fd.append('file', file);
+        fd.append('file', shrunk);
         const res = await fetch('/api/admin/upload', { method: 'POST', body: fd });
         const j = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(j.error || 'Upload failed');
