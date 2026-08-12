@@ -247,8 +247,15 @@ export function Header({ content }: { content: SiteContent }) {
                   {s.icon}
                 </a>
               ))}
+              {/* !h-11 !px-4: ThemeToggle's own h-9 is a mouse-target sized
+                  for the desktop bar. This is the touch-primary drawer this
+                  task moved it into, with 179px of spare room in the row —
+                  the same "don't shrink targets" principle that kept the
+                  header to one icon applies here too. `!` beats h-9 despite
+                  identical specificity, since Tailwind's compiled important
+                  utilities always win regardless of generation order. */}
               <span className="ml-auto">
-                <ThemeToggle />
+                <ThemeToggle className="!h-11 !px-4" />
               </span>
             </div>
           </div>
