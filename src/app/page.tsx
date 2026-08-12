@@ -50,6 +50,15 @@ import { BatchActions } from '@/components/BatchActions';
 // forbids dynamic rendering).
 export const dynamic = 'force-dynamic';
 
+// The two hero preload <link>s below need a single-URL `href` — the HTML
+// spec's fallback for a browser that ignores imagesrcset/imagesizes.
+// `poster.landscape.jpg` is a srcset string (one or more width-tagged URLs);
+// this pulls the first URL out of it. `poster.portrait.jpgSrc` already is a
+// bare URL, so it needs no help.
+function firstUrl(srcSet: string): string {
+  return srcSet.split(',')[0].trim().split(' ')[0];
+}
+
 export default async function HomePage() {
   const content = await getPublicContent();
   const sortedStyles = content.danceStyles.slice().sort((a, b) => a.displayOrder - b.displayOrder);
@@ -61,13 +70,51 @@ export default async function HomePage() {
   const trialLabel = `${bookLabel('Foundation', content.labels)}${
     trialFrom != null ? ` · ${formatInr(trialFrom)}` : ''
   }`;
+  // Resolved here, not inside Hero: Hero is a client component, and
+  // importing the variant manifest there would ship it in the client bundle
+  // for no reason. Computed once so the preload <link>s below and the prop
+  // passed to <Hero> agree on the exact same files.
+  const poster = heroPoster(content.hero.posterImage);
 
   return (
     <>
-      {/* Resolved here, not inside Hero: Hero is a client component, and
-          importing the variant manifest there would ship it in the client
-          bundle for no reason. */}
-      <Hero content={content} poster={heroPoster(content.hero.posterImage)} />
+      {poster ? (
+        <>
+          {/* Hand-written resource preloads for the hero's LCP image,
+              rendered here (a Server Component) rather than inside Hero
+              ('use client'). React only hoists a JSX <link> into <head>
+              when it carries a real string `href` — react-dom's SSR
+              renderer checks `typeof props.href === 'string'` before
+              treating a <link> as a hoistable Resource. An earlier version
+              of this tag carried only `imageSrcSet` and no `href`, so it
+              rendered inert in <body>, after the <picture> it was meant to
+              preload. `type`/`media` on each tag match its corresponding
+              <source> in Hero's <picture> exactly, so a browser that will
+              end up choosing WebP/JPEG simply ignores an AVIF preload it
+              can't decode rather than fetching a wasted file. */}
+          <link
+            rel="preload"
+            as="image"
+            type="image/avif"
+            media="(max-width: 639px)"
+            href={poster.portrait.jpgSrc}
+            imageSrcSet={poster.portrait.avif}
+            imageSizes="100vw"
+            fetchPriority="high"
+          />
+          <link
+            rel="preload"
+            as="image"
+            type="image/avif"
+            media="(min-width: 640px)"
+            href={firstUrl(poster.landscape.jpg)}
+            imageSrcSet={poster.landscape.avif}
+            imageSizes="100vw"
+            fetchPriority="high"
+          />
+        </>
+      ) : null}
+      <Hero content={content} poster={poster} />
 
       {/* Fast lane: join a real batch before the brochure even starts. */}
       <QuickEnroll content={content} trialFrom={trialFrom} />

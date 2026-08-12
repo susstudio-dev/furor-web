@@ -38,29 +38,16 @@ export function Hero({ content, poster }: { content: SiteContent; poster: HeroPo
         <div className="relative h-full w-full">
           {poster ? (
             <>
-              {/* Preload the LCP image by hand. A bare AVIF preload would be
-                  wasted on a browser that ends up picking WebP, so each one
-                  carries the same `type` and `media` the matching <source>
-                  does — the browser skips a preload whose type it cannot
-                  decode and falls through to the <picture> negotiation. */}
-              <link
-                rel="preload"
-                as="image"
-                type="image/avif"
-                media="(max-width: 639px)"
-                imageSrcSet={poster.portrait.avif}
-                imageSizes="100vw"
-                fetchPriority="high"
-              />
-              <link
-                rel="preload"
-                as="image"
-                type="image/avif"
-                media="(min-width: 640px)"
-                imageSrcSet={poster.landscape.avif}
-                imageSizes="100vw"
-                fetchPriority="high"
-              />
+              {/* The LCP preload <link>s live in page.tsx, not here. This
+                  component is 'use client', and a hand-written <link> only
+                  hoists into <head> when it carries a real string `href`
+                  (react-dom's SSR renderer checks `typeof props.href ===
+                  'string'` before treating it as a Resource) — the earlier
+                  imageSrcSet-only version of this tag rendered here had no
+                  `href` and sat inert in <body>, after the element it was
+                  meant to preload. page.tsx already computes `poster` to
+                  pass down as a prop, so the two preload tags render there
+                  instead, each with `href` set to the JPEG fallback URL. */}
               {/* Order is load-bearing: a browser takes the FIRST <source>
                   whose media and type it supports, and the <img> is the last
                   resort — so every <source> must precede it, media-constrained

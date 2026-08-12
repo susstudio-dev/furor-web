@@ -22,12 +22,15 @@ export function BrandMark({
     <span className={`brand-plate inline-flex items-center ${className ?? ''}`} aria-label={ariaLabel}>
       {/* No `priority`: it emits a preload that competes with the hero's own
           LCP preload for the first connection, for a 14,837 B logo that is
-          never the LCP element (spec §7.3 M2). */}
+          never the LCP element (spec §7.3 M2). `loading="eager"` on its own
+          (without `priority`) keeps it loading immediately — it's visible
+          above the fold on first paint — without the head preload. */}
       <Image
         src="/logo-mark.png"
         alt={ariaLabel}
         width={width}
         height={height}
+        loading="eager"
         className="h-auto w-auto"
         style={{ height, width: 'auto' }}
       />
