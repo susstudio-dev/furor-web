@@ -441,6 +441,10 @@ const WelcomeTrackSchema = z.object({
   key: z.string().min(1),
   trackLabel: z.string().default(''),
   styleSlugs: z.array(z.string()).default([]),
+  // Which batch this page binds to, with styleSlugs and weekendTod. Defaults
+  // to Foundation because every track predating this field was a beginner
+  // intake — stored documents without it keep behaving exactly as before.
+  level: z.enum(['Foundation', 'Intermediate', 'Advanced']).default('Foundation'),
   weekendTod: z.enum(['AM', 'PM']).default('AM'),
   whenDays: z.string().default(''),
   whenTime: z.string().default(''),

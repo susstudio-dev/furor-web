@@ -5,6 +5,7 @@ import { getPublicContent } from '@/lib/content';
 import { visibleBatches } from '@/lib/content-helpers';
 import { formatBatchDate } from '@/lib/format';
 import { resolveWelcomeState } from '@/lib/welcome-confirm';
+import { batchPoolForTrack, pickDefaultBatch } from '@/lib/welcome-tracks';
 import { WelcomeView, type BatchBundle } from './WelcomeView';
 
 // Post-payment landing page, one per track. Set the matching URL as the
@@ -150,15 +151,14 @@ export default async function WelcomePage({
 
   const wa = content.site.whatsappNumber;
 
-  // Candidate batches for this track. The redirect can pin one via ?d=/?b=;
-  // otherwise we show the next upcoming one (prefer weekend in the right
-  // time-of-day). Either way the date/time/venue come from live content.
-  const pool = visibleBatches(content).filter(
-    (b) => b.level === 'Foundation' && b.styleSlugs.some((s) => cfg.styleSlugs.includes(s)),
-  );
-  const matchesTod = (b: Batch) => (cfg.weekendTod === 'AM' ? /am/i.test(b.time) : /pm/i.test(b.time));
-  const isWeekend = (b: Batch) => b.daysOfWeek.some((d) => d === 'Sat' || d === 'Sun');
-  const next = pool.filter(isWeekend).find(matchesTod) ?? pool.find(isWeekend) ?? pool[0];
+  // Candidate batches for this track — same level, sharing a style. The
+  // redirect can pin one via ?d=/?b=; otherwise we show the next upcoming one
+  // (prefer weekend in the right time-of-day). Either way the date/time/venue
+  // come from live content. The level used to be hardcoded to 'Foundation'
+  // here, so an Intermediate or Advanced track silently matched nothing and
+  // fell back to the manual strings with no date at all.
+  const pool = batchPoolForTrack(visibleBatches(content), cfg);
+  const next = pickDefaultBatch(pool, cfg);
 
   // Everything the page shows for a given batch, precomputed server-side. We
   // build one bundle per candidate batch + a default, and the client picks the

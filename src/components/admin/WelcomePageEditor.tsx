@@ -7,24 +7,27 @@ import { Field, Select, EditorStyles } from '@/components/admin/fields';
 import { saveSiteContent } from '@/lib/admin-save';
 import { useAutosave } from '@/lib/autosave';
 import { AutosaveBanner } from '@/components/admin/AutosaveBanner';
-
-function slugify(s: string): string {
-  return s
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-+|-+$/g, '');
-}
+import {
+  duplicateTrackKeys,
+  normaliseTracks,
+  slugify,
+  suggestTrackKey,
+  unknownStyleSlugs,
+} from '@/lib/welcome-tracks';
 
 export function WelcomePageEditor({ initial }: { initial: SiteContent }) {
   const [c, setC] = useState<SiteContent>(initial);
   const [dirty, setDirty] = useState(false);
+  // Indices of tracks whose slug is still following the track label. Only
+  // tracks added in THIS session start linked, and typing in the slug field
+  // unlinks one for good: an already-saved slug is the redirect target on a
+  // live Razorpay payment page, so it must never move on its own.
+  const [linked, setLinked] = useState<ReadonlySet<number>>(() => new Set());
   // Subtree only - see AboutPageEditor.
   const autosave = useAutosave('welcome', c.welcome, dirty);
 
   const w = c.welcome;
+  const knownStyleSlugs = c.danceStyles.map((s) => s.slug);
 
   function patchWelcome(patch: Partial<Welcome>) {
     setC((prev) => ({ ...prev, welcome: { ...prev.welcome, ...patch } }));
@@ -43,6 +46,7 @@ export function WelcomePageEditor({ initial }: { initial: SiteContent }) {
           key: '',
           trackLabel: 'New track',
           styleSlugs: [],
+          level: 'Foundation',
           weekendTod: 'AM',
           whenDays: 'Saturday & Sunday',
           whenTime: '',
@@ -51,6 +55,9 @@ export function WelcomePageEditor({ initial }: { initial: SiteContent }) {
         },
       ],
     });
+    // A brand-new page has no URL in the wild yet, so its slug can safely
+    // follow the label until the studio types a slug of its own.
+    setLinked((prev) => new Set(prev).add(w.tracks.length));
   }
   function removeTrack(i: number) {
     if (
@@ -60,24 +67,49 @@ export function WelcomePageEditor({ initial }: { initial: SiteContent }) {
     )
       return;
     patchWelcome({ tracks: w.tracks.filter((_, j) => j !== i) });
+    // Tracks are identified by index, so removing one shifts every later link.
+    setLinked((prev) => {
+      const next = new Set<number>();
+      for (const j of prev) {
+        if (j < i) next.add(j);
+        else if (j > i) next.add(j - 1);
+      }
+      return next;
+    });
+  }
+  function unlink(i: number) {
+    setLinked((prev) => {
+      if (!prev.has(i)) return prev;
+      const next = new Set(prev);
+      next.delete(i);
+      return next;
+    });
   }
 
   async function save() {
-    // Auto-fill blank slugs from the track label so we never save an empty key
-    // (the schema requires one, and the URL needs it).
+    // Fill blank slugs from the track label (the schema requires a key and the
+    // URL needs it) and slugify the hand-typed style slugs, which are matched
+    // against batches exactly.
+    const tracks = normaliseTracks(c.welcome.tracks);
+    // /welcome/[track] resolves with find(), so a repeated slug would save a
+    // page that can never be opened. Refuse rather than lose it silently —
+    // SaveBar surfaces the message.
+    const dups = duplicateTrackKeys(tracks);
+    if (dups.length) {
+      throw new Error(
+        `Two welcome pages share the URL /welcome/${dups[0]} — only the first would ever open. Give each page a unique slug, then save.`,
+      );
+    }
     const cleaned: SiteContent = {
       ...c,
-      welcome: {
-        ...c.welcome,
-        tracks: c.welcome.tracks.map((t) => ({
-          ...t,
-          key: t.key.trim() || slugify(t.trackLabel) || 'track',
-        })),
-      },
+      welcome: { ...c.welcome, tracks },
     };
     await saveSiteContent(cleaned);
     setC(cleaned);
     setDirty(false);
+    // Every slug is now published and can be a Razorpay redirect target, so
+    // none of them may follow their label any longer.
+    setLinked(new Set());
     autosave.clear();
   }
 
@@ -116,6 +148,9 @@ export function WelcomePageEditor({ initial }: { initial: SiteContent }) {
             const welcome = autosave.stash!.value;
             setC((prev) => ({ ...prev, welcome }));
             setDirty(true);
+            // Links are by track index, and a restored stash can hold a
+            // different set of tracks entirely.
+            setLinked(new Set());
             autosave.clear();
           }}
           onDiscard={autosave.clear}
@@ -185,6 +220,17 @@ export function WelcomePageEditor({ initial }: { initial: SiteContent }) {
           {w.tracks.map((t, i) => {
             const slug = t.key.trim();
             const dup = slug && w.tracks.filter((x) => x.key.trim() === slug).length > 1;
+            const isLinked = linked.has(i);
+            // Offered as a chip rather than applied — an already-saved slug is
+            // a live Razorpay redirect target. Only where the studio is
+            // actually stuck, though: a page whose slug is deliberately
+            // shorter than its label ("latin" for "Latin beginner class") is
+            // right as it stands, and suggesting "latin-beginner-class" at it
+            // forever would be worse than saying nothing. Linked tracks apply
+            // the slug as you type, so they never need the chip.
+            const suggestion =
+              !isLinked && (dup || !slug) ? suggestTrackKey(t.trackLabel, t.key) : null;
+            const unknownStyles = unknownStyleSlugs(t.styleSlugs, knownStyleSlugs);
             return (
               <div key={i} className="rounded-xl border border-cream/10 p-4 grid gap-3">
                 <div className="flex items-center justify-between gap-3">
@@ -206,7 +252,10 @@ export function WelcomePageEditor({ initial }: { initial: SiteContent }) {
                   >
                     <input
                       value={t.key}
-                      onChange={(e) => patchTrackAt(i, { key: slugify(e.target.value) })}
+                      onChange={(e) => {
+                        patchTrackAt(i, { key: slugify(e.target.value) });
+                        unlink(i);
+                      }}
                       placeholder="e.g. kizomba"
                       className="input"
                     />
@@ -214,19 +263,45 @@ export function WelcomePageEditor({ initial }: { initial: SiteContent }) {
                   <Field label="Track label" hint="e.g. Latin beginner class. Shown in the copy as {trackLabel}.">
                     <input
                       value={t.trackLabel}
-                      onChange={(e) => patchTrackAt(i, { trackLabel: e.target.value })}
+                      onChange={(e) => {
+                        const trackLabel = e.target.value;
+                        // A never-saved page's slug follows the label until the
+                        // studio types its own; a saved one never moves itself.
+                        patchTrackAt(
+                          i,
+                          isLinked ? { trackLabel, key: slugify(trackLabel) } : { trackLabel },
+                        );
+                      }}
                       className="input"
                     />
                   </Field>
                 </div>
                 {dup ? (
                   <p className="rounded-lg border border-rose-400/40 bg-rose-500/10 px-3 py-2 text-xs text-rose-200">
-                    Another track already uses this slug — give it a unique one.
+                    Another welcome page already uses this slug, and only the first one would ever
+                    open. Give this page its own — two classes in the same style can each have their
+                    own page (e.g. <code>salsa-intermediate</code>), and the class date, time and
+                    venue still come from whichever batch you point it at below.
+                  </p>
+                ) : null}
+                {suggestion ? (
+                  <p className="text-xs text-cream/50">
+                    From the track label:{' '}
+                    <button
+                      type="button"
+                      onClick={() => patchTrackAt(i, { key: suggestion })}
+                      className="rounded-full border border-ember-500/50 px-2 py-0.5 font-mono text-ember-300 hover:border-ember-400 hover:text-ember-200"
+                    >
+                      use /welcome/{suggestion}
+                    </button>{' '}
+                    {slug
+                      ? '— changing a slug moves the page URL, so update the Razorpay redirect that points at the old one.'
+                      : '— this page has no URL yet.'}
                   </p>
                 ) : null}
                 <Field
                   label="Style slugs"
-                  hint="Comma-separated, e.g. salsa, bachata. Used to find the matching batch for the date."
+                  hint={`Comma-separated. Matched against batches exactly — one of: ${knownStyleSlugs.join(', ')}.`}
                 >
                   <input
                     value={t.styleSlugs.join(', ')}
@@ -238,16 +313,38 @@ export function WelcomePageEditor({ initial }: { initial: SiteContent }) {
                     className="input"
                   />
                 </Field>
-                <div className="grid gap-3 sm:grid-cols-4">
+                {unknownStyles.length ? (
+                  <p className="rounded-lg border border-amber-400/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
+                    No dance style uses {unknownStyles.map((s) => `“${s}”`).join(', ')}. Style slugs
+                    are matched exactly (lowercase, hyphenated), so this page would show no date,
+                    venue or calendar links — only the fallbacks below. Known styles:{' '}
+                    {knownStyleSlugs.join(', ')}.
+                  </p>
+                ) : null}
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Select
+                    label="Level"
+                    value={t.level}
+                    onChange={(v) => patchTrackAt(i, { level: v as WelcomeTrack['level'] })}
+                    hint="Must match the level on the batch this page is for."
+                    options={[
+                      { value: 'Foundation', label: 'Foundation (beginner)' },
+                      { value: 'Intermediate', label: 'Intermediate' },
+                      { value: 'Advanced', label: 'Advanced' },
+                    ]}
+                  />
                   <Select
                     label="Time of day"
                     value={t.weekendTod}
                     onChange={(v) => patchTrackAt(i, { weekendTod: v as 'AM' | 'PM' })}
+                    hint="Which sitting to prefer when a style runs more than one."
                     options={[
                       { value: 'AM', label: 'AM (morning)' },
                       { value: 'PM', label: 'PM (evening)' },
                     ]}
                   />
+                </div>
+                <div className="grid gap-3 sm:grid-cols-3">
                   <Field label="Days (fallback)" hint="e.g. Saturday & Sunday">
                     <input
                       value={t.whenDays}
