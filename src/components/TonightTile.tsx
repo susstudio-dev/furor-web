@@ -13,6 +13,10 @@ export function TonightTile({ content }: { content: SiteContent }) {
 
         <div className="relative flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
           <div>
+            {/* Only the short cadence goes in the pill. The venue lives in
+                `body`, which wraps — a 67-character `when` was being cut off
+                mid-venue-name on every phone (spec §6.4). Keep it that way:
+                this comment is what stops the venue being pasted back in. */}
             <p className="pill bg-ember-500/20 text-ember-400">
               <span className="relative flex h-2 w-2">
                 <span className="beat-ring absolute inset-0 rounded-full bg-ember-500/70" />

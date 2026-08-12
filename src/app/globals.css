@@ -136,7 +136,15 @@
   .pill {
     /* nowrap: a pill that breaks onto two lines ("FILLING / FAST") stops
        reading as a status chip at all — the sibling text wraps instead. */
-    @apply inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-xs uppercase tracking-wider;
+    /* max-w-full + overflow-hidden + text-ellipsis: nowrap inside an
+       overflow-clip ancestor razor-cuts a long value with no warning to
+       whoever typed it, and that is exactly the bug TonightTile shipped. This
+       protects the ten other .pill call sites that render admin-controlled
+       text (QuickEnroll.tsx, page.tsx x2, instructors/page.tsx, ...) — the
+       clipping now happens inside the pill's own box, visibly, instead of
+       escaping it. Every newly-editable label from Plan 1 that lands in a pill
+       would otherwise be a fresh instance of the same silent bug. */
+    @apply inline-flex max-w-full items-center gap-1 overflow-hidden text-ellipsis whitespace-nowrap rounded-full px-2.5 py-1 text-xs uppercase tracking-wider;
   }
   .hairline {
     @apply border-t border-cream/10;
