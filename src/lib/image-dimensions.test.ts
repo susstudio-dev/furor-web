@@ -58,6 +58,24 @@ function webpVp8l(width: number, height: number): Uint8Array {
   return b;
 }
 
+/** Wraps a Uint8Array so numeric index reads (`b[i]`) are counted. Lets a
+ *  test assert bounded WORK DONE instead of elapsed wall-clock time, which
+ *  is load-sensitive and flakes under full-suite parallelism even though the
+ *  underlying loop is perfectly deterministic. */
+function countingProxy(buf: Uint8Array): { proxy: Uint8Array; reads: () => number } {
+  let reads = 0;
+  const proxy = new Proxy(buf, {
+    get(target, prop) {
+      if (typeof prop === 'string' && /^\d+$/.test(prop)) reads++;
+      // Forward with `target` as the receiver (the 2-arg form), not the proxy
+      // itself — TypedArray accessors like `.length` are picky about `this`
+      // and throw "incompatible receiver" if invoked through the proxy.
+      return Reflect.get(target, prop);
+    },
+  });
+  return { proxy, reads: () => reads };
+}
+
 describe('readImageSize', () => {
   it('reads dimensions from a PNG IHDR chunk', () => {
     expect(readImageSize(png(1600, 1200))).toEqual({ width: 1600, height: 1200 });
@@ -79,22 +97,23 @@ describe('readImageSize', () => {
     expect(readImageSize(webpVp8l(640, 480))).toEqual({ width: 640, height: 480 });
   });
 
-  it('bounds the JPEG marker walk against a hostile 8 MB fill-byte buffer', () => {
+  it('bounds the JPEG marker walk to a fixed byte-read budget on a hostile 8 MB fill-byte buffer', () => {
     // Satisfies the route's own FF D8 FF sniff, then gives the marker walk
     // nothing but fill bytes for the rest of an 8 MB buffer (the route's own
     // byte cap). Unbounded, this forces a near-whole-buffer, one-byte-at-a-
-    // time scan: ~8.39M iterations, ~25-30ms measured — 2.5-3x the entire
-    // 10ms Workers CPU budget for the whole request.
+    // time scan: ~8.39M index reads (measured at ~20-30ms in isolation — but
+    // that number is load-sensitive and flaked under full-suite parallelism,
+    // so assert on work done, not wall-clock time).
     const hostile = new Uint8Array(8 * 1024 * 1024).fill(0xff);
     hostile[1] = 0xd8; // SOI; byte 0 and everything from byte 2 on stays 0xff
-    const start = performance.now();
-    const result = readImageSize(hostile);
-    const elapsed = performance.now() - start;
+    const { proxy, reads } = countingProxy(hostile);
+    const result = readImageSize(proxy);
     expect(result).toBe(null);
-    // Bounded to a 128 KB scan window this measures ~1-2ms locally; 5ms is
-    // generous for slower CI hardware while still catching a regression back
-    // toward the ~20-30ms whole-buffer scan by more than 3x.
-    expect(elapsed).toBeLessThan(5);
+    // Bounded to the 128 KB scan window, the fill-byte path reads b[i] and
+    // b[i+1] per iteration (~131,061 iterations => ~262,122 reads). 300,000
+    // comfortably covers that with margin while staying two orders of
+    // magnitude below the ~8.39M reads an unbounded scan needs.
+    expect(reads()).toBeLessThan(300_000);
   });
 
   it('returns null for a format it does not parse', () => {
