@@ -4,6 +4,7 @@ import { resolveMutationSubject } from '@/lib/subject';
 import { audit } from '@/lib/audit';
 import { StorageUnavailableError, writeBinary } from '@/lib/storage';
 import { contentLengthWithin, sameOrigin } from '@/lib/request-guards';
+import { oversizeError, readImageSize } from '@/lib/image-dimensions';
 
 const MAX_BYTES = 8 * 1024 * 1024;
 // Explicit type→extension map (never derive the extension from the MIME
@@ -54,13 +55,20 @@ export async function POST(req: Request) {
   if (file.size > MAX_BYTES) return NextResponse.json({ error: 'Max 8 MB per image' }, { status: 400 });
 
   const buf = Buffer.from(await file.arrayBuffer());
-  const sniffed = sniffImageType(new Uint8Array(buf));
+  const bytes = new Uint8Array(buf);
+  const sniffed = sniffImageType(bytes);
   if (!sniffed || !(sniffed in EXT)) {
     return NextResponse.json(
       { error: 'Unsupported type (JPEG, PNG, WebP or AVIF only)' },
       { status: 400 },
     );
   }
+  // Backstop for the admin UI's client-side resize (image-downscale.ts). A
+  // browser without OffscreenCanvas, or a direct POST, would otherwise store a
+  // 4000px master that every visitor then downloads in full — which is exactly
+  // how /instructors reached 6.9 MB. Header parse only: no decode, no CPU.
+  const oversize = oversizeError(readImageSize(bytes));
+  if (oversize) return NextResponse.json({ error: oversize }, { status: 400 });
 
   const filename = `${randomUUID()}.${EXT[sniffed]}`;
   try {
