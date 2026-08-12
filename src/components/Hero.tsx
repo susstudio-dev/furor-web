@@ -133,11 +133,14 @@ export function Hero({ content, poster }: { content: SiteContent; poster: HeroPo
           booking card further under the fold. The card's peek is the hero's
           real call to action, so the content block sits high and the reserved
           bottom padding (which the card overlaps) stays generous. */}
-      {/* Bottom padding minus QuickEnroll's pull-up (-mt-24/-mt-32/-mt-36)
-          leaves a constant 48px of clear air between the hero CTAs and the
-          card edge at every breakpoint — enough for the card to peek without
-          crowding the buttons above it. */}
-      <div className="container-x relative z-10 pt-8 pb-36 sm:pt-10 sm:pb-44 lg:pt-12 lg:pb-48">
+      {/* Bottom padding minus QuickEnroll's pull-up (-mt-24/-mt-32/-mt-36).
+          Deliberately NOT constant across breakpoints any more: at sm+ it
+          still leaves 48px of clear air between the hero CTAs and the card
+          edge, but on a phone the base pad drops to pb-28 so the clear air is
+          16px and the board's top edge climbs 32px up a 667px viewport. The
+          board is the conversion surface and it starts below the fold — 32px
+          of card peeking beats 32px of empty space. */}
+      <div className="container-x relative z-10 pt-8 pb-28 sm:pt-10 sm:pb-44 lg:pt-12 lg:pb-48">
         {/* The count-in every dancer knows — 5, 6, 7, 8 — then the words move
             on 1. Pure CSS, on tempo; collapses to nothing on reduced motion. */}
         <p
@@ -156,7 +159,7 @@ export function Hero({ content, poster }: { content: SiteContent; poster: HeroPo
           <CinematicHeadline text={content.hero.headline} />
         </h1>
         <p
-          className="mt-6 max-w-2xl text-lg text-cream/80 sm:text-xl hero-fade"
+          className="mt-4 max-w-2xl text-lg text-cream/80 sm:text-xl hero-fade"
           style={{ animationDelay: '0.95s' }}
         >
           {content.hero.subHeadline}
@@ -166,7 +169,7 @@ export function Hero({ content, poster }: { content: SiteContent; poster: HeroPo
             "See batches" button is gone — the booking board this button anchors
             to already links there. The .downbeat class fires the button's
             one-shot accent at the exact moment the count-in above resolves. */}
-        <div className="mt-8 hero-fade" style={{ animationDelay: '1.15s' }}>
+        <div className="mt-6 hero-fade" style={{ animationDelay: '1.15s' }}>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
             <a href="#start-this-week" className="btn-primary magnetic downbeat">
               {bookLabel('Foundation', content.labels)}
