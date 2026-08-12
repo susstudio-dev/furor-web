@@ -5,10 +5,18 @@ import { useEffect, useState } from 'react';
 import type { SiteContent } from '@/lib/content-schema';
 import { BrandMark } from './BrandMark';
 import { ThemeToggle } from './ThemeToggle';
+import { FacebookIcon, InstagramIcon, YouTubeIcon } from './SocialIcons';
 import { NAV_ITEMS, navLabel, type NavItem } from '@/lib/nav';
 import { label } from '@/lib/labels';
 
 type NavWithChildren = NavItem & { children?: { label: string; href: string }[] };
+
+interface SocialLink {
+  id: string;
+  href: string;
+  label: string;
+  icon: React.ReactNode;
+}
 
 export function Header({ content }: { content: SiteContent }) {
   const [open, setOpen] = useState(false);
@@ -45,6 +53,39 @@ export function Header({ content }: { content: SiteContent }) {
     .slice()
     .sort((a, b) => a.displayOrder - b.displayOrder)
     .map((p) => ({ label: p.navLabel || p.title, href: `/p/${p.slug}` }));
+
+  // Each icon renders only when its URL is set — the stored YouTube URL is
+  // unverified (spec decision #6), and an icon that 404s is worse than one
+  // that is absent. Accessible names come from `labels`, never from a literal:
+  // "every user-visible string editable" includes the ones only a screen
+  // reader hears.
+  const socials: SocialLink[] = [];
+  if (content.site.socials.instagram) {
+    socials.push({
+      id: 'instagram',
+      href: content.site.socials.instagram,
+      label: label(content.labels, 'ariaSocialInstagram'),
+      icon: <InstagramIcon />,
+    });
+  }
+  if (content.site.socials.facebook) {
+    socials.push({
+      id: 'facebook',
+      href: content.site.socials.facebook,
+      label: label(content.labels, 'ariaSocialFacebook'),
+      icon: <FacebookIcon />,
+    });
+  }
+  if (content.site.socials.youtube) {
+    socials.push({
+      id: 'youtube',
+      href: content.site.socials.youtube,
+      label: label(content.labels, 'ariaSocialYoutube'),
+      icon: <YouTubeIcon />,
+    });
+  }
+  const iconClass =
+    'inline-flex h-11 w-11 items-center justify-center rounded-full text-cream/80 transition hover:bg-cream/5 hover:text-cream';
 
   return (
     <header
@@ -89,11 +130,53 @@ export function Header({ content }: { content: SiteContent }) {
             </Link>
           ))}
         </nav>
+        {/* Mobile budget, measured at 375px against 335px of container-x
+            content width: BrandMark 156 + gap-3 12 + Instagram 44 + gap-2 8 +
+            burger 44 = 264. Three 44px social targets would need 412 and turn
+            the primary surface into a horizontally scrolling page (spec §6.1).
+            Desktop has the room, so it keeps all three inline. */}
         <div className="ml-auto lg:ml-0 flex shrink-0 items-center gap-2 sm:gap-3">
-          <ThemeToggle />
+          <div className="hidden lg:flex items-center gap-1">
+            {socials.map((s) => (
+              <a
+                key={s.id}
+                href={s.href}
+                aria-label={s.label}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={iconClass}
+              >
+                {s.icon}
+              </a>
+            ))}
+          </div>
+          {/* Wrapped rather than given `hidden lg:inline-flex` directly: the
+              toggle's own class string already sets inline-flex, and which of
+              two display utilities wins would depend on Tailwind's internal
+              ordering. A wrapper makes it unambiguous. */}
+          <span className="hidden lg:inline-flex">
+            <ThemeToggle />
+          </span>
+          {/* Instagram alone below lg. It is the traffic source, and the one
+              link a visitor who arrived from a Reel uses to check the school is
+              real before paying. */}
+          {content.site.socials.instagram ? (
+            <a
+              href={content.site.socials.instagram}
+              aria-label={label(content.labels, 'ariaSocialInstagram')}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`lg:hidden ${iconClass}`}
+            >
+              <InstagramIcon />
+            </a>
+          ) : null}
+          {/* h-11 w-11 p-0: `p-0` is a utility and beats .btn-ghost's @apply'd
+              px-4 py-2 (components layer). The burger was 38px — under the 44px
+              touch minimum, and it is one of only two controls up here. */}
           <button
             type="button"
-            className="lg:hidden btn-ghost p-2"
+            className="lg:hidden btn-ghost h-11 w-11 p-0"
             aria-label={label(content.labels, 'ariaToggleMenu')}
             aria-expanded={open}
             onClick={() => setOpen((v) => !v)}
@@ -142,6 +225,32 @@ export function Header({ content }: { content: SiteContent }) {
                 </Link>
               </div>
             ))}
+            {/* 3 x 44 + 2 x 12 = 156px inside a 335px drawer — 179px spare.
+                ThemeToggle lives here rather than in the bar because
+                layout.tsx already runs a pre-paint script honouring
+                prefers-color-scheme, so a system-mode visitor is served
+                correctly without ever opening this.
+                Rendered unconditionally, not gated on socials.length: the
+                theme toggle must stay reachable even when no social URL is
+                set, and an empty flex row costs nothing. */}
+            <div className="flex items-center gap-3 border-t border-cream/10 pt-4">
+              {socials.map((s) => (
+                <a
+                  key={s.id}
+                  href={s.href}
+                  aria-label={s.label}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setOpen(false)}
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-cream/15 text-cream/80 transition hover:border-ember-500/60 hover:text-cream"
+                >
+                  {s.icon}
+                </a>
+              ))}
+              <span className="ml-auto">
+                <ThemeToggle />
+              </span>
+            </div>
           </div>
         </div>
       ) : null}
