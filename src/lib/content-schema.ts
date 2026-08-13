@@ -820,7 +820,7 @@ const WelcomeSchema = z
     // time inside them are derived from the batch and studio records, so the
     // studio can say anything warm it likes and still cannot make the address
     // or the date wrong. The "Where" heading is NOT here — it is Plan 1's
-    // labels.welcomeWhereHeading, which Plan 3 already renders.
+    // labels.welcomeWhereHeading, which WelcomeView renders via label().
     whenHeading: z.string().default('When'),
     noVenueNote: z.string().default('We’ll share the exact address on WhatsApp.'),
     noDateNote: z
@@ -871,12 +871,16 @@ const WelcomeSchema = z
 // Every default is the exact literal shipping today, with two documented
 // exceptions. (1) The four ariaSocial* labels have no render site yet — they
 // exist so the header/footer social icons consume an editable string instead
-// of hardcoding a fresh one. (2) welcomeParking, welcomeReachUs and
-// welcomeCallPhone have no render site yet either: the welcome page has no
-// parking line, no "Reach us" block and no call link today. Plan 3 adds those
-// three rows, so the defaults here are the literals PLAN 3 RENDERS, not
-// literals lifted from the current file. The other two welcome keys are lifted
-// from the current file (WelcomeView.tsx:254 and :265).
+// of hardcoding a fresh one. (2) welcomeCallPhone STILL has no render site.
+// Its 'Call {phone}' default disagrees with the "Call the studio" literal
+// welcome-contact.ts actually builds, and rendering it would both rewrite live
+// copy and repeat the number already shown beside it — so wiring it is a copy
+// decision for the owner, not a mechanical one. The other four welcome keys
+// (welcomeWhereHeading, welcomeOpenMap, welcomeParking, welcomeReachUs) were
+// dead in exactly this way until Plan 4 wired them into WelcomeView.
+//
+// The lesson those four cost: a key declared here without a render site in the
+// SAME change is a field the owner can edit to no effect. Wire it or omit it.
 //
 // A REQUIRED field here would fail validation on read and serve the bundled
 // seed site-wide, so defaults are what make this a no-migration change.
@@ -958,10 +962,12 @@ export const LabelsSchema = z
     ariaSocialWhatsapp: z.string().default(L.ariaSocialWhatsapp),
 
     // — Post-payment (the /welcome/[track] page) —
-    //   welcomeWhereHeading and welcomeOpenMap are the literals shipping in
-    //   WelcomeView.tsx today (:254 and :265). The other three have no render
-    //   site yet — Plan 3 adds the parking line, the "Reach us" block and the
-    //   call link, and these are the exact strings it renders. Do NOT rename
+    //   All five are rendered by WelcomeView.tsx via label(labels, …). They
+    //   were declared here ahead of their render sites and sat DEAD for two
+    //   plans: Plan 3 built the parking line, the "Reach us" block and the
+    //   call link but left them as hardcoded literals, so editing these four
+    //   in the admin changed nothing on the page. Plan 4 wired them up. If you
+    //   add a key here, add its render site in the same change. Do NOT rename
     //   welcomeOpenMap to welcomeGetDirections: the map link reads "Open map →"
     //   today, and a "Get directions →" default would rewrite live copy.
     welcomeWhereHeading: z.string().default(L.welcomeWhereHeading),
