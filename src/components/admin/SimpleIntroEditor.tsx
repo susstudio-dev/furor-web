@@ -8,13 +8,10 @@ import { PageIntroFields } from '@/components/admin/PageIntroFields';
 import { saveSiteContent } from '@/lib/admin-save';
 import { SeoFields } from '@/components/admin/SeoFields';
 
-// 'batches' stays in the union for now: the plan moves it to its own
-// BatchesPageEditor once pages.batches gains its 34 browser strings, but that
-// schema/editor doesn't exist yet, and /admin/pages/batches/page.tsx still
-// mounts this editor with pageKey="batches". Narrowing this type before that
-// lands would just break that route's typecheck for no behavioural gain —
-// SeoFields works identically against 'batches', a valid PageMetaKey.
-type SimplePageKey = 'stories' | 'danceStyles' | 'batches';
+// 'batches' dropped: /admin/pages/batches/page.tsx now mounts its own
+// BatchesPageEditor, which also covers pages.batches.intro and SEO — nothing
+// else passes pageKey="batches" to this component.
+type SimplePageKey = 'stories' | 'danceStyles';
 
 export function SimpleIntroEditor({
   initial,
