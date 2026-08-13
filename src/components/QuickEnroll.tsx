@@ -35,19 +35,18 @@ function pickBoard(content: SiteContent): Batch[] {
 // to promise the trial fee back; the owner corrected that on 2026-08-08 — the
 // paid trial is NON-REFUNDABLE, so the risk-reversal is now the size of the
 // commitment (one class, no package), never money back.
-function countIn(trialPrice: string | null): { count: string; title: string; body: string }[] {
-  return [
-    { count: '5', title: 'Come alone.', body: 'No partner needed — partners rotate all class, so you’ll dance with everyone.' },
-    { count: '6', title: 'Never danced?', body: 'Foundation assumes zero experience. Most of the room started exactly there.' },
-    { count: '7', title: 'Wear anything.', body: 'Anything comfortable you can move in — fresh socks or smooth soles beat fancy shoes.' },
-    {
-      count: '8',
-      title: 'One class, not a course.',
-      body: trialPrice
-        ? `${trialPrice} books a single class — no package, no sign-up. You decide on the full program after.`
-        : 'The token books a single class — no package, no sign-up. You decide on the full program after.',
-    },
-  ];
+function countIn(
+  board: SiteContent['pages']['home']['board'],
+  trialPrice: string | null,
+): { count: string; title: string; body: string }[] {
+  return board.countIn.map((item) =>
+    item.body.includes('{price}')
+      ? {
+          ...item,
+          body: trialPrice ? item.body.replace('{price}', trialPrice) : board.countInFallbackBody,
+        }
+      : item,
+  );
 }
 
 export function QuickEnroll({
@@ -61,6 +60,7 @@ export function QuickEnroll({
   trialFrom: number | null;
 }) {
   const batches = pickBoard(content);
+  const board = content.pages.home.board;
   const branchOf = (slug: string) => content.studios.find((s) => s.slug === slug);
   // Real proof at the point of decision — rendered from the content document
   // so the admin stays the source of truth; nothing renders if it's removed.
@@ -97,21 +97,21 @@ export function QuickEnroll({
                 <span className="relative inline-block h-2 w-2 rounded-full bg-on-ember" />
               </span>
               <span className="display text-[11px] font-bold uppercase tracking-[0.25em] text-on-ember">
-                Booking open
+                {label(content.labels, 'badgeBookingOpen')}
               </span>
             </span>
             {/* Batch-agnostic on purpose: not every booking link is a Razorpay
                 checkout, so the header makes no per-provider claim. */}
-            <p className="text-sm text-cream/70">Book in ~30 seconds</p>
+            <p className="text-sm text-cream/70">{board.speed}</p>
           </div>
 
           <h2 className="mt-4 display text-3xl font-extrabold tracking-tight sm:text-4xl">
-            Start dancing <span className="accent">this week.</span>
+            {board.headline} <span className="accent">{board.headlineAccent}</span>
           </h2>
           <p className="mt-1 text-cream/65 max-w-2xl">
             {trialFrom != null
-              ? `Every batch opens with a ${formatInr(trialFrom)} trial class — come once, meet the room, then decide on the full program.`
-              : 'Come once, meet the room, then decide on the full program.'}
+              ? board.leadWithPrice.replace('{price}', formatInr(trialFrom))
+              : board.leadNoPrice}
           </p>
 
           {batches.length > 0 ? (
@@ -151,7 +151,7 @@ export function QuickEnroll({
                           <p className="display text-xl font-bold leading-tight">{sName}</p>
                           {spotlit ? (
                             <p className="mt-0.5 text-xs font-semibold uppercase tracking-wider text-ember-400">
-                              Foundation · start here
+                              {label(content.labels, 'badgeFoundationStartHere')}
                             </p>
                           ) : (
                             <p className="mt-0.5 text-xs uppercase tracking-wider text-cream/70">
@@ -170,18 +170,18 @@ export function QuickEnroll({
 
                       {spotlit ? (
                         <p className="relative mt-2 text-sm text-cream/80">
-                          No partner, no experience needed.
+                          {board.spotlitNote}
                         </p>
                       ) : !foundation ? (
                         <p className="relative mt-2 text-xs text-cream/55">
-                          For dancers with the basics down.
+                          {board.higherLevelNote}
                         </p>
                       ) : null}
 
                       <div className="relative mt-4 space-y-1 text-sm">
                         <p className="text-cream">{b.daysOfWeek.join('–')} · {b.time}</p>
                         <p className="text-cream/60">{branch?.name ?? b.branchSlug}</p>
-                        <p className="text-cream/60">Starts {formatBatchDate(b.startDate)}</p>
+                        <p className="text-cream/60">{board.startsTemplate.replace('{date}', formatBatchDate(b.startDate))}</p>
                       </div>
 
                       {/* The price flip: the trial IS the product, so its price
@@ -189,16 +189,19 @@ export function QuickEnroll({
                           the ask. */}
                       <div className="relative mt-3">
                         <p className="text-cream font-semibold">
-                          Trial class {formatInr(b.reservationInr)}
+                          {board.trialPrice.replace('{price}', formatInr(b.reservationInr))}
                         </p>
                         <p className="text-xs text-cream/60">
-                          Full program {formatInr(b.priceInr)} — decide after class one.
+                          {board.fullProgram.replace('{price}', formatInr(b.priceInr))}
                         </p>
                       </div>
 
                       {typeof b.seatsLeft === 'number' ? (
                         <p className="relative mt-3 text-xs font-semibold text-ember-400">
-                          ● {b.seatsLeft} seat{b.seatsLeft === 1 ? '' : 's'} left
+                          {(b.seatsLeft === 1 ? board.seatsLeftOne : board.seatsLeftMany).replace(
+                            '{n}',
+                            String(b.seatsLeft),
+                          )}
                         </p>
                       ) : (
                         <span className="mt-3 block h-[1px]" />
@@ -261,7 +264,7 @@ export function QuickEnroll({
                   the resolve lands where every dance does. */}
               <div className="mt-8 border-t border-cream/10 pt-6">
                 <div className="grid gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-4">
-                  {countIn(trialFrom != null ? formatInr(trialFrom) : null).map((item) => (
+                  {countIn(board, trialFrom != null ? formatInr(trialFrom) : null).map((item) => (
                     <div key={item.count} className="relative pl-9">
                       <span
                         aria-hidden
@@ -275,7 +278,7 @@ export function QuickEnroll({
                   ))}
                 </div>
                 <p className="display mt-5 text-right text-sm font-semibold tracking-tight text-ember-400">
-                  …and on the 1, you&apos;re dancing.
+                  {board.resolveLine}
                 </p>
               </div>
 
@@ -286,7 +289,7 @@ export function QuickEnroll({
                   </blockquote>
                   <figcaption className="mt-1 text-xs text-cream/55">
                     — {proof.studentName}
-                    {proofStyle ? `, ${proofStyle} student` : ''}
+                    {proofStyle ? board.proofSuffix.replace('{style}', proofStyle) : ''}
                   </figcaption>
                 </figure>
               ) : null}
@@ -299,7 +302,7 @@ export function QuickEnroll({
                   <span className="grid h-7 w-7 place-items-center rounded-full border border-cream/20 text-ember-400 transition group-hover:border-ember-500/60">
                     ?
                   </span>
-                  Not sure which? Take the 30-second style finder →
+                  {board.styleFinderLink}
                 </Link>
                 <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
                   {/* The experienced-dancer lane: featuring Foundation never
@@ -312,10 +315,10 @@ export function QuickEnroll({
                     href="/batches"
                     className="inline-flex min-h-[44px] items-center py-2 text-sm text-cream/75 transition hover:text-cream"
                   >
-                    Danced before? Intermediate &amp; Advanced →
+                    {board.advancedLink}
                   </Link>
                   <Link href="/batches" className="btn-secondary magnetic">
-                    See all batches &amp; prices
+                    {board.allBatchesLink}
                   </Link>
                 </div>
               </div>
@@ -323,17 +326,16 @@ export function QuickEnroll({
           ) : (
             <div className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-cream/12 bg-ink-800/60 p-6">
               <div>
-                <p className="display text-lg font-bold">New batches drop every week.</p>
+                <p className="display text-lg font-bold">{label(content.labels, 'emptyNewBatchesTitle')}</p>
                 <p className="mt-1 text-sm text-cream/65">
-                  Tell us your style — we&apos;ll hold you a seat in the next one.
+                  {label(content.labels, 'emptyNewBatchesBody')}
                 </p>
               </div>
               <EnquiryCTA
                 whatsappNumber={content.site.whatsappNumber}
                 ctx={{
                   source: 'primary',
-                  customNote:
-                    'Hi! I want to join a dance batch — please let me know the next start dates.',
+                  customNote: board.emptyNote,
                 }}
                 variant="primary"
                 labels={content.labels}

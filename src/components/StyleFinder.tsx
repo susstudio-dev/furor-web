@@ -5,6 +5,7 @@ import type { Batch, SiteContent, Studio } from '@/lib/content-schema';
 import { visibleBatches } from '@/lib/content-helpers';
 import { formatBatchDate, formatInr } from '@/lib/format';
 import { EnquiryCTA } from './EnquiryCTA';
+import { label } from '@/lib/labels';
 
 // Beginners have exactly two tracks, split by when they run:
 //   • Weekend mornings → Latin (Salsa + Bachata)
@@ -71,27 +72,25 @@ export function StyleFinder({ content }: { content: SiteContent }) {
     : undefined;
 
   const reset = () => setTrack(null);
+  const f = content.pages.home.styleFinder;
 
   return (
     <section id="style-finder" className="container-x py-12 sm:py-16 scroll-mt-24">
       <div className="rounded-3xl border border-cream/10 bg-ink-900/60 p-6 sm:p-10 backdrop-blur">
         <div className="flex items-center justify-between">
-          <p className="display text-sm uppercase tracking-widest text-ember-400">Style Finder</p>
+          <p className="display text-sm uppercase tracking-widest text-ember-400">{f.eyebrow}</p>
           {track ? (
             <button onClick={reset} className="btn-ghost text-xs">
-              Reset
+              {f.resetLabel}
             </button>
           ) : null}
         </div>
-        <h2 className="mt-2 display text-3xl font-bold sm:text-4xl">Two beginner tracks. Find yours.</h2>
-        <p className="mt-2 text-cream/70 max-w-xl">
-          Both are built for first-timers — no experience, no partner needed. Pick the time that
-          suits you and we’ll point you to the next beginner batch.
-        </p>
+        <h2 className="mt-2 display text-3xl font-bold sm:text-4xl">{f.headline}</h2>
+        <p className="mt-2 text-cream/70 max-w-xl">{f.lead}</p>
 
         {!track ? (
           <div className="mt-8 grid gap-4">
-            <p className="display text-xl">When can you make it?</p>
+            <p className="display text-xl">{f.question}</p>
             <div className="grid gap-3 sm:grid-cols-2">
               {TRACKS.map((t) => (
                 <button
@@ -110,25 +109,25 @@ export function StyleFinder({ content }: { content: SiteContent }) {
           // rather than snap. Reuses the existing disclosure language rather
           // than inventing a new one.
           <div className="animate-fade-up mt-8 rounded-2xl border border-ember-500/30 bg-ember-500/5 p-6">
-            <p className="display text-sm uppercase tracking-widest text-ember-400">We recommend</p>
+            <p className="display text-sm uppercase tracking-widest text-ember-400">{f.recommendEyebrow}</p>
             <h3 className="mt-1 display text-3xl font-bold">{track.name}</h3>
             <p className="mt-2 text-cream/80">{track.tagline}</p>
             {recommendedBatch && branch ? (
               <div className="mt-5 rounded-xl border border-cream/10 bg-ink-950/40 p-4">
-                <p className="text-cream/60 text-xs uppercase tracking-widest">Next beginner batch</p>
+                <p className="text-cream/60 text-xs uppercase tracking-widest">{f.nextBatchLabel}</p>
                 <p className="mt-1 text-cream font-semibold">
                   {recommendedBatch.level} · {branch.name} · {recommendedBatch.daysOfWeek.join('–')}{' '}
                   {recommendedBatch.time}
                 </p>
                 <p className="text-cream/70 text-sm">
-                  Starts {formatBatchDate(recommendedBatch.startDate)} ·{' '}
-                  {formatInr(recommendedBatch.priceInr)}
+                  {f.startsTemplate
+                    .replace('{date}', formatBatchDate(recommendedBatch.startDate))
+                    .replace('{price}', formatInr(recommendedBatch.priceInr))}
                 </p>
               </div>
             ) : (
               <p className="mt-4 text-cream/70">
-                No upcoming {track.name} beginner batch listed yet — chat with us and we’ll tell you
-                when the next one starts.
+                {label(content.labels, 'emptyNoFinderBatch').replace('{track}', track.name)}
               </p>
             )}
             <div className="mt-5 flex flex-wrap gap-3">

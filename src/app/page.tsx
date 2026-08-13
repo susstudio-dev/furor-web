@@ -186,7 +186,7 @@ export default async function HomePage() {
               </h2>
             </div>
             <Link href="/dance-styles" className="btn-secondary magnetic">
-              All styles
+              {label(content.labels, 'ctaAllStyles')}
             </Link>
           </div>
         </Reveal>
@@ -215,7 +215,7 @@ export default async function HomePage() {
                 </div>
                 <p className="mt-1 text-sm text-cream/70">{s.tagline}</p>
                 <p className="mt-4 inline-flex items-center text-ember-400 text-sm">
-                  Explore →
+                  {label(content.labels, 'ctaExplore')}
                 </p>
               </div>
             </Link>
@@ -237,7 +237,7 @@ export default async function HomePage() {
               </h2>
             </div>
             <Link href="/batches" className="btn-secondary magnetic">
-              See all batches
+              {label(content.labels, 'ctaSeeAllBatches')}
             </Link>
           </div>
         </Reveal>
@@ -264,7 +264,7 @@ export default async function HomePage() {
                   <>
                     <p className="mt-2 text-sm text-cream/70">
                       {b.level} · {branch.name}
-                      {combined ? ' · taught together' : ''}
+                      {combined ? h.nextBatches.combinedSuffix : ''}
                     </p>
                     {isFallback ? (
                       <p className="mt-1 text-sm text-gold-400">
@@ -273,11 +273,13 @@ export default async function HomePage() {
                     ) : null}
                     <p className="mt-1 text-cream">{b.daysOfWeek.join('–')} · {b.time}</p>
                     <p className="text-sm text-cream/60 mt-1">
-                      Starts {formatBatchDate(b.startDate)} · {formatInr(b.priceInr)}
+                      {h.nextBatches.starts
+                        .replace('{date}', formatBatchDate(b.startDate))
+                        .replace('{price}', formatInr(b.priceInr))}
                     </p>
                     {typeof b.seatsLeft === 'number' ? (
                       <p className="pill mt-3 bg-gold-500/15 text-gold-400">
-                        {b.seatsLeft} seats left
+                        {h.nextBatches.seatsLeft.replace('{n}', String(b.seatsLeft))}
                       </p>
                     ) : null}
                     <div className="mt-4">
@@ -294,7 +296,7 @@ export default async function HomePage() {
                 ) : (
                   <>
                     <p className="mt-2 text-cream/60">
-                      Next {s.name} batch coming soon.
+                      {label(content.labels, 'emptyNextBatchSoon').replace('{style}', s.name)}
                     </p>
                     <div className="mt-4">
                       <EnquiryCTA
@@ -322,7 +324,7 @@ export default async function HomePage() {
         <section className="container-x py-12 sm:py-16">
           <Reveal>
             <div className="flex items-center gap-3">
-              <p className="display text-sm uppercase tracking-widest text-ember-400">Why Furor</p>
+              <p className="display text-sm uppercase tracking-widest text-ember-400">{h.whyFurorEyebrow}</p>
               <RhythmSignature style="west-coast-swing" loop width={84} className="text-ember-500/70" />
             </div>
             <h2 className="mt-2 display text-3xl font-bold sm:text-5xl max-w-2xl">
@@ -442,22 +444,22 @@ export default async function HomePage() {
                       </p>
                       <div className="mt-6 space-y-4 text-cream/85">
                         <div>
-                          <p className="text-xs uppercase tracking-widest text-cream/70">Address</p>
+                          <p className="text-xs uppercase tracking-widest text-cream/70">{h.visitUs.addressLabel}</p>
                           <p className="mt-1 leading-relaxed">{s.address}</p>
                         </div>
                         <div>
-                          <p className="text-xs uppercase tracking-widest text-cream/70">Hours</p>
+                          <p className="text-xs uppercase tracking-widest text-cream/70">{h.visitUs.hoursLabel}</p>
                           <p className="mt-1">{s.hours}</p>
                         </div>
                         {s.parkingNotes ? (
                           <div>
-                            <p className="text-xs uppercase tracking-widest text-cream/70">Parking</p>
+                            <p className="text-xs uppercase tracking-widest text-cream/70">{h.visitUs.parkingLabel}</p>
                             <p className="mt-1 text-cream/80">{s.parkingNotes}</p>
                           </div>
                         ) : null}
                         {styleNames.length > 0 ? (
                           <div>
-                            <p className="text-xs uppercase tracking-widest text-cream/70">What we teach here</p>
+                            <p className="text-xs uppercase tracking-widest text-cream/70">{h.visitUs.teachHereLabel}</p>
                             <div className="mt-2 flex flex-wrap gap-2">
                               {styleNames.map((n) => (
                                 <span key={n} className="pill bg-cream/5 text-cream/80">{n}</span>
@@ -468,15 +470,15 @@ export default async function HomePage() {
                       </div>
                       <div className="mt-auto pt-6 flex flex-wrap gap-3">
                         <a href={directions} target="_blank" rel="noopener noreferrer" className="btn-primary">
-                          Get directions
+                          {label(content.labels, 'ctaGetDirections')}
                         </a>
-                        <a href={`tel:${tel}`} className="btn-secondary">Call {s.telephone}</a>
+                        <a href={`tel:${tel}`} className="btn-secondary">{h.visitUs.callTemplate.replace('{phone}', s.telephone)}</a>
                       </div>
                     </div>
                     <div className="relative overflow-hidden rounded-3xl border border-cream/10 bg-ink-900/40 min-h-[360px]">
                       <iframe
                         src={mapEmbed}
-                        title={`Map to ${s.name}`}
+                        title={h.visitUs.mapTitle.replace('{studio}', s.name)}
                         loading="lazy"
                         referrerPolicy="no-referrer-when-downgrade"
                         className="absolute inset-0 h-full w-full"
@@ -495,7 +497,7 @@ export default async function HomePage() {
                         >
                           <Img
                             src={p}
-                            alt={`Inside ${s.name}`}
+                            alt={h.visitUs.photoAlt.replace('{studio}', s.name)}
                             seed={`${s.slug}-${i}`}
                             fill
                             className="object-cover transition duration-700 hover:scale-[1.04]"
