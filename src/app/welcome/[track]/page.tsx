@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import type { Batch } from '@/lib/content-schema';
 import { getPublicContent } from '@/lib/content';
-import { visibleBatches } from '@/lib/content-helpers';
 import { formatBatchDate } from '@/lib/format';
 import { resolveWelcomeState } from '@/lib/welcome-confirm';
 import { batchPoolForTrack, pickDefaultBatch } from '@/lib/welcome-tracks';
@@ -157,14 +156,25 @@ export default async function WelcomePage({
   // come from live content. The level used to be hardcoded to 'Foundation'
   // here, so an Intermediate or Advanced track silently matched nothing and
   // fell back to the manual strings with no date at all.
-  const pool = batchPoolForTrack(visibleBatches(content), cfg);
+  // NOT visibleBatches: that drops anything whose startDate has passed, so a
+  // customer who paid and revisits their confirmation link the week after
+  // their class began found an empty pool — the page then fell back to the
+  // manual strings and, for the venue, to studios[0]. A confirmation page is
+  // a receipt; it has to stay correct for a batch that has already started.
+  const pool = batchPoolForTrack(content.batches, cfg);
   const next = pickDefaultBatch(pool, cfg);
 
   // Everything the page shows for a given batch, precomputed server-side. We
   // build one bundle per candidate batch + a default, and the client picks the
   // right one from the ?d=/?b= param (so this stays static-export safe).
   const buildBundle = (batch: Batch | undefined): BatchBundle => {
-    const studio = content.studios.find((s) => s.slug === batch?.branchSlug) ?? content.studios[0];
+    // No `?? content.studios[0]` fallback. When no batch resolves there is no
+    // venue to name, and substituting whichever studio happens to sit first in
+    // the array sent paying customers to the wrong address — since the studios
+    // reorder that fallback was Jubilee Hills, wrong for every PUP batch. The
+    // consumers below already handle `undefined`; an absent address is far
+    // better than a confidently wrong one.
+    const studio = content.studios.find((s) => s.slug === batch?.branchSlug);
     const venue = studio?.address ?? '';
     const mapUrl = studio
       ? `https://www.google.com/maps/search/?api=1&query=${studio.geo.lat},${studio.geo.lng}`
