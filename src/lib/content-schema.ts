@@ -54,6 +54,24 @@ export const TonightSchema = z
     when: z.string().default(''),
     ctaLabel: z.string().default('WhatsApp to RSVP'),
     ctaContext: z.string().default(''),
+    // Structured facts for the schema.org Event node. `when` above stays the
+    // human sentence shown on the tile; these are what a search engine needs.
+    //
+    // The social runs at a third-party bar, not at either studio, so there is
+    // nothing in `studios` to derive a location from — hence its own fields
+    // rather than a branchSlug. All defaulted: the Event node is emitted only
+    // when venueName, weekday and startTime are all filled, so an
+    // unconfigured document simply ships no node instead of an invalid one.
+    venueName: z.string().default(''),
+    venueStreet: z.string().default(''),
+    venueLocality: z.string().default(''),
+    weekday: z
+      .enum(['', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'])
+      .default(''),
+    /** 24-hour local start, e.g. '19:00'. */
+    startTime: z.string().default(''),
+    /** 24-hour local end, optional — omitted from the node when blank. */
+    endTime: z.string().default(''),
   })
   .refine(
     (t) => !t.enabled || (t.headline && t.body && t.when && t.ctaContext),

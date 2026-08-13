@@ -29,6 +29,9 @@ export async function generateMetadata() {
     alternates: { canonical: '/' },
   };
 }
+import { JsonLd } from '@/components/JsonLd';
+import { tonightEventLd } from '@/lib/tonight-event';
+import { todayIso } from '@/lib/format';
 import { Hero } from '@/components/Hero';
 import { KineticStrip } from '@/components/KineticStrip';
 import { TrialBanner } from '@/components/TrialBanner';
@@ -64,6 +67,10 @@ export default async function HomePage() {
   const sortedStyles = content.danceStyles.slice().sort((a, b) => a.displayOrder - b.displayOrder);
   const sortedStudios = content.studios.slice().sort((a, b) => a.displayOrder - b.displayOrder);
   const nextPerStyle = nextBatchPerStyle(content);
+  // todayIso() is passed in rather than read inside the builder so the node is
+  // deterministic and the IST business date is the one that decides which
+  // Saturday is "next".
+  const eventLd = tonightEventLd(content, todayIso());
   const h = content.pages.home;
   const bookable = visibleBatches(content);
   const trialFrom = bookable.length ? Math.min(...bookable.map((b) => b.reservationInr)) : null;
@@ -124,6 +131,18 @@ export default async function HomePage() {
           makes the bar appear only after the visitor scrolls past the board,
           with zero JS. See StickyTrialBar. */}
       <div className="relative">
+
+      {/* Emitted only when the social's venue, weekday and start time are all
+          filled in — see tonight-event.ts. A node without location and
+          startDate cannot earn an Event rich result, so we ship none rather
+          than assert something we don't know. */}
+      {eventLd ? <JsonLd data={eventLd} /> : null}
+
+      {/* La Rumba sits directly under the booking board, not eleven sections
+          down. Spec §6.2 chose moving this tile over building a separate
+          ribbon: it is richer, already admin-editable, already carries its
+          RSVP CTA, and adds no second La Rumba surface to keep in sync. */}
+      <TonightTile content={content} />
 
       <KineticStrip styles={sortedStyles} />
 
@@ -341,8 +360,6 @@ export default async function HomePage() {
 
       {/* Style finder */}
       <StyleFinder content={content} />
-
-      <TonightTile content={content} />
 
       {/* Closing CTA */}
       <section className="container-x py-14 sm:py-20">

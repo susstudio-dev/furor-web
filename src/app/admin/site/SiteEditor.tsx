@@ -239,6 +239,50 @@ export function SiteEditor({ initial }: { initial: SiteContent }) {
                 <input value={c.tonight.ctaContext} onChange={(e) => patchTonight({ ctaContext: e.target.value })} className="input" />
               </Field>
             </div>
+
+            {/* Structured facts for Google. "When" above stays the sentence
+                visitors read; these are what search engines need. All four of
+                venue, day and start time must be filled or no Event markup is
+                emitted at all — a node without a location and a date cannot
+                earn a rich result, so a partial one is worth nothing. */}
+            <div className="mt-4 border-t border-cream/10 pt-4">
+              <p className="text-xs uppercase tracking-widest text-cream/60">
+                Event details for Google
+              </p>
+              <p className="text-xs text-cream/40 mt-0.5">
+                Fill venue, day and start time to make this social eligible for Google&apos;s event
+                results. Leave any of them blank and no event markup is published.
+              </p>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <Field label="Venue name" hint="e.g. Over the Moon Brew Co">
+                  <input value={c.tonight.venueName} onChange={(e) => patchTonight({ venueName: e.target.value })} className="input" />
+                </Field>
+                <Field label="Area / city" hint="e.g. Gachibowli, Hyderabad">
+                  <input value={c.tonight.venueLocality} onChange={(e) => patchTonight({ venueLocality: e.target.value })} className="input" />
+                </Field>
+                <Field label="Street address (optional)" hint="Sharpens the map pin for search engines.">
+                  <input value={c.tonight.venueStreet} onChange={(e) => patchTonight({ venueStreet: e.target.value })} className="input" />
+                </Field>
+                <Field label="Day of the week">
+                  <select
+                    value={c.tonight.weekday}
+                    onChange={(e) => patchTonight({ weekday: e.target.value as SiteContent['tonight']['weekday'] })}
+                    className="input"
+                  >
+                    <option value="">— not set —</option>
+                    {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((d) => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
+                </Field>
+                <Field label="Start time" hint="24-hour, e.g. 19:00">
+                  <input type="time" value={c.tonight.startTime} onChange={(e) => patchTonight({ startTime: e.target.value })} className="input" />
+                </Field>
+                <Field label="End time (optional)" hint="24-hour, e.g. 23:00">
+                  <input type="time" value={c.tonight.endTime} onChange={(e) => patchTonight({ endTime: e.target.value })} className="input" />
+                </Field>
+              </div>
+            </div>
           </div>
         </div>
 

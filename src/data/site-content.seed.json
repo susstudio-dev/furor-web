@@ -30,7 +30,13 @@
     "body": "Hyderabad's weekly Latin social at Over the Moon Brew Co, Gachibowli. All levels welcome. Entry at the Venue.",
     "when": "Every Saturday · 7 PM",
     "ctaLabel": "WhatsApp to RSVP",
-    "ctaContext": "the La Rumba Latin social Saturday at Gachibowli"
+    "ctaContext": "the La Rumba Latin social Saturday at Gachibowli",
+    "venueName": "Over the Moon Brew Co",
+    "venueStreet": "",
+    "venueLocality": "Gachibowli, Hyderabad",
+    "weekday": "Saturday",
+    "startTime": "19:00",
+    "endTime": ""
   },
   "trial": {
     "enabled": true,
