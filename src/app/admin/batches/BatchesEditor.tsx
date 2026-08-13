@@ -5,6 +5,7 @@ import { randomId } from '@/lib/id';
 import type { Batch, SiteContent } from '@/lib/content-schema';
 import { SaveBar } from '@/components/admin/SaveBar';
 import { saveSiteContent } from '@/lib/admin-save';
+import { todayIso } from '@/lib/format';
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
 
@@ -29,7 +30,11 @@ export function BatchesEditor({ initial }: { initial: SiteContent }) {
       branchSlug: c.studios[0]?.slug || 'jubilee-hills',
       daysOfWeek: ['Sat', 'Sun'],
       time: '9:30–10:30 AM',
-      startDate: new Date().toISOString().slice(0, 10),
+      // todayIso(), not new Date().toISOString(): batch visibility is filtered
+      // on IST business dates (format.ts adds +5:30), so a UTC stamp meant a
+      // batch created between 00:00 and 05:30 IST was dated *yesterday* and
+      // went invisible on every public surface the instant it was saved.
+      startDate: todayIso(),
       priceInr: 6500,
       reservationInr: 500,
       seatsLeft: null,
@@ -105,6 +110,16 @@ export function BatchesEditor({ initial }: { initial: SiteContent }) {
               </Field>
               <Field label="Start date">
                 <input type="date" value={b.startDate} onChange={(e) => patch(i, { startDate: e.target.value })} className="input" />
+                {/* Batches whose start date has passed drop out of
+                    visibleBatches() and vanish from every public surface. That
+                    happened silently to five of six batches, leaving one class
+                    visible site-wide with nothing on screen to explain it. */}
+                {b.startDate && b.startDate < todayIso() ? (
+                  <p className="mt-1.5 text-xs text-ember-400">
+                    Hidden from the site — this start date has passed. Update it to show this batch
+                    again.
+                  </p>
+                ) : null}
               </Field>
               <Field label="Price (INR)" hint="Full course fee — shown on the cards.">
                 <input type="number" min={0} value={b.priceInr} onChange={(e) => patch(i, { priceInr: Number(e.target.value) })} className="input" />
