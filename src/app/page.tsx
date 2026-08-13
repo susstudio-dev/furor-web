@@ -287,6 +287,7 @@ export default async function HomePage() {
                         branch={{ slug: branch.slug, name: branch.name }}
                         whatsappNumber={content.site.whatsappNumber}
                         labels={content.labels}
+                        templates={content.site.whatsappTemplates}
                       />
                     </div>
                   </>
@@ -304,6 +305,7 @@ export default async function HomePage() {
                         }}
                         variant="batch-row"
                         labels={content.labels}
+                        templates={content.site.whatsappTemplates}
                         label={label(content.labels, 'ctaNotifyWhatsapp')}
                       />
                     </div>
@@ -388,6 +390,7 @@ export default async function HomePage() {
               ctx={{ source: 'primary' }}
               variant="secondary"
               labels={content.labels}
+              templates={content.site.whatsappTemplates}
               label={label(content.labels, 'ctaChatOnWhatsapp')}
               className="!border-on-ember/45 !text-on-ember hover:!border-on-ember magnetic"
             />
@@ -398,6 +401,7 @@ export default async function HomePage() {
               channel="instagram"
               variant="secondary"
               labels={content.labels}
+              templates={content.site.whatsappTemplates}
               className="!border-on-ember/45 !text-on-ember hover:!border-on-ember magnetic"
             />
           </div>
@@ -511,6 +515,7 @@ export default async function HomePage() {
         whatsappNumber={content.site.whatsappNumber}
         label={trialLabel}
         labels={content.labels}
+        templates={content.site.whatsappTemplates}
       />
       </div>
     </>

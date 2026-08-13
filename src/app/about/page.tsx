@@ -159,6 +159,7 @@ export default async function AboutPage() {
                 ctx={{ source: 'primary' }}
                 variant="primary"
                 labels={content.labels}
+                templates={content.site.whatsappTemplates}
               />
               <EnquiryCTA
                 whatsappNumber={content.site.whatsappNumber}
@@ -167,6 +168,7 @@ export default async function AboutPage() {
                 channel="instagram"
                 variant="secondary"
                 labels={content.labels}
+                templates={content.site.whatsappTemplates}
               />
             </div>
           </div>

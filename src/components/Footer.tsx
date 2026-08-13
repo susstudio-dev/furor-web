@@ -12,10 +12,11 @@ import { label } from '@/lib/labels';
 // footer with nothing in it.
 export function Footer({ content, flush = false }: { content: SiteContent; flush?: boolean }) {
   const wa = (branchSlug: string, branchName: string) =>
-    buildWhatsAppHref(content.site.whatsappNumber, {
-      source: 'footer',
-      branch: { slug: branchSlug, name: branchName },
-    });
+    buildWhatsAppHref(
+      content.site.whatsappNumber,
+      { source: 'footer', branch: { slug: branchSlug, name: branchName } },
+      content.site.whatsappTemplates,
+    );
 
   return (
     <footer className={`${flush ? '' : 'mt-32'} border-t border-cream/10 bg-ink-950/60`}>
@@ -68,7 +69,11 @@ export function Footer({ content, flush = false }: { content: SiteContent; flush
               <a
                 aria-label={label(content.labels, 'ariaSocialWhatsapp')}
                 className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-cream/15 transition hover:border-ember-500/60 hover:text-cream"
-                href={buildWhatsAppHref(content.site.whatsappNumber, { source: 'footer' })}
+                href={buildWhatsAppHref(
+                  content.site.whatsappNumber,
+                  { source: 'footer' },
+                  content.site.whatsappTemplates,
+                )}
                 target="_blank"
                 rel="noopener noreferrer"
               >

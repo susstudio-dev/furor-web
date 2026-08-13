@@ -10,6 +10,7 @@ import {
   type EnquiryContext,
 } from '@/lib/enquiry';
 import { enquiryDefaultLabel, type Labels } from '@/lib/labels';
+import type { WhatsappTemplates } from '@/lib/content-schema';
 
 interface Props {
   whatsappNumber: string;
@@ -20,6 +21,11 @@ interface Props {
   label?: string;
   /** Required for the icon variant, which renders no visible text. */
   ariaLabel?: string;
+  /** The document's WhatsApp message templates. Required, not optional: every
+   *  render site is reachable from the content document, and an optional prop
+   *  here would mean silently falling back to a second copy of the same six
+   *  strings living in code. */
+  templates: WhatsappTemplates;
   className?: string;
   /** The content document's labels. Required: every render site is reachable
    *  from the document, and an optional prop would let a call site silently
@@ -35,6 +41,7 @@ export function EnquiryCTA({
   variant = 'primary',
   label,
   ariaLabel,
+  templates,
   className,
   labels,
 }: Props) {
@@ -54,7 +61,7 @@ export function EnquiryCTA({
       if (channel === 'instagram') {
         try {
           if (navigator.clipboard && window.isSecureContext) {
-            await navigator.clipboard.writeText(buildPrefilledMessage(ctx));
+            await navigator.clipboard.writeText(buildPrefilledMessage(ctx, templates));
             showToast('Message copied — paste in Instagram DM');
           } else {
             showToast('Tap to message us on Instagram');
@@ -79,12 +86,12 @@ export function EnquiryCTA({
         e.preventDefault();
       }
     },
-    [channel, ctx, instagramHandle],
+    [channel, ctx, instagramHandle, templates],
   );
 
   const href =
     channel === 'whatsapp'
-      ? buildWhatsAppHref(whatsappNumber, ctx)
+      ? buildWhatsAppHref(whatsappNumber, ctx, templates)
       : instagramHandle
       ? buildInstagramWebHref(instagramHandle)
       : '#';

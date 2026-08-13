@@ -108,6 +108,7 @@ export default async function BatchesPage() {
         whatsappNumber={content.site.whatsappNumber}
         instagramHandle={content.site.instagramHandle}
         labels={content.labels}
+        templates={content.site.whatsappTemplates}
       />
 
       {courseLd.map((d, i) => (

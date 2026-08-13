@@ -123,6 +123,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           whatsappNumber={content.site.whatsappNumber}
           instagramHandle={content.site.instagramHandle}
           labels={content.labels}
+          templates={content.site.whatsappTemplates}
         />
       </body>
     </html>

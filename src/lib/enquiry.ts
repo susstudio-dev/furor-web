@@ -1,5 +1,6 @@
 import { formatBatchDate } from './format';
 import type { Batch, DanceStyle, Studio } from './content-schema';
+import type { WhatsappTemplates } from './content-schema';
 
 export type EnquirySource =
   | 'floating'
@@ -24,61 +25,77 @@ export interface EnquiryContext {
   customNote?: string;
 }
 
-const FORBIDDEN = ['<', '>', '{{', '}}', 'undefined'];
+export { FORBIDDEN_MESSAGE_TOKENS, firstForbiddenToken } from './content-schema';
+export type { WhatsappTemplates } from './content-schema';
 
-function assertCleanMessage(msg: string): string {
-  for (const token of FORBIDDEN) {
-    if (msg.includes(token)) {
-      throw new Error(`Enquiry message contains forbidden token "${token}": ${msg}`);
-    }
-  }
-  return msg;
+/**
+ * Substitute {placeholders}.
+ *
+ * A placeholder with no value is left EXACTLY as typed rather than replaced
+ * with an empty string or String(undefined): deleting words silently is worse
+ * than showing the editor their own token back, and "undefined" appearing in a
+ * customer's WhatsApp draft is the precise failure the forbidden-token list
+ * exists to prevent.
+ */
+function fill(template: string, vars: Record<string, string>): string {
+  return template.replace(/\{(\w+)\}/g, (whole, key: string) =>
+    Object.prototype.hasOwnProperty.call(vars, key) ? vars[key] : whole,
+  );
 }
 
-export function buildPrefilledMessage(ctx: EnquiryContext): string {
+/**
+ * The prefilled WhatsApp body.
+ *
+ * The forbidden-token check that used to THROW here now runs on the write path
+ * (src/lib/integrity.ts), so a bad template is a form error at save time rather
+ * than a crash on a visitor's phone at click time. Nothing in this function
+ * throws.
+ */
+export function buildPrefilledMessage(ctx: EnquiryContext, t: WhatsappTemplates): string {
   // Per-batch: most specific
   if (ctx.batch && ctx.style && ctx.branch) {
-    const days = ctx.batch.daysOfWeek.join('–');
-    const date = formatBatchDate(ctx.batch.startDate);
-    return assertCleanMessage(
-      `Hi Furor, I'm interested in the ${ctx.style.name} ${ctx.batch.level} batch at ${ctx.branch.name} (${days}, ${ctx.batch.time}, starting ${date}). Please share details.`,
-    );
+    return fill(t.batch, {
+      style: ctx.style.name,
+      level: ctx.batch.level,
+      branch: ctx.branch.name,
+      days: ctx.batch.daysOfWeek.join('–'),
+      time: ctx.batch.time,
+      date: formatBatchDate(ctx.batch.startDate),
+    });
   }
 
   // Style finder result
   if (ctx.source === 'style_finder' && ctx.styleFinderRecommendation) {
     const r = ctx.styleFinderRecommendation;
-    const where = r.branchName ? ` at ${r.branchName}` : '';
-    return assertCleanMessage(
-      `Hi Furor, the style finder suggested ${r.styleName} ${r.level}${where} for me. Please tell me about the next batch.`,
-    );
+    const where = r.branchName ? fill(t.styleFinderWhere, { branch: r.branchName }) : '';
+    return fill(t.styleFinder, { style: r.styleName, level: r.level, where });
   }
 
   // Style page
   if (ctx.style && !ctx.branch) {
-    return assertCleanMessage(
-      `Hi Furor, I'm interested in ${ctx.style.name} classes — please share details.`,
-    );
+    return fill(t.style, { style: ctx.style.name });
   }
 
   // Branch page
   if (ctx.branch && !ctx.style) {
-    return assertCleanMessage(
-      `Hi Furor, I'd like to know about classes at your ${ctx.branch.name} studio.`,
-    );
+    return fill(t.branch, { branch: ctx.branch.name });
   }
 
-  // Custom note (e.g. "Tonight" tile)
+  // Custom note (the Tonight tile, the trial ribbon)
   if (ctx.customNote) {
-    return assertCleanMessage(`Hi Furor, I'd like to come to ${ctx.customNote}.`);
+    return fill(t.custom, { note: ctx.customNote });
   }
 
   // Generic / floating from home
-  return assertCleanMessage(`Hi Furor, I'd like to know more about your dance classes.`);
+  return t.generic;
 }
 
-export function buildWhatsAppHref(whatsappNumber: string, ctx: EnquiryContext): string {
-  const msg = buildPrefilledMessage(ctx);
+export function buildWhatsAppHref(
+  whatsappNumber: string,
+  ctx: EnquiryContext,
+  t: WhatsappTemplates,
+): string {
+  const msg = buildPrefilledMessage(ctx, t);
   return `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(msg)}`;
 }
 

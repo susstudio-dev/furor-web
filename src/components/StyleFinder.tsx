@@ -147,6 +147,7 @@ export function StyleFinder({ content }: { content: SiteContent }) {
                 }}
                 variant="primary"
                 labels={content.labels}
+                templates={content.site.whatsappTemplates}
               />
               <EnquiryCTA
                 whatsappNumber={content.site.whatsappNumber}
@@ -163,6 +164,7 @@ export function StyleFinder({ content }: { content: SiteContent }) {
                 channel="instagram"
                 variant="secondary"
                 labels={content.labels}
+                templates={content.site.whatsappTemplates}
               />
             </div>
           </div>

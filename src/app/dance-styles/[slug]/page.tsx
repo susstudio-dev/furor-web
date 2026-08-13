@@ -88,6 +88,7 @@ export default async function StylePage({ params }: { params: Promise<{ slug: st
               ctx={{ source: 'primary', style: { slug: style.slug, name: style.name } }}
               variant="primary"
               labels={content.labels}
+              templates={content.site.whatsappTemplates}
             />
             <EnquiryCTA
               whatsappNumber={content.site.whatsappNumber}
@@ -96,6 +97,7 @@ export default async function StylePage({ params }: { params: Promise<{ slug: st
               channel="instagram"
               variant="secondary"
               labels={content.labels}
+              templates={content.site.whatsappTemplates}
             />
           </div>
         </div>
@@ -134,6 +136,7 @@ export default async function StylePage({ params }: { params: Promise<{ slug: st
                 ctx={{ source: 'primary', style: { slug: style.slug, name: style.name } }}
                 variant="primary"
                 labels={content.labels}
+                templates={content.site.whatsappTemplates}
                 label={`Notify me about ${style.name}`}
               />
             </div>
@@ -165,6 +168,7 @@ export default async function StylePage({ params }: { params: Promise<{ slug: st
                       whatsappNumber={content.site.whatsappNumber}
                       primaryLabelWhenNoLink="Enquire"
                       labels={content.labels}
+                      templates={content.site.whatsappTemplates}
                     />
                   </div>
                 </div>

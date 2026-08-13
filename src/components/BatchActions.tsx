@@ -1,4 +1,4 @@
-import type { Batch } from '@/lib/content-schema';
+import type { Batch, WhatsappTemplates } from '@/lib/content-schema';
 import { formatInr } from '@/lib/format';
 import { BookTrialLink } from './BookTrialLink';
 import { EnquiryCTA } from './EnquiryCTA';
@@ -20,6 +20,7 @@ export function BatchActions({
   primaryLabelWhenNoLink,
   whatsappLabelWhenLink,
   labels,
+  templates,
 }: {
   batch: Batch;
   style: { slug: string; name: string };
@@ -28,6 +29,7 @@ export function BatchActions({
   primaryLabelWhenNoLink?: string;
   whatsappLabelWhenLink?: string;
   labels: Labels;
+  templates: WhatsappTemplates;
 }) {
   const ctx = {
     source: 'batch_row' as const,
@@ -60,6 +62,7 @@ export function BatchActions({
           variant="link"
           label={chatLabel}
           labels={labels}
+          templates={templates}
         />
       </div>
     );
@@ -72,6 +75,7 @@ export function BatchActions({
       variant="batch-row"
       label={noLinkLabel}
       labels={labels}
+      templates={templates}
     />
   );
 }

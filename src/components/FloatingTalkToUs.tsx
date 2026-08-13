@@ -5,15 +5,18 @@ import { usePathname } from 'next/navigation';
 import { EnquiryCTA } from './EnquiryCTA';
 import type { EnquiryContext } from '@/lib/enquiry';
 import { label, type Labels } from '@/lib/labels';
+import type { WhatsappTemplates } from '@/lib/content-schema';
 
 export function FloatingTalkToUs({
   whatsappNumber,
   instagramHandle,
   labels,
+  templates,
 }: {
   whatsappNumber: string;
   instagramHandle: string;
   labels: Labels;
+  templates: WhatsappTemplates;
 }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname() || '/';
@@ -66,6 +69,7 @@ export function FloatingTalkToUs({
                 channel="whatsapp"
                 variant="primary"
                 labels={labels}
+                templates={templates}
                 className="w-full"
               />
               <EnquiryCTA
@@ -75,6 +79,7 @@ export function FloatingTalkToUs({
                 channel="instagram"
                 variant="secondary"
                 labels={labels}
+                templates={templates}
                 className="w-full"
               />
             </div>

@@ -11,6 +11,54 @@ const isSafeUrl = (v: string) =>
 const safeUrl = (message = 'Must be an http(s) URL or a /relative path') =>
   z.string().refine(isSafeUrl, { message });
 
+// The tokens that make a prefilled WhatsApp message unsafe or obviously broken.
+//
+// `<` and `>` because the message is interpolated into an href and read back by
+// a client that renders it; `{{` and `}}` because they are a template syntax
+// nothing here implements, so they would ship to a visitor verbatim; and the
+// literal word `undefined`, which is what a missing value used to produce.
+//
+// Checked at SAVE time (src/lib/integrity.ts), never on the read path. A Zod
+// refine here would be evaluated by getContent() on every request, and
+// content.ts serves the bundled seed for the ENTIRE public site when the parse
+// throws — so one bad character would be a site-wide outage rather than a form
+// error.
+export const FORBIDDEN_MESSAGE_TOKENS = ['<', '>', '{{', '}}', 'undefined'] as const;
+
+export function firstForbiddenToken(msg: string): string | null {
+  for (const token of FORBIDDEN_MESSAGE_TOKENS) {
+    if (msg.includes(token)) return token;
+  }
+  return null;
+}
+
+// The six prefilled WhatsApp messages, plus the optional studio fragment that
+// is substituted into {where}. Single-brace {placeholders} are filled at render
+// time from live records — the studio can rewrite the prose, it cannot make the
+// batch details wrong.
+export const WhatsappTemplatesSchema = z
+  .object({
+    batch: z
+      .string()
+      .default(
+        "Hi Furor, I'm interested in the {style} {level} batch at {branch} ({days}, {time}, starting {date}). Please share details.",
+      ),
+    styleFinder: z
+      .string()
+      .default(
+        'Hi Furor, the style finder suggested {style} {level}{where} for me. Please tell me about the next batch.',
+      ),
+    /** Substituted into {where} when a studio is known; dropped entirely when not. */
+    styleFinderWhere: z.string().default(' at {branch}'),
+    style: z
+      .string()
+      .default("Hi Furor, I'm interested in {style} classes — please share details."),
+    branch: z.string().default("Hi Furor, I'd like to know about classes at your {branch} studio."),
+    custom: z.string().default("Hi Furor, I'd like to come to {note}."),
+    generic: z.string().default("Hi Furor, I'd like to know more about your dance classes."),
+  })
+  .default({});
+
 export const SiteSettingsSchema = z.object({
   title: z.string().min(1),
   tagline: z.string().min(1),
@@ -26,6 +74,7 @@ export const SiteSettingsSchema = z.object({
     .partial(),
   footerCopy: z.string().optional().default(''),
   notice: z.string().optional().default(''),
+  whatsappTemplates: WhatsappTemplatesSchema,
   stats: z
     .object({
       studentsThisWeek: z.number().int().nonnegative().nullable().optional(),
@@ -773,3 +822,4 @@ export type CustomBlock = z.infer<typeof CustomBlockSchema>;
 export type Welcome = z.infer<typeof WelcomeSchema>;
 export type WelcomeTrack = z.infer<typeof WelcomeTrackSchema>;
 export type Labels = z.infer<typeof LabelsSchema>;
+export type WhatsappTemplates = z.infer<typeof WhatsappTemplatesSchema>;

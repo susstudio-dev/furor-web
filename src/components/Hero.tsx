@@ -180,6 +180,7 @@ export function Hero({ content, poster }: { content: SiteContent; poster: HeroPo
               ctx={{ source: 'primary' }}
               variant="link"
               labels={content.labels}
+              templates={content.site.whatsappTemplates}
               label={label(content.labels, 'ctaChatFirstWhatsapp')}
             />
           </div>

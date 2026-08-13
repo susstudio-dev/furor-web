@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import type { Batch } from '@/lib/content-schema';
+import type { Batch, WhatsappTemplates } from '@/lib/content-schema';
 import { formatBatchDate, formatInr } from '@/lib/format';
 import { compareByLevel } from '@/lib/batch-order';
 import { EnquiryCTA } from './EnquiryCTA';
@@ -25,6 +25,7 @@ interface Props {
   whatsappNumber: string;
   instagramHandle: string;
   labels: Labels;
+  templates: WhatsappTemplates;
 }
 
 // ── derived attributes ──────────────────────────────────────────────────────
@@ -86,6 +87,7 @@ export function BatchesBrowser({
   whatsappNumber,
   instagramHandle,
   labels,
+  templates,
 }: Props) {
   const [now] = useState(() => new Date());
   const multiBranch = studios.length > 1;
@@ -390,7 +392,7 @@ export function BatchesBrowser({
               No batches match these filters yet. Chat with us — we&apos;ll tell you when one opens.
             </p>
             <div className="mt-4 flex gap-3">
-              <EnquiryCTA whatsappNumber={whatsappNumber} instagramHandle={instagramHandle} ctx={{ source: 'primary' }} variant="primary" labels={labels} />
+              <EnquiryCTA whatsappNumber={whatsappNumber} instagramHandle={instagramHandle} ctx={{ source: 'primary' }} variant="primary" labels={labels} templates={templates} />
               <button onClick={clearAll} className="btn-secondary">Clear filters</button>
             </div>
           </div>
@@ -440,6 +442,7 @@ export function BatchesBrowser({
                       branch={{ slug: row.branchSlug, name: row.branchName }}
                       whatsappNumber={whatsappNumber}
                       labels={labels}
+                      templates={templates}
                       primaryLabelWhenNoLink="Enquire"
                     />
                   </div>

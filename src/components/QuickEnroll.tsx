@@ -228,6 +228,7 @@ export function QuickEnroll({
                                 }}
                                 variant="link"
                                 labels={content.labels}
+                                templates={content.site.whatsappTemplates}
                                 label={label(content.labels, 'ctaChatFirst')}
                                 className="!min-h-[36px] text-xs"
                               />
@@ -244,6 +245,7 @@ export function QuickEnroll({
                             }}
                             variant="batch-row"
                             labels={content.labels}
+                            templates={content.site.whatsappTemplates}
                             label={`${book} on WhatsApp`}
                             className="w-full justify-center magnetic"
                           />
@@ -335,6 +337,7 @@ export function QuickEnroll({
                 }}
                 variant="primary"
                 labels={content.labels}
+                templates={content.site.whatsappTemplates}
                 label={label(content.labels, 'ctaGrabSeatWhatsapp')}
                 className="magnetic"
               />

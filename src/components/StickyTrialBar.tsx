@@ -3,6 +3,7 @@ import { EnquiryCTA } from './EnquiryCTA';
 // which would shadow the resolver inside the function body.
 import { label as labelText } from '@/lib/labels';
 import type { Labels } from '@/lib/labels';
+import type { WhatsappTemplates } from '@/lib/content-schema';
 
 // The After-Band: a mobile-only booking bar that appears once the visitor has
 // scrolled PAST the booking board and rides the bottom edge through the
@@ -22,10 +23,12 @@ export function StickyTrialBar({
   whatsappNumber,
   label,
   labels,
+  templates,
 }: {
   whatsappNumber: string;
   label: string;
   labels: Labels;
+  templates: WhatsappTemplates;
 }) {
   return (
     <div className="sticky bottom-0 z-30 sm:hidden">
@@ -45,6 +48,7 @@ export function StickyTrialBar({
           ctx={{ source: 'sticky_bar' }}
           variant="icon"
           labels={labels}
+          templates={templates}
           ariaLabel={labelText(labels, 'ctaChatWhatsapp')}
         />
       </div>

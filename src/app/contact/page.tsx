@@ -185,6 +185,7 @@ export default async function ContactPage() {
               ctx={{ source: 'primary' }}
               variant="primary"
               labels={content.labels}
+              templates={content.site.whatsappTemplates}
               className="!bg-ink-950 !text-cream hover:!bg-ink-800"
             />
             <EnquiryCTA
@@ -194,6 +195,7 @@ export default async function ContactPage() {
               channel="instagram"
               variant="secondary"
               labels={content.labels}
+              templates={content.site.whatsappTemplates}
               className="!border-on-ember/45 !text-on-ember hover:!border-on-ember"
             />
           </div>
