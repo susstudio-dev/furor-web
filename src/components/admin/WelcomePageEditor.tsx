@@ -209,6 +209,41 @@ export function WelcomePageEditor({ initial }: { initial: SiteContent }) {
           {txt('Badge', 'unconfirmedBadge')}
           {txt('Headline', 'unconfirmedHeadline')}
           {area('Body', 'unconfirmedBody', 'Use {trackLabel}.')}
+          {txt('WhatsApp button', 'unconfirmedCta')}
+          {txt('Try-again button', 'tryAgainLabel')}
+          {txt('Reference line', 'referenceLabel', 'Use {id} for the payment reference.')}
+        </Section>
+
+        <Section title="Buttons & references">
+          {txt('Search / tab title', 'seoTitle', 'Leave empty to keep “You’re in — Furor Hyderabad”.')}
+          {txt('Google Calendar button', 'gcalLabel')}
+          {txt('Apple / Outlook button', 'icsLabel')}
+          {txt(
+            'Payment reference line',
+            'paymentReferenceLabel',
+            'Shown under the headline once payment is confirmed. Use {id}.',
+          )}
+        </Section>
+
+        <Section title="Intake details — headings and fallbacks">
+          <p className="-mt-1 text-xs text-cream/50">
+            The venue, days, times and arrival time are filled in automatically from the batch and
+            the studio. These are the words around them, and what we say when a batch has no venue
+            or date yet. (The “Where” heading itself lives in Labels.)
+          </p>
+          {area(
+            'When there is no venue yet',
+            'noVenueNote',
+            'Shown instead of the address when the batch has no studio set.',
+          )}
+          {txt('“When” heading', 'whenHeading')}
+          {txt('Days line', 'whenEvery', 'Use {days} — e.g. “Every Saturday & Sunday”.')}
+          {txt('Arrival note', 'arriveByNote', 'Use {time} for the arrive-by time.')}
+          {area(
+            'When there is no date yet',
+            'noDateNote',
+            'Shown instead of the calendar buttons when no upcoming batch date is set.',
+          )}
         </Section>
 
         <Section title="Tracks (post-payment pages)">

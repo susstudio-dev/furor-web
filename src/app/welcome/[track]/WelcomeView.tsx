@@ -4,6 +4,7 @@ import { Fragment, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Reveal } from '@/components/Reveal';
 import type { Welcome } from '@/lib/content-schema';
+import { label, type Labels } from '@/lib/labels';
 import type { WelcomeState } from '@/lib/welcome-confirm';
 import type { ContactRow } from '@/lib/welcome-contact';
 
@@ -33,6 +34,10 @@ interface Props {
   track: string;
   trackLabel: string;
   copy: Welcome; // admin-editable text templates from content.welcome
+  /** The shared labels bag. The Where/map/parking/Reach-us strings live here
+   *  rather than in `copy` because they are the same words this site already
+   *  uses elsewhere — one string, one home. */
+  labels: Labels;
   waNumber: string;
   waDisplay: string;
   vcardHref: string;
@@ -76,6 +81,7 @@ export function WelcomeView({
   track,
   trackLabel,
   copy,
+  labels,
   waNumber,
   waDisplay,
   vcardHref,
@@ -162,14 +168,14 @@ export function WelcomeView({
           </p>
           <div className="mt-7 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
             <a href={waText(helpMsg)} target="_blank" rel="noopener noreferrer" className="btn-primary">
-              Message us on WhatsApp
+              {copy.unconfirmedCta}
             </a>
             <Link href="/batches" className="btn-secondary">
-              Try again
+              {copy.tryAgainLabel}
             </Link>
           </div>
           {paymentId ? (
-            <p className="mt-6 text-xs text-cream/40">Reference: {paymentId}</p>
+            <p className="mt-6 text-xs text-cream/40">{copy.referenceLabel.replace('{id}', paymentId)}</p>
           ) : null}
         </Reveal>
       </section>
@@ -207,7 +213,11 @@ export function WelcomeView({
           </p>
           {paymentId ? (
             <p className="mt-5 inline-block rounded-full border border-cream/10 bg-ink-900/50 px-4 py-1.5 text-xs text-cream/70">
-              Payment reference: <span className="text-cream/80">{paymentId}</span>
+              <Filled
+                template={copy.paymentReferenceLabel}
+                vars={{ id: paymentId }}
+                classNames={{ id: 'text-cream/80' }}
+              />
             </p>
           ) : null}
         </Reveal>
@@ -258,19 +268,17 @@ export function WelcomeView({
                     rel="noopener noreferrer"
                     className="btn-primary inline-flex"
                   >
-                    Google Calendar
+                    {copy.gcalLabel}
                   </a>
                 ) : null}
                 {icsHref ? (
                   <a href={icsHref} download="furor-class.ics" className="btn-secondary inline-flex">
-                    Apple / Outlook (.ics)
+                    {copy.icsLabel}
                   </a>
                 ) : null}
               </div>
             ) : (
-              <p className="mt-5 text-sm text-cream/70">
-                We’ll confirm the exact date on WhatsApp and send you a reminder.
-              </p>
+              <p className="mt-5 text-sm text-cream/70">{copy.noDateNote}</p>
             )}
           </div>
         </Reveal>
@@ -282,9 +290,11 @@ export function WelcomeView({
           <p className="display text-sm uppercase tracking-widest text-ember-400">{copy.intakeHeading}</p>
           <div className="mt-6 grid gap-8 md:grid-cols-3">
             <div>
-              <p className="text-xs uppercase tracking-widest text-cream/70">Where</p>
+              <p className="text-xs uppercase tracking-widest text-cream/70">
+                {label(labels, 'welcomeWhereHeading')}
+              </p>
               <p className="mt-2 leading-relaxed text-cream/85">
-                {venue || 'We’ll share the exact address on WhatsApp.'}
+                {venue || copy.noVenueNote}
               </p>
               {mapUrl ? (
                 <a
@@ -293,22 +303,24 @@ export function WelcomeView({
                   rel="noopener noreferrer"
                   className="btn-secondary mt-4 inline-flex"
                 >
-                  Open map →
+                  {label(labels, 'welcomeOpenMap')}
                 </a>
               ) : null}
               {parkingNote ? (
-                <p className="mt-3 text-sm text-cream/60">Parking: {parkingNote}</p>
+                <p className="mt-3 text-sm text-cream/60">
+                  {label(labels, 'welcomeParking').replace('{notes}', parkingNote)}
+                </p>
               ) : null}
             </div>
             <div>
-              <p className="text-xs uppercase tracking-widest text-cream/70">When</p>
+              <p className="text-xs uppercase tracking-widest text-cream/70">{copy.whenHeading}</p>
               <p className="mt-2 leading-relaxed text-cream/85">
-                Every <span className="font-semibold text-cream">{whenDays}</span>
+                <Filled template={copy.whenEvery} vars={{ days: whenDays }} />
                 <br />
                 {whenTime}
               </p>
               <p className="mt-2 text-sm text-cream/60">
-                Please arrive by {arriveBy} for registration.
+                {copy.arriveByNote.replace('{time}', arriveBy)}
               </p>
             </div>
             <div>
@@ -326,7 +338,9 @@ export function WelcomeView({
               The phone and Instagram rows did not exist on this page before:
               WelcomeView was never passed a studio or an instagram handle. */}
           <div className="mt-8 border-t border-cream/10 pt-6">
-            <p className="text-xs uppercase tracking-widest text-cream/70">Reach us</p>
+            <p className="text-xs uppercase tracking-widest text-cream/70">
+              {label(labels, 'welcomeReachUs')}
+            </p>
             <div className="mt-3 flex flex-wrap gap-x-8 gap-y-3">
               {reachRows.map((row) => (
                 <a

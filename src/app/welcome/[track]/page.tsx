@@ -268,6 +268,7 @@ export default async function WelcomePage({
       track={track}
       trackLabel={cfg.trackLabel}
       copy={content.welcome}
+      labels={content.labels}
       waNumber={wa}
       waDisplay={formatPhoneDisplay(wa)}
       vcardHref={vcardHref}
