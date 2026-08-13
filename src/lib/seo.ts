@@ -209,7 +209,21 @@ export function breadcrumbLd(items: { name: string; path: string }[]) {
 // and a wide string hits it before the character count does.
 // ---------------------------------------------------------------------------
 
-const TITLE_CHARS = 57;
+/**
+ * The character ceiling fitTitle enforces. Exported so the /admin counter and
+ * the render-time trim can never drift apart — an editor who is told "57" must
+ * be told the number this file actually applies.
+ */
+export const SEO_TITLE_CHARS = 57;
+/**
+ * Advisory ceiling for the admin description counter. The render-time limit is
+ * DESC_PX below, because Google's real limit is pixels, not characters — but
+ * pixels are not a number anyone can count while typing, and 155 is the figure
+ * every SERP tool shows an editor.
+ */
+export const SEO_DESC_CHARS = 155;
+
+const TITLE_CHARS = SEO_TITLE_CHARS;
 const TITLE_PX = 520;
 const DESC_PX = 920;
 const DESC_MIN = 75;

@@ -260,6 +260,14 @@ const SectionHeaderSchema = z.object({
 
 const HomePageSchema = z
   .object({
+    // The SERP title and description for this page. Blank means "use the
+    // literal this route already shipped" — that literal lives once, in
+    // PAGE_SEO_DEFAULTS (src/lib/page-meta.ts), so the schema, the route and
+    // the admin placeholder cannot drift apart. Both still run through
+    // fitTitle / fitDescription at render time, so an over-long value is
+    // trimmed rather than shipped broken.
+    seoTitle: z.string().default(''),
+    seoDescription: z.string().default(''),
     whatWeTeach: SectionHeaderSchema.default({ eyebrow: '', headline: '' }),
     nextBatches: SectionHeaderSchema.default({ eyebrow: '', headline: '' }),
     howItWorks: z
@@ -285,6 +293,8 @@ const HomePageSchema = z
 
 const AboutPageSchema = z
   .object({
+    seoTitle: z.string().default(''),
+    seoDescription: z.string().default(''),
     intro: PageIntroSchema.default({ eyebrow: '', headline: '', lead: '' }),
     introParagraphs: z.array(z.string()).default([]),
     moments: z
@@ -337,6 +347,8 @@ const AboutPageSchema = z
 
 const FaqsPageSchema = z
   .object({
+    seoTitle: z.string().default(''),
+    seoDescription: z.string().default(''),
     intro: PageIntroSchema.default({ eyebrow: '', headline: '', lead: '' }),
     sections: z
       .array(
@@ -354,6 +366,8 @@ const FaqsPageSchema = z
 
 const ContactPageSchema = z
   .object({
+    seoTitle: z.string().default(''),
+    seoDescription: z.string().default(''),
     intro: PageIntroSchema.default({ eyebrow: '', headline: '', lead: '' }),
     tiles: z
       .object({
@@ -378,14 +392,24 @@ const ContactPageSchema = z
 
 const InstructorsPageSchema = z
   .object({
+    seoTitle: z.string().default(''),
+    seoDescription: z.string().default(''),
     intro: PageIntroSchema.default({ eyebrow: '', headline: '', lead: '' }),
     testimonialsHeader: SectionHeaderSchema.default({ eyebrow: '', headline: '' }),
     closingCta: CtaBlockSchema.default({ headline: '', body: '' }),
   })
   .default({});
 
+// Backs /stories and /dance-styles — two pages with two different shipped
+// titles, which is exactly why seoTitle defaults to '' here and each route
+// supplies its own fallback from PAGE_SEO_DEFAULTS. (/batches gets its own
+// BatchesPageSchema in this plan, because it also owns 34 browser strings.)
 const SimpleIntroPageSchema = z
-  .object({ intro: PageIntroSchema.default({ eyebrow: '', headline: '', lead: '' }) })
+  .object({
+    seoTitle: z.string().default(''),
+    seoDescription: z.string().default(''),
+    intro: PageIntroSchema.default({ eyebrow: '', headline: '', lead: '' }),
+  })
   .default({});
 
 // Privacy / Terms / similar long-form documents. Each section is a sub-heading
@@ -397,6 +421,8 @@ const LegalSectionSchema = z.object({
 
 export const LegalPageSchema = z
   .object({
+    seoTitle: z.string().default(''),
+    seoDescription: z.string().default(''),
     intro: PageIntroSchema.default({ eyebrow: 'Legal', headline: '', lead: '' }),
     lastUpdated: z.string().default(''),
     sections: z.array(LegalSectionSchema).default([]),
@@ -538,6 +564,11 @@ const WelcomeSchema = z
       .default(
         'It looks like the payment for your {trackLabel} didn’t complete. If any money was deducted, don’t worry — message us and we’ll sort it out right away.',
       ),
+    // The <title> of the confirmation page. It is noindex, so this is not an
+    // SERP budget question — it is the browser tab and the WhatsApp link
+    // preview, both of which the studio should own. Blank falls back to
+    // PAGE_SEO_DEFAULTS.welcome.title.
+    seoTitle: z.string().default(''),
     tracks: z
       .array(WelcomeTrackSchema)
       .default([
