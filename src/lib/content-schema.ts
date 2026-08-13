@@ -164,6 +164,18 @@ export const BatchSchema = z.preprocess(
     seatsLeft: z.number().int().nonnegative().nullable().optional(),
     status: z.enum(['Open', 'Filling Fast', 'Closed']),
     razorpayLink: safeUrl().nullable().optional(),
+    // The post-payment message for THIS intake, shown on the confirmation
+    // page after someone pays. Empty means "use the track's standard copy",
+    // so a batch created and never edited still ships a warm confirmation
+    // rather than a blank space.
+    //
+    // Prose only. Venue, date, time and contact details are derived from the
+    // batch and its studio (see welcome-contact.ts) precisely so a note can
+    // never contradict the record it sits beside — which is exactly how
+    // /p/latinl1july2026 ended up naming the wrong venue and arrival time.
+    //
+    // Defaulted, so every stored batch stays valid with no migration.
+    welcomeNote: z.string().default(''),
   }),
 );
 

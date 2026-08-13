@@ -24,6 +24,9 @@ export interface BatchBundle {
    *  block switches with the batch rather than describing a different venue.
    *  Empty of venue/phone rows when no batch resolved — see welcome-contact.ts. */
   contact: ContactRow[];
+  /** This intake's own post-payment message. '' means the studio hasn't
+   *  written one, and the track's standard copy is shown instead. */
+  welcomeNote: string;
 }
 
 interface Props {
@@ -113,8 +116,18 @@ export function WelcomeView({
   const confirmed = paymentState.confirmed;
   const paymentId = paymentState.paymentId;
 
-  const { intakeDate, whenDays, whenTime, arriveBy, venue, mapUrl, gcalUrl, icsHref, contact } =
-    bundle;
+  const {
+    intakeDate,
+    whenDays,
+    whenTime,
+    arriveBy,
+    venue,
+    mapUrl,
+    gcalUrl,
+    icsHref,
+    contact,
+    welcomeNote,
+  } = bundle;
 
   // The venue row carries the studio's parking note; the reachable channels
   // are everything that isn't already rendered by the Where/When cells above.
@@ -186,7 +199,12 @@ export function WelcomeView({
               <Filled template={copy.reminderNoDate} vars={{ trackLabel }} />
             )}
           </p>
-          <p className="mt-4 mx-auto max-w-2xl text-cream/70">{copy.thankYouBody}</p>
+          {/* This intake's own words when the studio wrote them, the track's
+              standard copy otherwise. Prose only — every fact beside it
+              (venue, date, time, contact) is derived from the batch record. */}
+          <p className="mt-4 mx-auto max-w-2xl whitespace-pre-line text-cream/70">
+            {welcomeNote.trim() || copy.thankYouBody}
+          </p>
           {paymentId ? (
             <p className="mt-5 inline-block rounded-full border border-cream/10 bg-ink-900/50 px-4 py-1.5 text-xs text-cream/70">
               Payment reference: <span className="text-cream/80">{paymentId}</span>

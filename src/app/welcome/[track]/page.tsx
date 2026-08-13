@@ -244,6 +244,7 @@ export default async function WelcomePage({
       // the whole contact block together — venue, map, phone — instead of
       // leaving a stale address beside a new date.
       contact: contactRows({ studio, site: content.site }),
+      welcomeNote: batch?.welcomeNote ?? '',
     };
   };
 

@@ -35,6 +35,10 @@ export function BatchesEditor({ initial }: { initial: SiteContent }) {
       seatsLeft: null,
       status: 'Open',
       razorpayLink: null,
+      // Present from the moment a batch is created, so the post-payment
+      // message is a field the studio can see and fill rather than a hidden
+      // capability. Empty ships the track's standard copy.
+      welcomeNote: '',
     };
     setC((prev) => ({ ...prev, batches: [fresh, ...prev.batches] }));
     setDirty(true);
@@ -145,6 +149,29 @@ export function BatchesEditor({ initial }: { initial: SiteContent }) {
                 value={b.razorpayLink || ''}
                 onChange={(e) => patch(i, { razorpayLink: e.target.value || null })}
                 placeholder="https://razorpay.me/..."
+                className="input"
+              />
+            </Field>
+
+            <Field
+              label="Post-payment message (optional)"
+              hint="Shown on the confirmation page after someone pays for this batch. Leave blank to use the standard copy for this track. Venue, date, time and contact details are filled in automatically — you only need the words."
+            >
+              <textarea
+                value={b.welcomeNote}
+                onChange={(e) => patch(i, { welcomeNote: e.target.value })}
+                rows={3}
+                placeholder={
+                  c.welcome.tracks.find((t) =>
+                    t.styleSlugs.some((s) => b.styleSlugs.includes(s)),
+                  )?.trackLabel
+                    ? `Standard copy for the ${
+                        c.welcome.tracks.find((t) =>
+                          t.styleSlugs.some((s) => b.styleSlugs.includes(s)),
+                        )?.trackLabel
+                      } will be used.`
+                    : 'Standard copy for this track will be used.'
+                }
                 className="input"
               />
             </Field>
