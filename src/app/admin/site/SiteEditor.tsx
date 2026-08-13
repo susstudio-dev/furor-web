@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import type { SiteContent } from '@/lib/content-schema';
+import { firstForbiddenToken, type SiteContent } from '@/lib/content-schema';
 import { SaveBar } from '@/components/admin/SaveBar';
 import { saveSiteContent } from '@/lib/admin-save';
 import { SOCIAL_URL_HINT, socialUrlIssue, type SocialKey } from '@/lib/social-url';
@@ -20,6 +20,13 @@ export function SiteEditor({ initial }: { initial: SiteContent }) {
   }
   function patchTonight(patch: Partial<SiteContent['tonight']>) {
     setC((p) => ({ ...p, tonight: { ...p.tonight, ...patch } }));
+    setDirty(true);
+  }
+  function patchTemplates(patch: Partial<SiteContent['site']['whatsappTemplates']>) {
+    setC((p) => ({
+      ...p,
+      site: { ...p.site, whatsappTemplates: { ...p.site.whatsappTemplates, ...patch } },
+    }));
     setDirty(true);
   }
   function patchWhy(patch: Partial<SiteContent['whyFuror']>) {
@@ -335,6 +342,94 @@ export function SiteEditor({ initial }: { initial: SiteContent }) {
             </div>
           </div>
         </div>
+
+        <div className="mt-4 rounded-2xl border border-cream/10 bg-ink-900/40 p-5">
+          <p className="display text-sm uppercase tracking-widest text-ember-400">
+            WhatsApp messages
+          </p>
+          <p className="mt-1 text-xs text-cream/50">
+            What we type into WhatsApp for a visitor when they tap a chat button. Words in{' '}
+            <code>{'{braces}'}</code> are filled in from the real batch, style or studio — leave
+            them in. Angle brackets, double braces and the word “undefined” are not allowed: the
+            save is refused with an error rather than breaking a link on someone’s phone.
+          </p>
+          <div className="mt-4 grid gap-3">
+            <Field
+              label="A specific batch"
+              hint="Placeholders: {style} {level} {branch} {days} {time} {date}"
+            >
+              <textarea
+                rows={3}
+                value={c.site.whatsappTemplates.batch}
+                onChange={(e) => patchTemplates({ batch: e.target.value })}
+                className="input"
+              />
+              <TemplateIssueNote value={c.site.whatsappTemplates.batch} />
+            </Field>
+            <Field label="Style finder result" hint="Placeholders: {style} {level} {where}">
+              <textarea
+                rows={3}
+                value={c.site.whatsappTemplates.styleFinder}
+                onChange={(e) => patchTemplates({ styleFinder: e.target.value })}
+                className="input"
+              />
+              <TemplateIssueNote value={c.site.whatsappTemplates.styleFinder} />
+            </Field>
+            <Field
+              label="…and the studio bit inside {where}"
+              hint="Placeholder: {branch}. Dropped entirely when no studio is known, so keep the leading space."
+            >
+              <input
+                value={c.site.whatsappTemplates.styleFinderWhere}
+                onChange={(e) => patchTemplates({ styleFinderWhere: e.target.value })}
+                className="input"
+              />
+              <TemplateIssueNote value={c.site.whatsappTemplates.styleFinderWhere} />
+            </Field>
+            <Field label="A dance style page" hint="Placeholder: {style}">
+              <textarea
+                rows={2}
+                value={c.site.whatsappTemplates.style}
+                onChange={(e) => patchTemplates({ style: e.target.value })}
+                className="input"
+              />
+              <TemplateIssueNote value={c.site.whatsappTemplates.style} />
+            </Field>
+            <Field label="A studio page" hint="Placeholder: {branch}">
+              <textarea
+                rows={2}
+                value={c.site.whatsappTemplates.branch}
+                onChange={(e) => patchTemplates({ branch: e.target.value })}
+                className="input"
+              />
+              <TemplateIssueNote value={c.site.whatsappTemplates.branch} />
+            </Field>
+            <Field
+              label="An event or offer"
+              hint="Placeholder: {note} — filled from the tile or ribbon’s message context above."
+            >
+              <textarea
+                rows={2}
+                value={c.site.whatsappTemplates.custom}
+                onChange={(e) => patchTemplates({ custom: e.target.value })}
+                className="input"
+              />
+              <TemplateIssueNote value={c.site.whatsappTemplates.custom} />
+            </Field>
+            <Field
+              label="Everything else"
+              hint="The floating button and the general “chat with us” buttons. No placeholders."
+            >
+              <textarea
+                rows={2}
+                value={c.site.whatsappTemplates.generic}
+                onChange={(e) => patchTemplates({ generic: e.target.value })}
+                className="input"
+              />
+              <TemplateIssueNote value={c.site.whatsappTemplates.generic} />
+            </Field>
+          </div>
+        </div>
       </div>
       <SaveBar dirty={dirty} onSave={save} />
       <style jsx global>{`
@@ -363,6 +458,20 @@ function SocialUrlNote({ k, value }: { k: SocialKey; value: string }) {
   const issue = socialUrlIssue(k, value.trim());
   if (!issue) return null;
   return <p className="mt-1 text-xs text-ember-400">{issue}</p>;
+}
+
+// Advisory only — the save path (integrity.ts messageTemplates) is the
+// authority. Uses the same firstForbiddenToken() helper as that write-path
+// check, so the admin hint and the save-time refusal can never disagree
+// about which tokens are forbidden.
+function TemplateIssueNote({ value }: { value: string }) {
+  const bad = firstForbiddenToken(value);
+  if (!bad) return null;
+  return (
+    <p className="mt-1 text-xs text-ember-400">
+      {`Message cannot contain "${bad}" — it would break the WhatsApp link.`}
+    </p>
+  );
 }
 
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
