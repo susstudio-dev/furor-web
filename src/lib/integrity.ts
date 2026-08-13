@@ -6,6 +6,7 @@
 // the ENTIRE public site — turning one bad record into a site-wide outage.
 // As a write-path check, the same violation merely refuses the save.
 
+import { firstForbiddenToken } from './content-schema';
 import { SOCIAL_KEYS, socialUrlIssue } from './social-url';
 
 export interface IntegrityIssue {
@@ -51,6 +52,30 @@ function duplicates(doc: Doc, issues: IntegrityIssue[]): void {
           issues.push({ path: [key, i, field], message: `Duplicate ${field} "${value}"` });
         }
         seen.add(value);
+      });
+    }
+  }
+}
+
+// Admin-authored WhatsApp prefill templates.
+//
+// buildPrefilledMessage used to THROW on these tokens — at click time, on the
+// visitor's device — which meant an admin could author a template that crashed
+// a CTA in production. Checking here turns that into a form error at save time.
+// It deliberately does NOT live in SiteContentSchema: a read-path refine would
+// make one bad character serve the bundled seed for the entire public site.
+function messageTemplates(doc: Doc, issues: IntegrityIssue[]): void {
+  const site = doc.site;
+  if (site == null || typeof site !== 'object') return;
+  const templates = (site as Row).whatsappTemplates;
+  if (templates == null || typeof templates !== 'object') return;
+  for (const [key, value] of Object.entries(templates as Row)) {
+    if (typeof value !== 'string') continue;
+    const bad = firstForbiddenToken(value);
+    if (bad) {
+      issues.push({
+        path: ['site', 'whatsappTemplates', key],
+        message: `Message cannot contain "${bad}" — it would break the WhatsApp link.`,
       });
     }
   }
@@ -110,5 +135,6 @@ export function integrityIssues(doc: unknown): IntegrityIssue[] {
   duplicates(doc as Doc, issues);
   socials(doc as Doc, issues);
   references(doc as Doc, issues);
+  messageTemplates(doc as Doc, issues);
   return issues;
 }

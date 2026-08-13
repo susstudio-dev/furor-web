@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { integrityIssues } from './integrity';
+import { SiteContentSchema } from './content-schema';
+import seed from '@/data/site-content.seed.json';
 
 const doc = () => ({
   danceStyles: [
@@ -73,5 +75,64 @@ describe('integrityIssues', () => {
     expect(check(d)).toEqual([]);
     d.testimonials[0].styleSlug = 'nope';
     expect(check(d)).toHaveLength(1);
+  });
+});
+
+const full = () => SiteContentSchema.parse(seed);
+
+// A PRE-EXISTING, UNRELATED ISSUE LIVES IN THE SEED. Plan 2 Task 14 added a
+// write-path socials check, and `site.socials.youtube` is stored as
+// `https://youtube.com/furorhyd` — a bare path, not a channel — so from Plan 2
+// onward integrityIssues(full()) ALWAYS returns one issue at
+// ['site','socials','youtube']. Correcting that URL is the owner's action in
+// /admin (Plan 2's own follow-up), not a code change, so it must not be
+// "fixed" in data/site-content.json here. Every assertion below therefore
+// narrows to the templates first: an unrelated issue must not fail this test,
+// and this test must not start passing for the wrong reason if the owner does
+// fix the URL.
+const templateIssues = (d: unknown) =>
+  integrityIssues(d).filter((i) => i.path[1] === 'whatsappTemplates');
+
+describe('integrityIssues — WhatsApp templates', () => {
+  // Save-time, never read-time. content.ts serves the bundled seed for the
+  // whole public site when SiteContentSchema.parse throws, so this check must
+  // refuse the SAVE, not the document.
+  it('flags a template containing an angle bracket, naming the field', () => {
+    const d = full();
+    d.site.whatsappTemplates.generic = 'Hi Furor <b>hello</b>';
+    expect(templateIssues(d)).toEqual([
+      {
+        path: ['site', 'whatsappTemplates', 'generic'],
+        message: 'Message cannot contain "<" — it would break the WhatsApp link.',
+      },
+    ]);
+  });
+
+  it('flags a double brace and the literal word undefined', () => {
+    const d = full();
+    d.site.whatsappTemplates.style = 'Hi Furor, about {{style}} classes.';
+    d.site.whatsappTemplates.branch = 'Hi Furor, classes at undefined studio.';
+    const issues = templateIssues(d);
+    expect(issues).toHaveLength(2);
+    expect(issues.map((i) => i.path)).toEqual([
+      ['site', 'whatsappTemplates', 'style'],
+      ['site', 'whatsappTemplates', 'branch'],
+    ]);
+    expect(issues[1].message).toContain('undefined');
+  });
+
+  it('passes the shipped templates and an ordinary rewrite', () => {
+    const d = full();
+    expect(templateIssues(d)).toEqual([]);
+    d.site.whatsappTemplates.generic = 'Hey Furor! Tell me about your classes please.';
+    expect(templateIssues(d)).toEqual([]);
+  });
+
+  // integrityIssues runs on raw objects too (save-pipeline hands it the
+  // pre-patch document), so a doc with no site key must be a no-op, not a throw.
+  it('is a no-op on a document with no site key at all', () => {
+    expect(check(doc())).toEqual([]);
+    expect(integrityIssues({ site: {} })).toEqual([]);
+    expect(integrityIssues({ site: { whatsappTemplates: null } })).toEqual([]);
   });
 });
