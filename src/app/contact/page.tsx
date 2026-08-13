@@ -1,11 +1,23 @@
 import { getPublicContent } from '@/lib/content';
 import { EnquiryCTA } from '@/components/EnquiryCTA';
+import { resolvePageMeta } from '@/lib/page-meta';
 
-export const metadata = {
-  title: 'Contact',
-  description: 'Get in touch with Furor Dance Hyderabad — WhatsApp, Instagram, email or visit the Jubilee Hills studio.',
-  alternates: { canonical: '/contact' },
-};
+export async function generateMetadata() {
+  const c = await getPublicContent();
+  // No derivedDescription on purpose: this route has never used
+  // pages.contact.intro.lead for its snippet, and borrowing it now would
+  // silently replace the shipped one. The studio can still type its own.
+  const meta = resolvePageMeta('contact', {
+    seoTitle: c.pages.contact.seoTitle,
+    seoDescription: c.pages.contact.seoDescription,
+    brand: c.site.title,
+  });
+  return {
+    title: meta.title,
+    description: meta.description,
+    alternates: { canonical: '/contact' },
+  };
+}
 
 // The DanceSchool/LocalBusiness JSON-LD is emitted site-wide from the root
 // layout (one node per studio, with geo + sameAs) — no page-local copy here.

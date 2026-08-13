@@ -3,19 +3,22 @@ import { getPublicContent } from '@/lib/content';
 import { StyleFinder } from '@/components/StyleFinder';
 import { Img } from '@/components/Img';
 import { RhythmSignature } from '@/components/RhythmSignature';
-import { fitDescription } from '@/lib/seo';
+import { resolvePageMeta } from '@/lib/page-meta';
 
 export async function generateMetadata() {
   const c = await getPublicContent();
+  const meta = resolvePageMeta('danceStyles', {
+    seoTitle: c.pages.danceStyles.seoTitle,
+    seoDescription: c.pages.danceStyles.seoDescription,
+    brand: c.site.title,
+    // The admin lead here is a 45-character line — true, but on its own it left
+    // two thirds of the snippet empty. fitDescription keeps it and adds the
+    // support sentence behind it instead of choosing between them.
+    derivedDescription: c.pages.danceStyles.intro.lead || c.pages.danceStyles.intro.headline,
+  });
   return {
-    title: 'Dance Styles',
-    // The admin lead here is a 45-character line ("The dances we teach…") —
-    // true, but it left two thirds of the SERP snippet empty. fitDescription
-    // keeps it and adds the fallback behind it instead of choosing between them.
-    description: fitDescription(
-      c.pages.danceStyles.intro.lead || c.pages.danceStyles.intro.headline,
-      'Salsa, Bachata and West Coast Swing classes in Jubilee Hills, Hyderabad — find the style that fits you.',
-    ),
+    title: meta.title,
+    description: meta.description,
     alternates: { canonical: '/dance-styles' },
   };
 }

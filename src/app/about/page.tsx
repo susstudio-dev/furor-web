@@ -3,18 +3,21 @@ import { getPublicContent } from '@/lib/content';
 import { EnquiryCTA } from '@/components/EnquiryCTA';
 import { JsonLd } from '@/components/JsonLd';
 import { PhotoCarousel } from '@/components/PhotoCarousel';
-import { fitDescription } from '@/lib/seo';
+import { resolvePageMeta } from '@/lib/page-meta';
 
 export async function generateMetadata() {
   const c = await getPublicContent();
+  const meta = resolvePageMeta('about', {
+    seoTitle: c.pages.about.seoTitle,
+    seoDescription: c.pages.about.seoDescription,
+    brand: c.site.title,
+    // introParagraphs[0] is a 322-character paragraph — more than double what a
+    // SERP renders. fitDescription trims it on a word boundary.
+    derivedDescription: c.pages.about.introParagraphs[0] ?? '',
+  });
   return {
-    title: 'About',
-    // introParagraphs[0] is a 322-character paragraph — it was being emitted
-    // whole, more than double what a SERP renders.
-    description: fitDescription(
-      c.pages.about.introParagraphs[0],
-      'The story of Furor — Hyderabad’s home for Salsa, Bachata and West Coast Swing.',
-    ),
+    title: meta.title,
+    description: meta.description,
     alternates: { canonical: '/about' },
   };
 }

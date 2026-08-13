@@ -1,17 +1,18 @@
 import Link from 'next/link';
 import { getPublicContent } from '@/lib/content';
-import { fitDescription } from '@/lib/seo';
+import { resolvePageMeta } from '@/lib/page-meta';
 
 export async function generateMetadata() {
   const c = await getPublicContent();
+  const meta = resolvePageMeta('stories', {
+    seoTitle: c.pages.stories.seoTitle,
+    seoDescription: c.pages.stories.seoDescription,
+    brand: c.site.title,
+    derivedDescription: c.pages.stories.intro.lead,
+  });
   return {
-    title: 'Stories',
-    description: fitDescription(
-      c.pages.stories.intro.lead,
-      // Deliberately does not repeat the lead's words — appending an echo of
-      // it produced "festivals, socials, bootcamps" twice in one snippet.
-      'Read what a night on the Furor floor actually looks like.',
-    ),
+    title: meta.title,
+    description: meta.description,
     alternates: { canonical: '/stories' },
   };
 }

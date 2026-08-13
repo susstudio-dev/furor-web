@@ -2,16 +2,19 @@ import { getPublicContent } from '@/lib/content';
 import { EnquiryCTA } from '@/components/EnquiryCTA';
 import { JsonLd } from '@/components/JsonLd';
 import { Img } from '@/components/Img';
-import { fitDescription } from '@/lib/seo';
+import { resolvePageMeta } from '@/lib/page-meta';
 
 export async function generateMetadata() {
   const c = await getPublicContent();
+  const meta = resolvePageMeta('instructorsPage', {
+    seoTitle: c.pages.instructorsPage.seoTitle,
+    seoDescription: c.pages.instructorsPage.seoDescription,
+    brand: c.site.title,
+    derivedDescription: c.pages.instructorsPage.intro.lead,
+  });
   return {
-    title: 'Instructors',
-    description: fitDescription(
-      c.pages.instructorsPage.intro.lead,
-      'Meet the instructors behind Furor’s Salsa, Bachata and West Coast Swing classes in Hyderabad.',
-    ),
+    title: meta.title,
+    description: meta.description,
     alternates: { canonical: '/instructors' },
   };
 }

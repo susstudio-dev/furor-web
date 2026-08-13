@@ -1,16 +1,19 @@
 import { getPublicContent } from '@/lib/content';
 import { EnquiryCTA } from '@/components/EnquiryCTA';
 import { JsonLd } from '@/components/JsonLd';
-import { fitDescription } from '@/lib/seo';
+import { resolvePageMeta } from '@/lib/page-meta';
 
 export async function generateMetadata() {
   const c = await getPublicContent();
+  const meta = resolvePageMeta('faqs', {
+    seoTitle: c.pages.faqs.seoTitle,
+    seoDescription: c.pages.faqs.seoDescription,
+    brand: c.site.title,
+    derivedDescription: c.pages.faqs.intro.lead,
+  });
   return {
-    title: 'FAQs',
-    description: fitDescription(
-      c.pages.faqs.intro.lead,
-      'Answers on classes, batches, pricing and getting started at Furor Dance Hyderabad.',
-    ),
+    title: meta.title,
+    description: meta.description,
     alternates: { canonical: '/faqs' },
   };
 }

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { getPublicContent, nextBatchPerStyle, visibleBatches, formatBatchDate, formatInr, batchStyleLabel } from '@/lib/content';
-import { fitDescription, fitTitle } from '@/lib/seo';
+import { resolvePageMeta } from '@/lib/page-meta';
 import { heroPoster } from '@/lib/image-variants';
 
 export async function generateMetadata() {
@@ -18,14 +18,20 @@ export async function generateMetadata() {
   // city was being cut off, which is the one word this page most needs to rank
   // for. West Coast Swing has its own page and stays in the description.
   const lead = styleNames.slice(0, 2).join(' & ') || 'Dance';
+  const meta = resolvePageMeta('home', {
+    seoTitle: c.pages.home.seoTitle,
+    seoDescription: c.pages.home.seoDescription,
+    brand: c.site.title,
+    derivedTitle: `${lead} Classes in Hyderabad`,
+    // Decoupled from hero.subHeadline (spec §6.3). SEO copy should stop
+    // dictating what a first-time visitor reads, and the sub-headline is being
+    // trimmed to ~130 characters — a meta description is not what it is for.
+    derivedDescription: c.site.tagline,
+    supportDescription: `${classes} classes in Jubilee Hills, Hyderabad.`,
+  });
   return {
-    title: fitTitle(`${lead} Classes in Hyderabad`, c.site.title),
-    // The hero sub-headline carries the service+city phrasing ("Learn Salsa,
-    // Bachata… Jubilee Hills, Hyderabad") — the highest-value local query.
-    description: fitDescription(
-      c.hero.subHeadline || c.site.tagline,
-      `${classes} classes in Jubilee Hills, Hyderabad.`,
-    ),
+    title: meta.title,
+    description: meta.description,
     alternates: { canonical: '/' },
   };
 }

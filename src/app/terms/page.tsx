@@ -1,15 +1,19 @@
 import { getPublicContent } from '@/lib/content';
 import { LegalDoc } from '@/components/LegalDoc';
-import { fitDescription, fitTitle } from '@/lib/seo';
+import { resolvePageMeta } from '@/lib/page-meta';
 
 export async function generateMetadata() {
   const c = await getPublicContent();
+  const meta = resolvePageMeta('terms', {
+    seoTitle: c.pages.terms.seoTitle,
+    seoDescription: c.pages.terms.seoDescription,
+    brand: c.site.title,
+    derivedTitle: c.pages.terms.intro.headline,
+    derivedDescription: c.pages.terms.intro.lead,
+  });
   return {
-    title: fitTitle(c.pages.terms.intro.headline || 'Terms & Services', c.site.title),
-    description: fitDescription(
-      c.pages.terms.intro.lead,
-      'Terms of service for Furor Dance Hyderabad — classes, payments, conduct and refunds.',
-    ),
+    title: meta.title,
+    description: meta.description,
     alternates: { canonical: '/terms' },
   };
 }

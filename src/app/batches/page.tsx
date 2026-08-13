@@ -1,16 +1,19 @@
 import { getPublicContent, visibleBatches, batchStyleLabel } from '@/lib/content';
 import { JsonLd } from '@/components/JsonLd';
 import { BatchesBrowser, type BatchRow } from '@/components/BatchesBrowser';
-import { fitDescription } from '@/lib/seo';
+import { resolvePageMeta } from '@/lib/page-meta';
 
 export async function generateMetadata() {
   const c = await getPublicContent();
+  const meta = resolvePageMeta('batches', {
+    seoTitle: c.pages.batches.seoTitle,
+    seoDescription: c.pages.batches.seoDescription,
+    brand: c.site.title,
+    derivedDescription: c.pages.batches.intro.lead,
+  });
   return {
-    title: 'Batches & Pricing',
-    description: fitDescription(
-      c.pages.batches.intro.lead,
-      'Upcoming Salsa, Bachata and West Coast Swing batches in Hyderabad with transparent pricing.',
-    ),
+    title: meta.title,
+    description: meta.description,
     alternates: { canonical: '/batches' },
   };
 }

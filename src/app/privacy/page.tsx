@@ -1,15 +1,19 @@
 import { getPublicContent } from '@/lib/content';
 import { LegalDoc } from '@/components/LegalDoc';
-import { fitDescription, fitTitle } from '@/lib/seo';
+import { resolvePageMeta } from '@/lib/page-meta';
 
 export async function generateMetadata() {
   const c = await getPublicContent();
+  const meta = resolvePageMeta('privacy', {
+    seoTitle: c.pages.privacy.seoTitle,
+    seoDescription: c.pages.privacy.seoDescription,
+    brand: c.site.title,
+    derivedTitle: c.pages.privacy.intro.headline,
+    derivedDescription: c.pages.privacy.intro.lead,
+  });
   return {
-    title: fitTitle(c.pages.privacy.intro.headline || 'Privacy Policy', c.site.title),
-    description: fitDescription(
-      c.pages.privacy.intro.lead,
-      'How Furor Dance Hyderabad collects, uses and protects your information.',
-    ),
+    title: meta.title,
+    description: meta.description,
     alternates: { canonical: '/privacy' },
   };
 }

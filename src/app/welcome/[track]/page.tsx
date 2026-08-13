@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import type { Batch } from '@/lib/content-schema';
 import { getPublicContent } from '@/lib/content';
+import { PAGE_SEO_DEFAULTS } from '@/lib/page-meta';
 import { formatBatchDate } from '@/lib/format';
 import { resolveWelcomeState } from '@/lib/welcome-confirm';
 import { batchPoolForTrack, pickDefaultBatch } from '@/lib/welcome-tracks';
@@ -46,8 +47,8 @@ export async function generateMetadata({
   const content = await getPublicContent();
   const cfg = content.welcome.tracks.find((t) => t.key === track);
   return {
-    title: 'You’re in — Furor Hyderabad',
-    description: cfg?.metaDesc || 'Your intake details and next steps.',
+    title: content.welcome.seoTitle.trim() || PAGE_SEO_DEFAULTS.welcome.title,
+    description: cfg?.metaDesc || PAGE_SEO_DEFAULTS.welcome.description,
     robots: { index: false, follow: false },
   };
 }
