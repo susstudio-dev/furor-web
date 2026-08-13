@@ -13,16 +13,34 @@ import { saveSiteContent } from '@/lib/admin-save';
 type Browser = BatchesPage['browser'];
 type BrowserKey = keyof Browser;
 
-// The thirteen values that render inside a .pill on /batches — the five quick
-// picks and the eight derived option labels. `.pill` is whitespace-nowrap
-// inside overflow-clip wrappers, so a long value razor-cuts itself with no
-// warning. Same budget as Plan 1's PILL_KEYS, which covers the label bag.
-const PILL_FIELDS = new Set<BrowserKey>([
+// The quick picks are .pill too, but they do NOT get PILL_CHAR_LIMIT.
+//
+// That budget is documented as "roughly what fits in a pill at 375px without
+// clipping the sibling text" — it is sized for a status badge sitting beside
+// other content in a row. A quick pick is a standalone chip in a flex-wrap
+// container that is 320px wide at 375px, so it wraps onto its own line and has
+// far more room. Measured on /batches: the shipping default "🔰 Never danced?
+// Start here" is 27 characters, renders at 231px, is NOT truncated, and still
+// has 89px of headroom — yet a 24-char budget flagged it "too long, it will be
+// cut off" the moment the owner opened this screen. A warning that fires on
+// copy the site already renders correctly teaches owners to ignore warnings.
+//
+// 34 is the measured capacity with margin: ~8.5px per character across the
+// 320px row, minus room for the wider emoji these values start with.
+const PRESET_CHAR_LIMIT = 34;
+
+const PRESET_FIELDS = new Set<BrowserKey>([
   'presetBeginner',
   'presetWeekend',
   'presetEvening',
   'presetStartingSoon',
   'presetFillingFast',
+]);
+
+// The eight derived option labels. These are genuinely tight — they render in
+// compact facet chips beside sibling text, which is exactly what PILL_KEYS's
+// budget was calibrated against.
+const PILL_FIELDS = new Set<BrowserKey>([
   'todMorning',
   'todAfternoon',
   'todEvening',
@@ -156,7 +174,13 @@ export function BatchesPageEditor({ initial }: { initial: SiteContent }) {
                   onChange={(e) => patchBrowser(f.key, e.target.value)}
                   className="input"
                 />
-                {PILL_FIELDS.has(f.key) ? (
+                {PRESET_FIELDS.has(f.key) ? (
+                  <CharCount
+                    text={p.browser[f.key]}
+                    max={PRESET_CHAR_LIMIT}
+                    note="a quick-pick chip — it wraps onto its own line, but very long text still gets cut off on phones"
+                  />
+                ) : PILL_FIELDS.has(f.key) ? (
                   <CharCount
                     text={p.browser[f.key]}
                     max={PILL_CHAR_LIMIT}
