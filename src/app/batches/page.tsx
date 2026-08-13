@@ -107,6 +107,7 @@ export default async function BatchesPage() {
         studios={studios}
         whatsappNumber={content.site.whatsappNumber}
         instagramHandle={content.site.instagramHandle}
+        copy={content.pages.batches.browser}
         labels={content.labels}
         templates={content.site.whatsappTemplates}
       />
