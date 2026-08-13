@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Reveal } from '@/components/Reveal';
 import type { Welcome } from '@/lib/content-schema';
 import type { WelcomeState } from '@/lib/welcome-confirm';
+import type { ContactRow } from '@/lib/welcome-contact';
 
 // Everything the page shows for one batch, precomputed server-side. The client
 // picks the right one from the ?d=/?b= redirect param.
@@ -19,6 +20,10 @@ export interface BatchBundle {
   mapUrl: string | null;
   gcalUrl: string | null;
   icsHref: string | null;
+  /** Contact rows derived from THIS batch's studio plus site settings, so the
+   *  block switches with the batch rather than describing a different venue.
+   *  Empty of venue/phone rows when no batch resolved — see welcome-contact.ts. */
+  contact: ContactRow[];
 }
 
 interface Props {
@@ -108,7 +113,15 @@ export function WelcomeView({
   const confirmed = paymentState.confirmed;
   const paymentId = paymentState.paymentId;
 
-  const { intakeDate, whenDays, whenTime, arriveBy, venue, mapUrl, gcalUrl, icsHref } = bundle;
+  const { intakeDate, whenDays, whenTime, arriveBy, venue, mapUrl, gcalUrl, icsHref, contact } =
+    bundle;
+
+  // The venue row carries the studio's parking note; the reachable channels
+  // are everything that isn't already rendered by the Where/When cells above.
+  const parkingNote = contact.find((r) => r.kind === 'venue')?.note;
+  const reachRows = contact.filter(
+    (r) => r.kind === 'phone' || r.kind === 'whatsapp' || r.kind === 'instagram',
+  );
 
   const waText = (msg: string) => `https://wa.me/${waNumber}?text=${encodeURIComponent(msg)}`;
   const confirmMsg =
@@ -265,6 +278,9 @@ export function WelcomeView({
                   Open map →
                 </a>
               ) : null}
+              {parkingNote ? (
+                <p className="mt-3 text-sm text-cream/60">Parking: {parkingNote}</p>
+              ) : null}
             </div>
             <div>
               <p className="text-xs uppercase tracking-widest text-cream/70">When</p>
@@ -284,6 +300,33 @@ export function WelcomeView({
                   <li key={i}>• {item}</li>
                 ))}
               </ul>
+            </div>
+          </div>
+
+          {/* Reach us — phone, WhatsApp and Instagram, every value derived from
+              the studio record and site settings rather than typed into copy.
+              The phone and Instagram rows did not exist on this page before:
+              WelcomeView was never passed a studio or an instagram handle. */}
+          <div className="mt-8 border-t border-cream/10 pt-6">
+            <p className="text-xs uppercase tracking-widest text-cream/70">Reach us</p>
+            <div className="mt-3 flex flex-wrap gap-x-8 gap-y-3">
+              {reachRows.map((row) => (
+                <a
+                  key={row.kind}
+                  href={row.href}
+                  {...(row.kind === 'phone'
+                    ? {}
+                    : { target: '_blank', rel: 'noopener noreferrer' })}
+                  className="group inline-flex flex-col leading-tight"
+                >
+                  <span className="text-xs uppercase tracking-widest text-cream/60">
+                    {row.label}
+                  </span>
+                  <span className="text-cream/85 underline-offset-4 group-hover:underline">
+                    {row.value}
+                  </span>
+                </a>
+              ))}
             </div>
           </div>
         </Reveal>

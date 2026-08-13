@@ -5,6 +5,7 @@ import { getPublicContent } from '@/lib/content';
 import { formatBatchDate } from '@/lib/format';
 import { resolveWelcomeState } from '@/lib/welcome-confirm';
 import { batchPoolForTrack, pickDefaultBatch } from '@/lib/welcome-tracks';
+import { contactRows } from '@/lib/welcome-contact';
 import { WelcomeView, type BatchBundle } from './WelcomeView';
 
 // Post-payment landing page, one per track. Set the matching URL as the
@@ -239,6 +240,10 @@ export default async function WelcomePage({
       mapUrl,
       gcalUrl,
       icsHref,
+      // Derived from this batch's own studio, so switching bundles switches
+      // the whole contact block together — venue, map, phone — instead of
+      // leaving a stale address beside a new date.
+      contact: contactRows({ studio, site: content.site }),
     };
   };
 
