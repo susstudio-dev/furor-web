@@ -461,6 +461,72 @@ const SimpleIntroPageSchema = z
   })
   .default({});
 
+// The /batches screen's own copy. Facet headings, quick picks, the filter-bar
+// chrome and the derived option labels belong to this one page, so they live
+// with it rather than in the global `labels` bag — the studio edits batches-page
+// wording on the batches screen, and keeping 34 strings out of a document key
+// that is parsed on every request keeps that key's node count flat.
+//
+// The stored facet VALUES (Foundation / Filling Fast / Weekend / This month /
+// Morning …) are live URL state in BatchesBrowser — read from the query string,
+// compared, and shared in bookmarked links. They never change; only what a
+// visitor reads does.
+const BatchesPageSchema = z
+  .object({
+    seoTitle: z.string().default(''),
+    seoDescription: z.string().default(''),
+    intro: PageIntroSchema.default({ eyebrow: '', headline: '', lead: '' }),
+    browser: z
+      .object({
+        // — Quick picks. All five render inside a .pill —
+        presetBeginner: z.string().default('🔰 Never danced? Start here'),
+        presetWeekend: z.string().default('🗓️ Weekend classes'),
+        presetEvening: z.string().default('🌙 Evening classes'),
+        presetStartingSoon: z.string().default('⚡ Starting soon'),
+        presetFillingFast: z.string().default('🔥 Filling fast'),
+
+        // — Facet group headings —
+        facetStyle: z.string().default('Dance'),
+        facetLevel: z.string().default('Level'),
+        facetBranch: z.string().default('Studio'),
+        facetTod: z.string().default('Time of day'),
+        facetDays: z.string().default('Days'),
+        facetStarting: z.string().default('Starting'),
+        facetPrice: z.string().default('Price'),
+        facetStatus: z.string().default('Availability'),
+
+        // — Filter bar chrome —
+        filterQuickPicks: z.string().default('Quick picks'),
+        filterShowAll: z.string().default('All filters'),
+        filterHide: z.string().default('Hide filters'),
+        filterClearAll: z.string().default('Clear all'),
+        filterClearAction: z.string().default('Clear filters'),
+        filterRemoveTitle: z.string().default('Remove filter'),
+        filterSortLabel: z.string().default('Sort'),
+        filterSortLevel: z.string().default('Beginner → advanced'),
+        filterSortSoon: z.string().default('Soonest first'),
+        filterSortLate: z.string().default('Latest first'),
+        filterWeekends: z.string().default('Weekends'),
+        filterWeekdays: z.string().default('Weekdays'),
+
+        // — Display labels for derived option values. All eight render inside
+        //   a .pill; the values themselves are URL state and do not move. —
+        todMorning: z.string().default('Morning'),
+        todAfternoon: z.string().default('Afternoon'),
+        todEvening: z.string().default('Evening'),
+        startingThisMonth: z.string().default('This month'),
+        startingNext30: z.string().default('Next 30 days'),
+        startingLater: z.string().default('Later'),
+
+        // — Row templates. {n} and {total} are filled from live counts. —
+        resultCount: z.string().default('{n} of {total} batches'),
+        seatsTemplate: z.string().default('{n} seats'),
+        startsPrefix: z.string().default('starts'),
+      })
+      .default({}),
+  })
+  .default({});
+
 // Privacy / Terms / similar long-form documents. Each section is a sub-heading
 // + a paragraph (markdown not required — keep editing friction-free).
 const LegalSectionSchema = z.object({
@@ -487,7 +553,7 @@ const PagesSchema = z
     instructorsPage: InstructorsPageSchema,
     stories: SimpleIntroPageSchema,
     danceStyles: SimpleIntroPageSchema,
-    batches: SimpleIntroPageSchema,
+    batches: BatchesPageSchema,
     privacy: LegalPageSchema,
     terms: LegalPageSchema,
   })
@@ -823,3 +889,4 @@ export type Welcome = z.infer<typeof WelcomeSchema>;
 export type WelcomeTrack = z.infer<typeof WelcomeTrackSchema>;
 export type Labels = z.infer<typeof LabelsSchema>;
 export type WhatsappTemplates = z.infer<typeof WhatsappTemplatesSchema>;
+export type BatchesPage = z.infer<typeof BatchesPageSchema>;
