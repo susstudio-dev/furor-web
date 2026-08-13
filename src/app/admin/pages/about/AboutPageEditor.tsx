@@ -7,6 +7,7 @@ import { Field, EditorStyles } from '@/components/admin/fields';
 import { PageIntroFields } from '@/components/admin/PageIntroFields';
 import { ImageGalleryEditor } from '@/components/admin/ImageUploader';
 import { saveSiteContent } from '@/lib/admin-save';
+import { SeoFields } from '@/components/admin/SeoFields';
 import { useAutosave } from '@/lib/autosave';
 import { AutosaveBanner } from '@/components/admin/AutosaveBanner';
 
@@ -52,6 +53,11 @@ export function AboutPageEditor({ initial }: { initial: SiteContent }) {
       ) : null}
 
       <div className="mt-8 grid gap-5">
+        <SeoFields
+          pageKey="about"
+          value={{ seoTitle: a.seoTitle, seoDescription: a.seoDescription }}
+          onChange={(next) => patchAbout(next)}
+        />
         <Section title="Header">
           <PageIntroFields value={a.intro} onChange={(v) => patchAbout({ intro: v })} />
         </Section>

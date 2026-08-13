@@ -6,6 +6,7 @@ import { SaveBar } from '@/components/admin/SaveBar';
 import { Field, EditorStyles } from '@/components/admin/fields';
 import { PageIntroFields } from '@/components/admin/PageIntroFields';
 import { saveSiteContent } from '@/lib/admin-save';
+import { SeoFields } from '@/components/admin/SeoFields';
 
 type PageKey = 'privacy' | 'terms';
 
@@ -49,6 +50,11 @@ export function LegalPageEditor({
     <>
       <EditorStyles />
       <div className="mt-8 grid gap-5">
+        <SeoFields
+          pageKey={pageKey}
+          value={{ seoTitle: page.seoTitle, seoDescription: page.seoDescription }}
+          onChange={(next) => patch(next)}
+        />
         <Section title="Header">
           <PageIntroFields value={page.intro} onChange={(v) => patch({ intro: v })} />
         </Section>

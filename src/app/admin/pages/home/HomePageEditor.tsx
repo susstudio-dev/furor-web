@@ -5,6 +5,7 @@ import type { Pages, SiteContent } from '@/lib/content-schema';
 import { SaveBar } from '@/components/admin/SaveBar';
 import { Field, EditorStyles } from '@/components/admin/fields';
 import { saveSiteContent } from '@/lib/admin-save';
+import { SeoFields } from '@/components/admin/SeoFields';
 
 type HomePage = Pages['home'];
 
@@ -30,6 +31,12 @@ export function HomePageEditor({ initial }: { initial: SiteContent }) {
   return (
     <>
       <div className="mt-8 grid gap-5">
+        <SeoFields
+          pageKey="home"
+          value={{ seoTitle: h.seoTitle, seoDescription: h.seoDescription }}
+          onChange={(next) => patchHome(next)}
+          titleHint="Leave empty and we build it from your two lead dance styles. The site name is added after either way."
+        />
         <Section title="What we teach (dance-styles section header)">
           <Field label="Eyebrow">
             <input
