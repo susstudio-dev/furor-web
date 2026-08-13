@@ -283,7 +283,17 @@ export function fitTitle(title: string, brand: string): { absolute: string } {
   }
   // Bare title still over budget: trim rather than ship a title the SERP cuts
   // at an arbitrary character. Nothing in the content hits this today.
-  return { absolute: truncateToPixels(clean.length <= 60 ? clean : clean.slice(0, 60), TITLE_PX) };
+  //
+  // truncateAtWord (not a raw slice) here: a raw 60-char slice can land
+  // mid-word, and if that slice happens to already fit TITLE_PX, the
+  // truncateToPixels call below short-circuits and returns it verbatim —
+  // shipping exactly the arbitrary-character cut this comment says we avoid.
+  return {
+    absolute: truncateToPixels(
+      clean.length <= 60 ? clean : truncateAtWord(clean, 60),
+      TITLE_PX,
+    ),
+  };
 }
 
 /**
