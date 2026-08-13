@@ -218,7 +218,13 @@ export default async function HomePage() {
         </Reveal>
         <Reveal stagger className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {sortedStyles.map((s) => {
-            const b = nextPerStyle.get(s.slug);
+            const hit = nextPerStyle.get(s.slug);
+            const b = hit?.batch;
+            // True when this style has no Foundation batch and we are showing
+            // a higher level instead. Labelled rather than hidden: a beginner
+            // should not be quietly pointed at an Advanced room, and an
+            // experienced dancer should still find their lane.
+            const isFallback = hit?.isFallback ?? false;
             const branch = b ? content.studios.find((st) => st.slug === b.branchSlug) : undefined;
             const combined = b && b.styleSlugs.length > 1;
             return (
@@ -235,6 +241,11 @@ export default async function HomePage() {
                       {b.level} · {branch.name}
                       {combined ? ' · taught together' : ''}
                     </p>
+                    {isFallback ? (
+                      <p className="mt-1 text-sm text-gold-400">
+                        Danced before? No Foundation batch open for {s.name} right now.
+                      </p>
+                    ) : null}
                     <p className="mt-1 text-cream">{b.daysOfWeek.join('–')} · {b.time}</p>
                     <p className="text-sm text-cream/60 mt-1">
                       Starts {formatBatchDate(b.startDate)} · {formatInr(b.priceInr)}
