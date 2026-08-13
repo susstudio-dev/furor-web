@@ -317,8 +317,98 @@ const HomePageSchema = z
     // trimmed rather than shipped broken.
     seoTitle: z.string().default(''),
     seoDescription: z.string().default(''),
+    // The booking board — the conversion surface. Its own object because every
+    // string here belongs to that one block, not to the site at large.
+    board: z
+      .object({
+        speed: z.string().default('Book in ~30 seconds'),
+        headline: z.string().default('Start dancing'),
+        /** Rendered inside <span class="accent"> — the highlighted tail. */
+        headlineAccent: z.string().default('this week.'),
+        // {price} is filled from live batch data. Never hardcode a rupee figure
+        // in prose: the copy would lie the day the deposit changes.
+        leadWithPrice: z
+          .string()
+          .default(
+            'Every batch opens with a {price} trial class — come once, meet the room, then decide on the full program.',
+          ),
+        leadNoPrice: z
+          .string()
+          .default('Come once, meet the room, then decide on the full program.'),
+        spotlitNote: z.string().default('No partner, no experience needed.'),
+        higherLevelNote: z.string().default('For dancers with the basics down.'),
+        startsTemplate: z.string().default('Starts {date}'),
+        trialPrice: z.string().default('Trial class {price}'),
+        fullProgram: z.string().default('Full program {price} — decide after class one.'),
+        // Two forms, because "1 seats left" is what one template produces.
+        seatsLeftOne: z.string().default('● {n} seat left'),
+        seatsLeftMany: z.string().default('● {n} seats left'),
+        // The count-in strip: the four documented first-class fears, answered at
+        // the point of decision. Items 5-7 are backed by live site copy (FAQ,
+        // hero) — none of these lines ships unverified. Item 8 used to promise
+        // the trial fee back; the owner corrected that on 2026-08-08 — the paid
+        // trial is NON-REFUNDABLE, so the risk reversal is the size of the
+        // commitment, never money back.
+        countIn: z
+          .array(
+            z.object({
+              count: z.string().default(''),
+              title: z.string().default(''),
+              body: z.string().default(''),
+            }),
+          )
+          .default([
+            {
+              count: '5',
+              title: 'Come alone.',
+              body: 'No partner needed — partners rotate all class, so you’ll dance with everyone.',
+            },
+            {
+              count: '6',
+              title: 'Never danced?',
+              body: 'Foundation assumes zero experience. Most of the room started exactly there.',
+            },
+            {
+              count: '7',
+              title: 'Wear anything.',
+              body: 'Anything comfortable you can move in — fresh socks or smooth soles beat fancy shoes.',
+            },
+            {
+              count: '8',
+              title: 'One class, not a course.',
+              body: '{price} books a single class — no package, no sign-up. You decide on the full program after.',
+            },
+          ]),
+        /** Substituted for a {price} card body when no trial price is known. */
+        countInFallbackBody: z
+          .string()
+          .default(
+            'The token books a single class — no package, no sign-up. You decide on the full program after.',
+          ),
+        resolveLine: z.string().default("…and on the 1, you're dancing."),
+        proofSuffix: z.string().default(', {style} student'),
+        styleFinderLink: z.string().default('Not sure which? Take the 30-second style finder →'),
+        advancedLink: z.string().default('Danced before? Intermediate & Advanced →'),
+        allBatchesLink: z.string().default('See all batches & prices'),
+        emptyNote: z
+          .string()
+          .default('Hi! I want to join a dance batch — please let me know the next start dates.'),
+      })
+      .default({}),
     whatWeTeach: SectionHeaderSchema.default({ eyebrow: '', headline: '' }),
-    nextBatches: SectionHeaderSchema.default({ eyebrow: '', headline: '' }),
+    // Was a bare SectionHeaderSchema; the eyebrow and headline keep their exact
+    // shape and their stored values, and the three card templates join them.
+    nextBatches: z
+      .object({
+        eyebrow: z.string().default(''),
+        headline: z.string().default(''),
+        starts: z.string().default('Starts {date} · {price}'),
+        /** Renders inside a .pill — keep it short. */
+        seatsLeft: z.string().default('{n} seats left'),
+        /** Appended after the studio name when one batch teaches two styles. */
+        combinedSuffix: z.string().default(' · taught together'),
+      })
+      .default({}),
     howItWorks: z
       .object({
         eyebrow: z.string().default(''),
@@ -332,11 +422,45 @@ const HomePageSchema = z
     visitUs: z
       .object({
         eyebrow: z.string().default(''),
-        headlineTemplate: z
-          .string()
-          .default('Find us in {neighborhood}, Hyderabad.'),
+        headlineTemplate: z.string().default('Find us in {neighborhood}, Hyderabad.'),
+        // The four card headings. Address / Hours / Parking each render at two
+        // sites on this page, which is why they get one field rather than two.
+        addressLabel: z.string().default('Address'),
+        hoursLabel: z.string().default('Hours'),
+        parkingLabel: z.string().default('Parking'),
+        teachHereLabel: z.string().default('What we teach here'),
+        // Templates, not prose: the phone number, the studio name and the photo
+        // caption are all filled from the studio record, so hand-typed copy can
+        // never disagree with it. This is the same rule the confirmation page's
+        // contact block follows, and for the same reason.
+        callTemplate: z.string().default('Call {phone}'),
+        mapTitle: z.string().default('Map to {studio}'),
+        photoAlt: z.string().default('Inside {studio}'),
       })
-      .default({ eyebrow: '', headlineTemplate: 'Find us in {neighborhood}, Hyderabad.' }),
+      .default({}),
+    // The style finder. Its two TRACKS stay in code: their ids key the batch
+    // lookup and DENY_IDS blocks *.id / *.*.id for every role including owner,
+    // so the array cannot move into content without splitting one record across
+    // two homes. The chrome around it is all editable.
+    styleFinder: z
+      .object({
+        eyebrow: z.string().default('Style Finder'),
+        headline: z.string().default('Two beginner tracks. Find yours.'),
+        lead: z
+          .string()
+          .default(
+            'Both are built for first-timers — no experience, no partner needed. Pick the time that suits you and we’ll point you to the next beginner batch.',
+          ),
+        resetLabel: z.string().default('Reset'),
+        question: z.string().default('When can you make it?'),
+        recommendEyebrow: z.string().default('We recommend'),
+        nextBatchLabel: z.string().default('Next beginner batch'),
+        startsTemplate: z.string().default('Starts {date} · {price}'),
+      })
+      .default({}),
+    /** The eyebrow above the Why Furor block. Its headline and points already
+     *  live in whyFuror, which /admin/site owns; only this word was stranded. */
+    whyFurorEyebrow: z.string().default('Why Furor'),
   })
   .default({});
 
@@ -684,6 +808,26 @@ const WelcomeSchema = z
     // preview, both of which the studio should own. Blank falls back to
     // PAGE_SEO_DEFAULTS.welcome.title.
     seoTitle: z.string().default(''),
+    // Payment-not-confirmed actions
+    unconfirmedCta: z.string().default('Message us on WhatsApp'),
+    tryAgainLabel: z.string().default('Try again'),
+    referenceLabel: z.string().default('Reference: {id}'),
+    // Confirmed-state actions
+    paymentReferenceLabel: z.string().default('Payment reference: {id}'),
+    gcalLabel: z.string().default('Google Calendar'),
+    icsLabel: z.string().default('Apple / Outlook (.ics)'),
+    // Intake grid. The headings are copy; the venue, days, time and arrival
+    // time inside them are derived from the batch and studio records, so the
+    // studio can say anything warm it likes and still cannot make the address
+    // or the date wrong. The "Where" heading is NOT here — it is Plan 1's
+    // labels.welcomeWhereHeading, which Plan 3 already renders.
+    whenHeading: z.string().default('When'),
+    noVenueNote: z.string().default('We’ll share the exact address on WhatsApp.'),
+    noDateNote: z
+      .string()
+      .default('We’ll confirm the exact date on WhatsApp and send you a reminder.'),
+    whenEvery: z.string().default('Every {days}'),
+    arriveByNote: z.string().default('Please arrive by {time} for registration.'),
     tracks: z
       .array(WelcomeTrackSchema)
       .default([
