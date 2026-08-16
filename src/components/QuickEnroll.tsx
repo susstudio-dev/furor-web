@@ -5,17 +5,19 @@ import { compareByLevel } from '@/lib/batch-order';
 import { BookTrialLink } from './BookTrialLink';
 import { EnquiryCTA } from './EnquiryCTA';
 import { label } from '@/lib/labels';
-import { bookLabel, statusLabel } from '@/lib/book-label';
+import { bookLabel, bookPriceInr, statusLabel } from '@/lib/book-label';
 
 // The booking board — the conversion surface, styled like the lineup board
 // outside a club, overlapping the hero so its lit edge peeks above the fold.
 //
-// The board sells the ₹500 trial as the product: level-first ordering puts
+// The board sells the trial as the product: level-first ordering puts
 // Foundation in front of the never-danced visitor (a date-sorted board could
 // open with an Advanced card), the first Foundation batch sits under a literal
-// spotlight, the trial price leads every card with the program price as quiet
-// context, and the count-in strip answers the four documented beginner fears
-// at the exact point of decision — resolving, like every dance, on the 1.
+// spotlight, the trial price leads every card that HAS one with the program
+// price as quiet context, and the count-in strip answers the four documented
+// beginner fears at the exact point of decision — resolving, like every dance,
+// on the 1. A batch with no trial (batch.trialInr === null) leads with the
+// program fee instead; the board never invents a trial to fill the slot.
 
 /** Up to 3 soonest Foundation batches + 1 soonest higher-level batch, so the
  *  board reads as one obvious beginner lane plus a door for dancers who know
@@ -127,7 +129,7 @@ export function QuickEnroll({
                   // the beginner's default the way a follow spot lands on a
                   // dancer.
                   const spotlit = i === 0 && foundation;
-                  const book = bookLabel(b.level, content.labels);
+                  const book = bookLabel(b, content.labels);
                   return (
                     <div
                       key={b.id}
@@ -184,16 +186,26 @@ export function QuickEnroll({
                         <p className="text-cream/60">{board.startsTemplate.replace('{date}', formatBatchDate(b.startDate))}</p>
                       </div>
 
-                      {/* The price flip: the trial IS the product, so its price
-                          carries the weight; the program price is context, not
-                          the ask. */}
+                      {/* The price flip: where a trial exists it IS the
+                          product, so its price carries the weight and the
+                          program price is context. Where there is no trial the
+                          program fee is the ask, and the trial line is dropped
+                          rather than printed as a ₹0 or an invented deposit. */}
                       <div className="relative mt-3">
-                        <p className="text-cream font-semibold">
-                          {board.trialPrice.replace('{price}', formatInr(b.reservationInr))}
-                        </p>
-                        <p className="text-xs text-cream/60">
-                          {board.fullProgram.replace('{price}', formatInr(b.priceInr))}
-                        </p>
+                        {b.trialInr !== null ? (
+                          <>
+                            <p className="text-cream font-semibold">
+                              {board.trialPrice.replace('{price}', formatInr(b.trialInr))}
+                            </p>
+                            <p className="text-xs text-cream/60">
+                              {board.fullProgram.replace('{price}', formatInr(b.priceInr))}
+                            </p>
+                          </>
+                        ) : (
+                          <p className="text-cream font-semibold">
+                            {board.fullProgramOnly.replace('{price}', formatInr(b.priceInr))}
+                          </p>
+                        )}
                       </div>
 
                       {typeof b.seatsLeft === 'number' ? (
@@ -218,7 +230,7 @@ export function QuickEnroll({
                               source="quick_enroll"
                               className="magnetic inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-full bg-ember-600 px-4 py-2 text-sm font-semibold text-on-ember transition hover:bg-ember-700"
                             >
-                              {book} · {formatInr(b.reservationInr)}
+                              {book} · {formatInr(bookPriceInr(b))}
                             </BookTrialLink>
                             <div className="mt-1 text-center">
                               <EnquiryCTA

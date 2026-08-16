@@ -207,3 +207,51 @@ describe('welcome page copy', () => {
     expect(w().arriveByNote).toBe('Please arrive by {time} for registration.');
   });
 });
+
+// Whether a batch offers a paid trial, and what it costs, as ONE field.
+//
+// `reservationInr: z.number().default(500)` could not express "this batch has
+// no trial" at all, so every booking surface assumed one existed: an
+// Intermediate batch whose booking link is a Google Form still rendered
+// "Book my trial class · ₹500" and reported a ₹500 conversion to GA4.
+describe('BatchSchema trialInr', () => {
+  const raw = () => JSON.parse(JSON.stringify(seed));
+  const parseBatch = (over: Record<string, unknown>) => {
+    const r = raw();
+    r.batches[0] = { ...r.batches[0], ...over };
+    return SiteContentSchema.parse(r).batches[0];
+  };
+
+  it('migrates a stored reservationInr onto trialInr', () => {
+    const r = raw();
+    delete r.batches[0].trialInr;
+    r.batches[0].reservationInr = 750;
+    expect(SiteContentSchema.parse(r).batches[0].trialInr).toBe(750);
+  });
+
+  it('keeps an explicit null trial rather than resurrecting reservationInr', () => {
+    expect(parseBatch({ trialInr: null, reservationInr: 500 }).trialInr).toBeNull();
+  });
+
+  it('defaults to 500 for a batch that carries neither field', () => {
+    const r = raw();
+    delete r.batches[0].trialInr;
+    delete r.batches[0].reservationInr;
+    expect(SiteContentSchema.parse(r).batches[0].trialInr).toBe(500);
+  });
+
+  // A required or non-nullable field here would throw inside the read path,
+  // and content.ts serves the bundled seed for the ENTIRE public site when the
+  // parse throws. Every batch field has to survive an absent value.
+  it('accepts a null trial without failing the whole-document parse', () => {
+    const r = raw();
+    r.batches = r.batches.map((b: Record<string, unknown>) => ({ ...b, trialInr: null }));
+    expect(() => SiteContentSchema.parse(r)).not.toThrow();
+  });
+
+  it('rejects a negative trial price', () => {
+    const r = raw();
+    r.batches[0].trialInr = -1;
+    expect(() => SiteContentSchema.parse(r)).toThrow();
+  });
+});

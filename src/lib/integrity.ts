@@ -128,6 +128,61 @@ function socials(doc: Doc, issues: IntegrityIssue[]): void {
   }
 }
 
+// Welcome-page tracks.
+//
+// `welcome` is a nested object rather than a top-level array, so it is invisible
+// to ID_COLLECTIONS and to references() — which is how both invariants below
+// came to be enforced nowhere on the write path. The duplicate-slug check did
+// exist, but only inside the welcome-page editor component, so any other write
+// path could persist a slug that /welcome/[track] can never reach (it resolves
+// with find(): first match wins, the second page is unreachable for good).
+//
+// Deliberately NOT checked here: "this batch has no welcome page for its level
+// and style". That is a legitimate intermediate state — the studio creates the
+// batch first and the page after — so it is a warning in BatchesEditor, not a
+// save-blocking error.
+function welcomeTracks(doc: Doc, issues: IntegrityIssue[]): void {
+  const welcome = doc.welcome;
+  if (welcome == null || typeof welcome !== 'object') return;
+  const tracks = (welcome as Row).tracks;
+  if (!Array.isArray(tracks)) return;
+
+  const styles = slugSet(doc, 'danceStyles');
+  const seen = new Set<string>();
+  const reported = new Set<string>();
+
+  tracks.forEach((track, i) => {
+    if (track == null || typeof track !== 'object') return;
+    const row = track as Row;
+
+    const key = typeof row.key === 'string' ? row.key.trim() : '';
+    if (key) {
+      if (seen.has(key) && !reported.has(key)) {
+        reported.add(key);
+        issues.push({
+          path: ['welcome', 'tracks', i, 'key'],
+          message: `Duplicate welcome page slug "${key}" — the second page would be unreachable.`,
+        });
+      }
+      seen.add(key);
+    }
+
+    // Matched against batches exactly and case-sensitively, so one stray
+    // capital means the page binds to no batch at all and says nothing.
+    if (Array.isArray(row.styleSlugs)) {
+      row.styleSlugs.forEach((slug, j) => {
+        if (typeof slug !== 'string' || slug === '') return;
+        if (!styles.has(slug)) {
+          issues.push({
+            path: ['welcome', 'tracks', i, 'styleSlugs', j],
+            message: `Unknown dance style "${slug}"`,
+          });
+        }
+      });
+    }
+  });
+}
+
 /** Every invariant violation in the document. Empty means consistent. */
 export function integrityIssues(doc: unknown): IntegrityIssue[] {
   if (doc == null || typeof doc !== 'object') return [];
@@ -136,5 +191,6 @@ export function integrityIssues(doc: unknown): IntegrityIssue[] {
   socials(doc as Doc, issues);
   references(doc as Doc, issues);
   messageTemplates(doc as Doc, issues);
+  welcomeTracks(doc as Doc, issues);
   return issues;
 }

@@ -4,10 +4,13 @@ import { SiteContentSchema } from './content-schema';
 import {
   batchPoolForTrack,
   duplicateTrackKeys,
+  levelMismatchedTracks,
   normaliseTracks,
   pickDefaultBatch,
+  resolveWelcomeBatch,
   slugify,
   suggestTrackKey,
+  tracksForBatch,
   unknownStyleSlugs,
 } from './welcome-tracks';
 
@@ -161,11 +164,24 @@ describe('unknownStyleSlugs', () => {
 
 // The live batch board, as of the seed: one Intermediate salsa batch at a
 // different time of day from the Foundation one.
+//
+// Every fixture row carries a startDate and a status. The old fixture carried
+// neither, which is exactly why `pickDefaultBatch` could ship a docstring
+// promising "the soonest weekend batch" while comparing no dates at all: there
+// was nothing in the test data for a date bug to be visible in.
+//
+// Deliberately NOT in date order — `content.batches` is stored in reverse
+// creation order (BatchesEditor.add() prepends), so a function that picks by
+// array position rather than by date must fail here.
+const TODAY = '2026-08-16';
+
 const BATCHES = [
-  { id: 'batch-001', level: 'Foundation' as const, styleSlugs: ['salsa', 'bachata'], daysOfWeek: ['Sat', 'Sun'] as const, time: '9:30–10:30 AM' },
-  { id: 'batch-002', level: 'Foundation' as const, styleSlugs: ['west-coast-swing'], daysOfWeek: ['Sat', 'Sun'] as const, time: '5:00–6:00 PM' },
-  { id: 'batch-004', level: 'Intermediate' as const, styleSlugs: ['salsa'], daysOfWeek: ['Sat', 'Sun'] as const, time: '12:00–2:00 PM' },
-  { id: 'batch-009', level: 'Foundation' as const, styleSlugs: ['salsa'], daysOfWeek: ['Wed'] as const, time: '7:00–8:00 PM' },
+  { id: 'batch-001', level: 'Foundation' as const, styleSlugs: ['salsa', 'bachata'], daysOfWeek: ['Sat', 'Sun'] as const, time: '9:30–10:30 AM', startDate: '2026-06-20', status: 'Open' as const },
+  { id: 'batch-002', level: 'Foundation' as const, styleSlugs: ['west-coast-swing'], daysOfWeek: ['Sat', 'Sun'] as const, time: '5:00–6:00 PM', startDate: '2026-07-04', status: 'Open' as const },
+  { id: 'batch-004', level: 'Intermediate' as const, styleSlugs: ['salsa'], daysOfWeek: ['Sat', 'Sun'] as const, time: '12:00–2:00 PM', startDate: '2026-07-04', status: 'Open' as const },
+  { id: 'batch-009', level: 'Foundation' as const, styleSlugs: ['salsa'], daysOfWeek: ['Wed'] as const, time: '7:00–8:00 PM', startDate: '2026-09-05', status: 'Open' as const },
+  { id: 'batch-010', level: 'Foundation' as const, styleSlugs: ['salsa'], daysOfWeek: ['Sat', 'Sun'] as const, time: '9:30–10:30 AM', startDate: '2026-10-10', status: 'Open' as const },
+  { id: 'batch-011', level: 'Foundation' as const, styleSlugs: ['salsa'], daysOfWeek: ['Sat', 'Sun'] as const, time: '6:00–7:00 PM', startDate: '2026-09-19', status: 'Open' as const },
 ].map((b) => ({ ...b, daysOfWeek: [...b.daysOfWeek] }));
 
 describe('batchPoolForTrack', () => {
@@ -181,7 +197,7 @@ describe('batchPoolForTrack', () => {
 
   it('keeps a Foundation track away from the Intermediate batch', () => {
     const pool = batchPoolForTrack(BATCHES, { styleSlugs: ['salsa'], level: 'Foundation' });
-    expect(pool.map((b) => b.id)).toEqual(['batch-001', 'batch-009']);
+    expect(pool.map((b) => b.id)).toEqual(['batch-001', 'batch-009', 'batch-010', 'batch-011']);
   });
 
   it('matches a track that lists several styles', () => {
@@ -189,7 +205,7 @@ describe('batchPoolForTrack', () => {
       styleSlugs: ['salsa', 'bachata'],
       level: 'Foundation',
     });
-    expect(pool.map((b) => b.id)).toEqual(['batch-001', 'batch-009']);
+    expect(pool.map((b) => b.id)).toEqual(['batch-001', 'batch-009', 'batch-010', 'batch-011']);
   });
 
   it('finds nothing for a style slug that was typed wrong', () => {
@@ -201,22 +217,158 @@ describe('pickDefaultBatch', () => {
   const pool = batchPoolForTrack(BATCHES, { styleSlugs: ['salsa'], level: 'Foundation' });
 
   it('prefers a weekend batch in the track’s time of day', () => {
-    expect(pickDefaultBatch(pool, { weekendTod: 'AM' })?.id).toBe('batch-001');
+    expect(pickDefaultBatch(pool, { weekendTod: 'AM' }, TODAY)?.id).toBe('batch-010');
   });
 
   it('falls back to any weekend batch when none matches the time of day', () => {
-    // batch-009 is the only PM salsa Foundation batch and it is midweek, so
-    // the weekend AM batch is still the better default.
-    expect(pickDefaultBatch(pool, { weekendTod: 'PM' })?.id).toBe('batch-001');
+    // batch-011 is the soonest upcoming weekend batch; asked for PM it matches
+    // outright, and it is what an AM-less pool would fall back to.
+    expect(pickDefaultBatch(pool, { weekendTod: 'PM' }, TODAY)?.id).toBe('batch-011');
   });
 
-  it('falls back to the first batch when none fall on a weekend', () => {
+  it('falls back to the first upcoming batch when none fall on a weekend', () => {
     const midweek = pool.filter((b) => b.id === 'batch-009');
-    expect(pickDefaultBatch(midweek, { weekendTod: 'AM' })?.id).toBe('batch-009');
+    expect(pickDefaultBatch(midweek, { weekendTod: 'AM' }, TODAY)?.id).toBe('batch-009');
   });
 
   it('returns nothing for an empty pool', () => {
-    expect(pickDefaultBatch([], { weekendTod: 'AM' })).toBeUndefined();
+    expect(pickDefaultBatch([], { weekendTod: 'AM' }, TODAY)).toBeUndefined();
+  });
+
+  // THE bug behind "the confirmation page shows a class that already ran":
+  // the old implementation compared no dates at all and took whatever sat
+  // first in the array. `content.batches` is in reverse creation order, so the
+  // past batch is routinely first.
+  it('never defaults to a batch that has already started when one is upcoming', () => {
+    const past = BATCHES.find((b) => b.id === 'batch-001')!;
+    const upcoming = BATCHES.find((b) => b.id === 'batch-010')!;
+    expect(pickDefaultBatch([past, upcoming], { weekendTod: 'AM' }, TODAY)?.id).toBe('batch-010');
+  });
+
+  it('picks the soonest upcoming batch, not the one stored first', () => {
+    const later = BATCHES.find((b) => b.id === 'batch-010')!; // 2026-10-10
+    const sooner = BATCHES.find((b) => b.id === 'batch-011')!; // 2026-09-19
+    expect(pickDefaultBatch([later, sooner], { weekendTod: 'PM' }, TODAY)?.id).toBe('batch-011');
+  });
+
+  it('never defaults to a Closed batch', () => {
+    const closed = { ...BATCHES.find((b) => b.id === 'batch-011')!, status: 'Closed' as const };
+    const open = BATCHES.find((b) => b.id === 'batch-010')!;
+    expect(pickDefaultBatch([closed, open], { weekendTod: 'PM' }, TODAY)?.id).toBe('batch-010');
+  });
+
+  // A confirmation page is a receipt: once every intake on the track has
+  // started, the most recent one is still the honest answer — far better than
+  // no venue at all for someone re-opening their link mid-course.
+  it('falls back to the most recent past batch once every batch has started', () => {
+    const old = BATCHES.find((b) => b.id === 'batch-001')!; // 2026-06-20
+    const recent = BATCHES.find((b) => b.id === 'batch-002')!; // 2026-07-04
+    expect(pickDefaultBatch([old, recent], { weekendTod: 'AM' }, TODAY)?.id).toBe('batch-002');
+  });
+});
+
+// The rule that decides which welcome page a batch's payment redirect goes to.
+//
+// This existed only as an inline `tracks.find(style overlap)` inside
+// BatchesEditor, while the page bound with style AND level — so the admin
+// handed the studio a redirect URL for a page that structurally could not
+// display that batch. One exported rule, used by both, is the fix.
+describe('tracksForBatch', () => {
+  const TRACKS = [
+    { key: 'latin', level: 'Foundation' as const, styleSlugs: ['salsa', 'bachata'] },
+    { key: 'wcs', level: 'Foundation' as const, styleSlugs: ['west-coast-swing'] },
+  ];
+
+  it('matches a Foundation batch to the Foundation track for its style', () => {
+    const b = BATCHES.find((x) => x.id === 'batch-001')!;
+    expect(tracksForBatch(TRACKS, b).map((t) => t.key)).toEqual(['latin']);
+  });
+
+  // THE reported bug, at its source: batch-004 is Intermediate salsa and the
+  // only salsa track is Foundation, so there is NO welcome page for it. The
+  // admin must say so instead of offering /welcome/latin.
+  it('matches nothing when every style-matching track is a different level', () => {
+    const b = BATCHES.find((x) => x.id === 'batch-004')!;
+    expect(tracksForBatch(TRACKS, b)).toEqual([]);
+  });
+
+  it('reports every candidate when two tracks claim the same level and style', () => {
+    const twin = { key: 'salsa-am', level: 'Foundation' as const, styleSlugs: ['salsa'] };
+    const b = BATCHES.find((x) => x.id === 'batch-001')!;
+    expect(tracksForBatch([...TRACKS, twin], b).map((t) => t.key)).toEqual(['latin', 'salsa-am']);
+  });
+
+  // The diagnostic the admin needs in order to be useful rather than silent:
+  // "a page exists for this style but it is set to Foundation".
+  it('levelMismatchedTracks names the style-matching track at the wrong level', () => {
+    const b = BATCHES.find((x) => x.id === 'batch-004')!;
+    expect(levelMismatchedTracks(TRACKS, b).map((t) => t.key)).toEqual(['latin']);
+  });
+
+  it('levelMismatchedTracks stays quiet when the level already matches', () => {
+    const b = BATCHES.find((x) => x.id === 'batch-001')!;
+    expect(levelMismatchedTracks(TRACKS, b)).toEqual([]);
+  });
+});
+
+// Which batch a post-payment visit is about, decided on the SERVER.
+//
+// The pin used to be resolved in a client useEffect against the already
+// level-filtered option list, so a `?b=` naming a batch outside the pool
+// matched nothing and silently kept a DIFFERENT batch's date, venue and .ics.
+describe('resolveWelcomeBatch', () => {
+  const latin = { level: 'Foundation' as const, styleSlugs: ['salsa', 'bachata'], weekendTod: 'AM' as const };
+  const resolve = (over: Partial<Parameters<typeof resolveWelcomeBatch>[0]> = {}) =>
+    resolveWelcomeBatch({ batchId: null, dateIso: null, batches: BATCHES, track: latin, today: TODAY, ...over });
+
+  it('honours ?b= for a batch on the track', () => {
+    expect(resolve({ batchId: 'batch-010' }).batch?.id).toBe('batch-010');
+  });
+
+  // Links already pasted into live Razorpay pages cannot be edited
+  // retroactively, so an off-track ?b= must still resolve to the batch the
+  // customer actually paid for rather than to a stranger's timetable.
+  it('honours ?b= for a batch the track would not otherwise include', () => {
+    const got = resolve({ batchId: 'batch-004' });
+    expect(got.batch?.id).toBe('batch-004');
+    expect(got.batch?.level).toBe('Intermediate');
+  });
+
+  it('resolves ?b= for a batch whose start date has already passed', () => {
+    expect(resolve({ batchId: 'batch-001' }).batch?.id).toBe('batch-001');
+  });
+
+  // Honest over confident: a pin that names nothing must not hand the payer
+  // another batch's venue and calendar file.
+  it('reports a miss rather than substituting the default batch', () => {
+    const got = resolve({ batchId: 'deleted-batch' });
+    expect(got.batch).toBeNull();
+    expect(got.pinMissed).toBe(true);
+  });
+
+  it('honours ?d= within the track', () => {
+    expect(resolve({ dateIso: '2026-10-10' }).batch?.id).toBe('batch-010');
+  });
+
+  it('reports a miss for a ?d= no batch on the track starts on', () => {
+    expect(resolve({ dateIso: '2030-01-01' }).pinMissed).toBe(true);
+  });
+
+  it('lets ?b= win over ?d= when the redirect carries both', () => {
+    expect(resolve({ batchId: 'batch-011', dateIso: '2026-10-10' }).batch?.id).toBe('batch-011');
+  });
+
+  // A bare pages.razorpay.com redirect carries no params at all.
+  it('falls back to the date-aware default when nothing is pinned', () => {
+    const got = resolve();
+    expect(got.batch?.id).toBe('batch-010');
+    expect(got.pinMissed).toBe(false);
+  });
+
+  it('returns no batch and no miss when the track has none at all', () => {
+    const got = resolve({ track: { level: 'Advanced', styleSlugs: ['kizomba'], weekendTod: 'AM' } });
+    expect(got.batch).toBeNull();
+    expect(got.pinMissed).toBe(false);
   });
 });
 
@@ -237,5 +389,53 @@ describe('documents stored before `level` existed', () => {
     expect(parsed.welcome.tracks.map((t) => t.level)).toEqual(
       parsed.welcome.tracks.map(() => 'Foundation'),
     );
+  });
+});
+
+// The reported failure, replayed against the document the site actually
+// ships. These read the seed rather than a fixture on purpose: the bug was
+// only visible in the interaction between the real tracks (both Foundation)
+// and the real batches (one Intermediate, one Advanced).
+describe('the shipped document', () => {
+  const content = SiteContentSchema.parse(seed);
+  const batch = (id: string) => content.batches.find((b) => b.id === id)!;
+
+  it('offers no welcome page for the Advanced batch instead of a Foundation one', () => {
+    // Both shipped tracks are Foundation. batch-005 is Advanced bachata, and
+    // its Razorpay page is live — the admin used to hand the studio
+    // /welcome/latin for it, and the payer landed on a beginner salsa intake.
+    expect(tracksForBatch(content.welcome.tracks, batch('batch-005'))).toEqual([]);
+    expect(levelMismatchedTracks(content.welcome.tracks, batch('batch-005')).map((t) => t.key))
+      .toEqual(['latin']);
+  });
+
+  it('offers no welcome page for the Intermediate batch either', () => {
+    expect(tracksForBatch(content.welcome.tracks, batch('batch-004'))).toEqual([]);
+  });
+
+  it('still binds each Foundation batch to its own track', () => {
+    expect(tracksForBatch(content.welcome.tracks, batch('batch-001')).map((t) => t.key)).toEqual([
+      'latin',
+    ]);
+    expect(tracksForBatch(content.welcome.tracks, batch('batch-002')).map((t) => t.key)).toEqual([
+      'wcs',
+    ]);
+  });
+
+  // Links already pasted into live Razorpay pages cannot be edited
+  // retroactively. /welcome/latin?b=batch-005 must now show the batch that was
+  // actually paid for — 2:00–3:00 PM on 18 July — not batch-rp8nn4's 9:30 AM.
+  it('resolves an already-minted off-track ?b= to the batch that was paid for', () => {
+    const latin = content.welcome.tracks.find((t) => t.key === 'latin')!;
+    const got = resolveWelcomeBatch({
+      batchId: 'batch-005',
+      dateIso: '2026-07-18',
+      batches: content.batches,
+      track: latin,
+      today: '2026-08-16',
+    });
+    expect(got.batch?.id).toBe('batch-005');
+    expect(got.batch?.time).toBe('2:00–3:00 PM');
+    expect(got.batch?.startDate).toBe('2026-07-18');
   });
 });

@@ -22,7 +22,7 @@ const batch = (over: Partial<SiteContent['batches'][number]> & { id: string }) =
     time: '9:30–10:30 AM',
     startDate: future(7),
     priceInr: 6500,
-    reservationInr: 500,
+    trialInr: 500,
     seatsLeft: null,
     status: 'Open',
     razorpayLink: null,

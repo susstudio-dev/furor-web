@@ -7,7 +7,7 @@ import { formatInr } from '@/lib/format';
 import { EnquiryCTA } from './EnquiryCTA';
 import { Img } from './Img';
 import { CinematicHeadline } from './CinematicHeadline';
-import { bookLabel } from '@/lib/book-label';
+import { trialFromInr } from '@/lib/book-label';
 import { label } from '@/lib/labels';
 import { HERO_POSTER_ALT_DEFAULT } from '@/lib/hero-defaults';
 import type { HeroPoster } from '@/lib/image-variants';
@@ -15,11 +15,10 @@ import type { HeroPoster } from '@/lib/image-variants';
 export function Hero({ content, poster }: { content: SiteContent; poster: HeroPoster | null }) {
   const [allowVideo, setAllowVideo] = useState(false);
   // The trial price comes from live batch data, never a hardcoded string —
-  // if the studio changes the token in the admin, every button follows.
-  const bookable = visibleBatches(content);
-  const trialFrom = bookable.length
-    ? Math.min(...bookable.map((b) => b.reservationInr))
-    : null;
+  // if the studio changes the token in the admin, every button follows. Only
+  // batches that actually run a trial count: this used to minimise over
+  // `reservationInr`, which every batch carried whether or not it ran one.
+  const trialFrom = trialFromInr(visibleBatches(content));
   const videoRef = useRef<HTMLVideoElement>(null);
   const spotRef = useRef<HTMLDivElement>(null);
 
@@ -172,7 +171,10 @@ export function Hero({ content, poster }: { content: SiteContent; poster: HeroPo
         <div className="mt-6 hero-fade" style={{ animationDelay: '1.15s' }}>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
             <a href="#start-this-week" className="btn-primary magnetic downbeat">
-              {bookLabel('Foundation', content.labels)}
+              {/* Site-wide CTA, not a per-batch one: it anchors to the board
+                  rather than to any batch's checkout, so it always speaks the
+                  beginner's language and prices off the cheapest real trial. */}
+              {label(content.labels, 'ctaBookFoundation')}
               {trialFrom != null ? ` · ${formatInr(trialFrom)}` : ''}
             </a>
             <EnquiryCTA

@@ -136,3 +136,87 @@ describe('integrityIssues — WhatsApp templates', () => {
     expect(integrityIssues({ site: { whatsappTemplates: null } })).toEqual([]);
   });
 });
+
+// Welcome tracks: the document-level invariants that decide whether a paid
+// customer's redirect can resolve at all.
+//
+// `duplicateTrackKeys` existed but was enforced ONLY inside the welcome-page
+// editor component, so every other write path — a direct patch, a different
+// admin screen — could persist a slug that /welcome/[track] can never reach
+// (it resolves with find(), first match wins).
+describe('welcome tracks', () => {
+  const withTracks = (tracks: unknown[]) => ({
+    danceStyles: [
+      { id: 'st_1', slug: 'salsa' },
+      { id: 'st_2', slug: 'bachata' },
+    ],
+    welcome: { tracks },
+  });
+  const keys = (d: unknown) => integrityIssues(d).map((i) => i.message);
+
+  it('rejects two tracks claiming the same slug', () => {
+    const issues = integrityIssues(
+      withTracks([
+        { key: 'latin', styleSlugs: ['salsa'] },
+        { key: 'latin', styleSlugs: ['bachata'] },
+      ]),
+    );
+    expect(issues.map((i) => i.path)).toEqual([['welcome', 'tracks', 1, 'key']]);
+    expect(issues[0].message).toContain('latin');
+  });
+
+  it('reports a duplicated slug once, not once per extra copy', () => {
+    const issues = integrityIssues(
+      withTracks([
+        { key: 'latin', styleSlugs: ['salsa'] },
+        { key: 'latin', styleSlugs: ['salsa'] },
+        { key: 'latin', styleSlugs: ['salsa'] },
+      ]),
+    );
+    expect(issues).toHaveLength(1);
+  });
+
+  it('ignores surrounding whitespace when comparing slugs', () => {
+    expect(
+      keys(withTracks([{ key: 'latin', styleSlugs: [] }, { key: ' latin ', styleSlugs: [] }])),
+    ).toHaveLength(1);
+  });
+
+  // A style slug matched against batches exactly: one stray capital and the
+  // page silently binds to no batch and says nothing about it.
+  it('rejects a style slug no dance style publishes', () => {
+    const issues = integrityIssues(withTracks([{ key: 'latin', styleSlugs: ['salsa', 'Kizomba'] }]));
+    expect(issues.map((i) => i.path)).toEqual([['welcome', 'tracks', 0, 'styleSlugs', 1]]);
+    expect(issues[0].message).toContain('Kizomba');
+  });
+
+  it('passes tracks with distinct slugs and known styles', () => {
+    expect(
+      keys(
+        withTracks([
+          { key: 'latin', styleSlugs: ['salsa', 'bachata'] },
+          { key: 'wcs', styleSlugs: [] },
+        ]),
+      ),
+    ).toEqual([]);
+  });
+
+  // integrityIssues runs on raw pre-patch documents, so every shape a stored
+  // document could be in must be a no-op rather than a throw.
+  it('is a no-op when the welcome key is absent or malformed', () => {
+    expect(integrityIssues({ welcome: null })).toEqual([]);
+    expect(integrityIssues({ welcome: { tracks: null } })).toEqual([]);
+    expect(integrityIssues({ welcome: { tracks: [null, 7] } })).toEqual([]);
+  });
+
+  // Scoped to welcome issues on purpose: the seed carries one KNOWN, unrelated
+  // violation (the stored YouTube handle URL, see the note above socials()),
+  // and /admin/site is where it gets fixed — asserting on the whole list here
+  // would make this test a tripwire for that instead of for these tracks.
+  it('finds nothing to complain about in the shipped welcome tracks', () => {
+    const welcomeIssues = integrityIssues(SiteContentSchema.parse(seed)).filter(
+      (i) => i.path[0] === 'welcome',
+    );
+    expect(welcomeIssues).toEqual([]);
+  });
+});

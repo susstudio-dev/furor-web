@@ -16,7 +16,7 @@ describe('LabelsSchema', () => {
   // and Zod cost scales with node count. The 12 filter* keys deliberately
   // live on the batches page instead of here.
   it('parses an empty object into the full shipped label set', () => {
-    expect(Object.keys(labels())).toHaveLength(56);
+    expect(Object.keys(labels())).toHaveLength(57);
   });
 
   // The four screen-reader labels Plan 2's header/footer rewrite must consume

@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useEffect, useState } from 'react';
+import { Fragment, useEffect } from 'react';
 import Link from 'next/link';
 import { Reveal } from '@/components/Reveal';
 import type { Welcome } from '@/lib/content-schema';
@@ -8,8 +8,10 @@ import { label, type Labels } from '@/lib/labels';
 import type { WelcomeState } from '@/lib/welcome-confirm';
 import type { ContactRow } from '@/lib/welcome-contact';
 
-// Everything the page shows for one batch, precomputed server-side. The client
-// picks the right one from the ?d=/?b= redirect param.
+// Everything the page shows for one batch, resolved server-side from the
+// ?d=/?b= redirect params. There is deliberately no client-side option list:
+// choosing the batch in the browser meant the initial HTML — and every no-JS
+// visitor — saw a different batch than the one that was paid for.
 export interface BatchBundle {
   id: string;
   startDate: string; // '' when there is no live batch
@@ -41,8 +43,13 @@ interface Props {
   waNumber: string;
   waDisplay: string;
   vcardHref: string;
-  defaultBundle: BatchBundle;
-  options: BatchBundle[];
+  /** The resolved batch's details. Empty of date/venue/calendar links when no
+   *  batch could be identified — see `pinMissed`. */
+  bundle: BatchBundle;
+  /** The redirect named a batch (?b=/?d=) that no longer resolves. The page
+   *  shows its neutral no-date/no-venue copy rather than another batch's
+   *  details, and says so in the analytics event. */
+  pinMissed: boolean;
   /** Decided server-side from the redirect params (welcome-confirm.ts), so a
    *  failed payment never flashes the confirmation hero. */
   paymentState: WelcomeState;
@@ -85,37 +92,32 @@ export function WelcomeView({
   waNumber,
   waDisplay,
   vcardHref,
-  defaultBundle,
-  options,
+  bundle,
+  pinMissed,
   paymentState,
 }: Props) {
-  // The confirmed/unconfirmed decision arrived from the server (see the page
-  // component) — this effect only pins the ?d=/?b= batch bundle and fires the
-  // analytics event, which mirrors the same server decision exactly.
-  const [bundle, setBundle] = useState<BatchBundle>(defaultBundle);
-
+  // Both decisions — which batch, and whether the payment is confirmed —
+  // arrived from the server. This effect only reports them. It used to also
+  // re-pin the batch from ?b=/?d=, which is why the server HTML and the
+  // hydrated page could disagree about the date and the address.
   useEffect(() => {
-    const q = new URLSearchParams(window.location.search);
-
-    // Pin the exact batch the customer paid for, if the redirect named one.
-    const b = q.get('b');
-    const d = q.get('d');
-    const picked =
-      (b && options.find((o) => o.id === b)) || (d && options.find((o) => o.startDate === d));
-    if (picked) setBundle(picked);
-
     const w = window as unknown as { gtag?: (...args: unknown[]) => void };
-    if (w.gtag) {
-      w.gtag(
-        'event',
-        paymentState.confirmed ? 'registration_confirmed' : 'registration_unconfirmed',
-        {
-          track,
-          status: q.get('razorpay_payment_link_status') ?? 'none',
-          payment_id: paymentState.paymentId ?? null,
-        },
-      );
-    }
+    if (!w.gtag) return;
+    const q = new URLSearchParams(window.location.search);
+    w.gtag(
+      'event',
+      paymentState.confirmed ? 'registration_confirmed' : 'registration_unconfirmed',
+      {
+        track,
+        status: q.get('razorpay_payment_link_status') ?? 'none',
+        payment_id: paymentState.paymentId ?? null,
+        batch_id: bundle.id || null,
+        // Surfaces a redirect pointing at a batch that no longer resolves —
+        // otherwise the studio only finds out when a customer turns up on the
+        // wrong day.
+        pin_missed: pinMissed,
+      },
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [track]);
 
@@ -319,9 +321,14 @@ export function WelcomeView({
                 <br />
                 {whenTime}
               </p>
-              <p className="mt-2 text-sm text-cream/60">
-                {copy.arriveByNote.replace('{time}', arriveBy)}
-              </p>
+              {/* Empty when the batch's time string could not be read — the
+                  line is dropped rather than filled from the track's manual
+                  string, which would describe a different class. */}
+              {arriveBy ? (
+                <p className="mt-2 text-sm text-cream/60">
+                  {copy.arriveByNote.replace('{time}', arriveBy)}
+                </p>
+              ) : null}
             </div>
             <div>
               <p className="text-xs uppercase tracking-widest text-cream/70">{copy.whatToBringHeading}</p>

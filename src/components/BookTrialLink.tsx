@@ -2,6 +2,7 @@
 
 import { useCallback } from 'react';
 import type { Batch } from '@/lib/content-schema';
+import { bookPriceInr, offersTrial } from '@/lib/book-label';
 
 // The paid conversion — a Razorpay checkout link — previously rendered as a
 // bare <a> with no analytics at all, so the funnel could measure every
@@ -29,8 +30,14 @@ export function BookTrialLink({ href, batch, styleSlug, branchSlug, source, clas
         dance_style: styleSlug ?? batch.styleSlugs[0] ?? null,
         branch: branchSlug ?? batch.branchSlug,
         level: batch.level,
-        value: batch.reservationInr,
+        // What this click actually commits to paying — the trial price, or
+        // the full programme fee when the batch runs no trial. It used to
+        // report `reservationInr`, which defaulted to 500 for every batch,
+        // so a batch with no trial booked a ₹500 conversion that never
+        // happened.
+        value: bookPriceInr(batch),
         currency: 'INR',
+        is_trial: offersTrial(batch),
       });
     }
   }, [batch, styleSlug, branchSlug, source]);

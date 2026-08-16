@@ -196,21 +196,28 @@ export const StudioSchema = z.object({
 // validates without manual migration.
 export const BatchSchema = z.preprocess(
   (val) => {
-    if (
-      val &&
-      typeof val === 'object' &&
-      !Array.isArray(val) &&
-      'styleSlug' in val &&
-      !('styleSlugs' in val)
-    ) {
-      const v = val as Record<string, unknown>;
+    if (!val || typeof val !== 'object' || Array.isArray(val)) return val;
+    let v = val as Record<string, unknown>;
+
+    if ('styleSlug' in v && !('styleSlugs' in v)) {
       const { styleSlug, ...rest } = v;
-      return {
+      v = {
         ...rest,
         styleSlugs: typeof styleSlug === 'string' && styleSlug ? [styleSlug] : [],
       };
     }
-    return val;
+
+    // `reservationInr` → `trialInr`. The old field was a plain number with a
+    // 500 default, so there was no way to record "this batch has no trial" —
+    // and every booking surface read the absence as ₹500 rather than as
+    // nothing. Migrated here so stored documents need no hand edit, and only
+    // when `trialInr` is genuinely absent: an explicit null is the studio
+    // saying "no trial" and must survive.
+    if (!('trialInr' in v) && typeof v.reservationInr === 'number') {
+      v = { ...v, trialInr: v.reservationInr };
+    }
+
+    return v;
   },
   z.object({
     id: z.string().min(1),
@@ -223,11 +230,19 @@ export const BatchSchema = z.preprocess(
     time: z.string().min(1),
     startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'YYYY-MM-DD'),
     priceInr: z.number().int().nonnegative(),
-    // Amount charged up front to reserve a seat (the Razorpay "book now"
-    // deposit). priceInr stays the full course fee shown on the cards; this is
-    // what the "Reserve my seat · ₹X" CTA advertises. Defaults to 500 so it
-    // applies to existing batches without an explicit value.
-    reservationInr: z.number().int().nonnegative().default(500),
+    // What the trial class costs — and, by being nullable, WHETHER this batch
+    // runs one at all. `null` means no trial: the booking CTA then advertises
+    // the full programme price instead of inventing a deposit.
+    //
+    // One field rather than a boolean beside a number, so "offers a trial" and
+    // "the trial costs ₹X" can never disagree. Its predecessor
+    // (`reservationInr`, a plain number defaulting to 500) could only say
+    // "yes, ₹500", which is how an Intermediate batch whose booking link is a
+    // Google Form came to advertise a ₹500 trial and report a ₹500 conversion.
+    //
+    // Defaulted, never required: a required field throws on the READ path and
+    // content.ts then serves the bundled seed for the entire public site.
+    trialInr: z.number().int().nonnegative().nullable().default(500),
     seatsLeft: z.number().int().nonnegative().nullable().optional(),
     status: z.enum(['Open', 'Filling Fast', 'Closed']),
     razorpayLink: safeUrl().nullable().optional(),
@@ -327,10 +342,15 @@ const HomePageSchema = z
         headlineAccent: z.string().default('this week.'),
         // {price} is filled from live batch data. Never hardcode a rupee figure
         // in prose: the copy would lie the day the deposit changes.
+        // "Every batch opens with a {price} trial class" was the shipped
+        // default and it was simply untrue: the board can carry batches that
+        // run no trial at all, and the schema now says so (BatchSchema
+        // .trialInr). Universal quantifiers over batch data do not belong in
+        // static copy — the same trap as hardcoding a rupee figure.
         leadWithPrice: z
           .string()
           .default(
-            'Every batch opens with a {price} trial class — come once, meet the room, then decide on the full program.',
+            'Trial classes from {price} — come once, meet the room, then decide on the full program.',
           ),
         leadNoPrice: z
           .string()
@@ -340,6 +360,10 @@ const HomePageSchema = z
         startsTemplate: z.string().default('Starts {date}'),
         trialPrice: z.string().default('Trial class {price}'),
         fullProgram: z.string().default('Full program {price} — decide after class one.'),
+        // The whole price block for a card whose batch runs NO trial. Not
+        // `fullProgram`: that line's "decide after class one" describes a
+        // trial, so reusing it would promise one that is not on offer.
+        fullProgramOnly: z.string().default('Full program {price}'),
         // Two forms, because "1 seats left" is what one template produces.
         seatsLeftOne: z.string().default('● {n} seat left'),
         seatsLeftMany: z.string().default('● {n} seats left'),
@@ -903,6 +927,7 @@ export const LabelsSchema = z
     ctaDmInstagram: z.string().default(L.ctaDmInstagram),
     ctaBookFoundation: z.string().default(L.ctaBookFoundation),
     ctaBookTrial: z.string().default(L.ctaBookTrial),
+    ctaBookSeat: z.string().default(L.ctaBookSeat),
     ctaChatFirst: z.string().default(L.ctaChatFirst),
     ctaChatFirstWhatsapp: z.string().default(L.ctaChatFirstWhatsapp),
     ctaChatOnWhatsapp: z.string().default(L.ctaChatOnWhatsapp),

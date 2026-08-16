@@ -44,7 +44,7 @@ import { TrialBanner } from '@/components/TrialBanner';
 import { StyleFinder } from '@/components/StyleFinder';
 import { EnquiryCTA } from '@/components/EnquiryCTA';
 import { label } from '@/lib/labels';
-import { bookLabel } from '@/lib/book-label';
+import { trialFromInr } from '@/lib/book-label';
 import { TonightTile } from '@/components/TonightTile';
 import { RhythmSignature } from '@/components/RhythmSignature';
 import { Img } from '@/components/Img';
@@ -78,9 +78,13 @@ export default async function HomePage() {
   // Saturday is "next".
   const eventLd = tonightEventLd(content, todayIso());
   const h = content.pages.home;
-  const bookable = visibleBatches(content);
-  const trialFrom = bookable.length ? Math.min(...bookable.map((b) => b.reservationInr)) : null;
-  const trialLabel = `${bookLabel('Foundation', content.labels)}${
+  // Only batches that actually run a trial set the "from ₹X" — this used to
+  // minimise `reservationInr` across every visible batch, a field that
+  // defaulted to 500 whether or not a trial existed.
+  const trialFrom = trialFromInr(visibleBatches(content));
+  // The sticky bar anchors to the booking board, not to a batch's checkout, so
+  // it stays the beginner-facing CTA regardless of any one batch's level.
+  const trialLabel = `${label(content.labels, 'ctaBookFoundation')}${
     trialFrom != null ? ` · ${formatInr(trialFrom)}` : ''
   }`;
   // Resolved here, not inside Hero: Hero is a client component, and

@@ -17,7 +17,7 @@ const batch = {
   time: '9:30 AM – 10:30 AM',
   startDate: '2026-09-05',
   priceInr: 6000,
-  reservationInr: 500,
+  trialInr: 500,
   status: 'Open' as const,
   welcomeNote: '',
 };

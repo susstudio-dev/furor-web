@@ -5,7 +5,8 @@ import { randomId } from '@/lib/id';
 import type { Batch, SiteContent } from '@/lib/content-schema';
 import { SaveBar } from '@/components/admin/SaveBar';
 import { saveSiteContent } from '@/lib/admin-save';
-import { todayIso } from '@/lib/format';
+import { formatInr, todayIso } from '@/lib/format';
+import { levelMismatchedTracks, tracksForBatch } from '@/lib/welcome-tracks';
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
 
@@ -36,7 +37,7 @@ export function BatchesEditor({ initial }: { initial: SiteContent }) {
       // went invisible on every public surface the instant it was saved.
       startDate: todayIso(),
       priceInr: 6500,
-      reservationInr: 500,
+      trialInr: 500,
       seatsLeft: null,
       status: 'Open',
       razorpayLink: null,
@@ -124,8 +125,32 @@ export function BatchesEditor({ initial }: { initial: SiteContent }) {
               <Field label="Price (INR)" hint="Full course fee — shown on the cards.">
                 <input type="number" min={0} value={b.priceInr} onChange={(e) => patch(i, { priceInr: Number(e.target.value) })} className="input" />
               </Field>
-              <Field label="Reserve deposit (INR)" hint="Amount the 'Reserve my seat' button charges to book.">
-                <input type="number" min={0} value={b.reservationInr} onChange={(e) => patch(i, { reservationInr: Number(e.target.value) })} className="input" />
+              <Field
+                label="Trial class price (INR)"
+                hint="What the trial costs. Untick when this batch runs no trial — the booking button then charges the full course fee and stops saying 'trial'."
+              >
+                <label className="mb-2 flex items-center gap-2 text-sm text-cream/75">
+                  <input
+                    type="checkbox"
+                    checked={b.trialInr !== null}
+                    onChange={(e) => patch(i, { trialInr: e.target.checked ? 500 : null })}
+                  />
+                  This batch offers a trial class
+                </label>
+                {b.trialInr !== null ? (
+                  <input
+                    type="number"
+                    min={0}
+                    value={b.trialInr}
+                    onChange={(e) => patch(i, { trialInr: Number(e.target.value) })}
+                    className="input"
+                  />
+                ) : (
+                  <p className="text-xs text-cream/50">
+                    Booking button will read &ldquo;Book my seat &middot; {formatInr(b.priceInr)}
+                    &rdquo;.
+                  </p>
+                )}
               </Field>
               <Field label="Seats left (blank to hide)">
                 <input
@@ -176,16 +201,17 @@ export function BatchesEditor({ initial }: { initial: SiteContent }) {
                 value={b.welcomeNote}
                 onChange={(e) => patch(i, { welcomeNote: e.target.value })}
                 rows={3}
+                // Same rule as the redirect hint below and as the page itself.
+                // This used to name whichever track merely shared a STYLE, so
+                // an Advanced Bachata batch was told its note would appear on
+                // the "Latin beginner class" page — a page that would never
+                // show this batch at all.
                 placeholder={
-                  c.welcome.tracks.find((t) =>
-                    t.styleSlugs.some((s) => b.styleSlugs.includes(s)),
-                  )?.trackLabel
+                  tracksForBatch(c.welcome.tracks, b)[0]
                     ? `Standard copy for the ${
-                        c.welcome.tracks.find((t) =>
-                          t.styleSlugs.some((s) => b.styleSlugs.includes(s)),
-                        )?.trackLabel
+                        tracksForBatch(c.welcome.tracks, b)[0].trackLabel
                       } will be used.`
-                    : 'Standard copy for this track will be used.'
+                    : 'This batch has no welcome page yet, so this message would not be shown.'
                 }
                 className="input"
               />
@@ -221,8 +247,14 @@ export function BatchesEditor({ initial }: { initial: SiteContent }) {
 }
 
 // Tells the studio admin which exact URL to paste into Razorpay as the
-// "redirect after payment" — pinning the welcome page to THIS batch's date so
-// two batches of the same style don't get conflated.
+// "redirect after payment" — pinning the welcome page to THIS batch.
+//
+// It must decide "which welcome page" with the SAME rule /welcome/[track]
+// uses, which is why it calls tracksForBatch rather than carrying its own
+// copy. It used to match on style overlap alone while the page also required
+// the levels to match, so for an Intermediate or Advanced batch it printed a
+// confident URL to a Foundation page that structurally could not display that
+// batch: the payer landed on somebody else's date, time, venue and .ics.
 function RazorpayRedirectHint({
   batch,
   tracks,
@@ -231,20 +263,42 @@ function RazorpayRedirectHint({
   tracks: SiteContent['welcome']['tracks'];
 }) {
   const [copied, setCopied] = useState(false);
-  const matchingTrack = tracks.find((t) => t.styleSlugs.some((s) => batch.styleSlugs.includes(s)));
-  if (!matchingTrack) {
+  const matches = tracksForBatch(tracks, batch);
+  const nearMisses = levelMismatchedTracks(tracks, batch);
+
+  if (matches.length === 0) {
     return (
-      <p className="text-xs text-cream/50">
-        No welcome page matches this batch&apos;s styles yet — add one in{' '}
-        <a href="/admin/pages/welcome" className="text-ember-400 hover:text-ember-300">
-          Welcome pages
-        </a>{' '}
-        to enable a post-payment redirect.
+      <p className="text-xs text-ember-400">
+        {nearMisses.length > 0 ? (
+          <>
+            No welcome page for this batch yet. {nearMisses.map((t) => `/welcome/${t.key}`).join(', ')}{' '}
+            {nearMisses.length === 1 ? 'teaches' : 'teach'} this style but{' '}
+            {nearMisses.length === 1 ? `is set to ${nearMisses[0].level}` : 'at other levels'} and this
+            batch is {batch.level} — sending payers there would show them a different batch. Add a{' '}
+            {batch.level} page in{' '}
+            <a href="/admin/pages/welcome" className="underline hover:text-ember-300">
+              Welcome pages
+            </a>
+            .
+          </>
+        ) : (
+          <>
+            No welcome page matches this batch&apos;s styles and level yet — add one in{' '}
+            <a href="/admin/pages/welcome" className="underline hover:text-ember-300">
+              Welcome pages
+            </a>{' '}
+            to enable a post-payment redirect.
+          </>
+        )}
       </p>
     );
   }
+
+  // More than one page can legitimately claim the same level and style. Naming
+  // them all beats silently taking tracks[0], which made a second page for the
+  // same style permanently unreachable.
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
-  const url = `${origin}/welcome/${matchingTrack.key}?d=${batch.startDate}&b=${batch.id}`;
+  const url = `${origin}/welcome/${matches[0].key}?d=${batch.startDate}&b=${batch.id}`;
   return (
     <div className="rounded-lg border border-cream/10 bg-cream/5 p-3 text-xs">
       <p className="text-cream/60">
@@ -270,9 +324,16 @@ function RazorpayRedirectHint({
         </button>
       </div>
       <p className="mt-2 text-cream/40">
-        The <code>?d=</code> param pins the welcome page to this batch&apos;s start date, so two
-        batches of the same style stay distinct.
+        The <code>?b=</code> param pins the page to this exact batch; <code>?d=</code> is kept so
+        links minted before it existed keep working.
       </p>
+      {matches.length > 1 ? (
+        <p className="mt-2 text-ember-400">
+          {matches.length} welcome pages match this batch (
+          {matches.map((t) => `/welcome/${t.key}`).join(', ')}). The URL above uses the first — pick
+          deliberately, or give them distinct styles in Welcome pages.
+        </p>
+      ) : null}
     </div>
   );
 }

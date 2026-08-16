@@ -22,6 +22,9 @@ export const LABEL_DEFAULT_LITERALS = {
   ctaDmInstagram: 'DM on Instagram',
   ctaBookFoundation: 'Book my first class',
   ctaBookTrial: 'Book my trial class',
+  // For a batch that runs no trial (trialInr === null). Says nothing about a
+  // trial and nothing about a level — it books the class itself.
+  ctaBookSeat: 'Book my seat',
   ctaChatFirst: 'or chat first',
   ctaChatFirstWhatsapp: 'or chat first on WhatsApp',
   ctaChatOnWhatsapp: 'or chat on WhatsApp',
