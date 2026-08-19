@@ -126,8 +126,8 @@ export function BatchesEditor({ initial }: { initial: SiteContent }) {
                 <input type="number" min={0} value={b.priceInr} onChange={(e) => patch(i, { priceInr: Number(e.target.value) })} className="input" />
               </Field>
               <Field
-                label="Trial class price (INR)"
-                hint="What the trial costs. Untick when this batch runs no trial — the booking button then charges the full course fee and stops saying 'trial'."
+                label="First class price (INR)"
+                hint="What one class off this batch costs. Untick when the batch sells no single class — the booking button then charges the full course fee and reads “Book my seat”."
               >
                 <label className="mb-2 flex items-center gap-2 text-sm text-cream/75">
                   <input
@@ -135,7 +135,7 @@ export function BatchesEditor({ initial }: { initial: SiteContent }) {
                     checked={b.trialInr !== null}
                     onChange={(e) => patch(i, { trialInr: e.target.checked ? 500 : null })}
                   />
-                  This batch offers a trial class
+                  You can book a single class in this batch
                 </label>
                 {b.trialInr !== null ? (
                   <input

@@ -21,9 +21,14 @@ export const LABEL_DEFAULT_LITERALS = {
   ctaEnquireWhatsapp: 'Enquire on WhatsApp',
   ctaDmInstagram: 'DM on Instagram',
   ctaBookFoundation: 'Book my first class',
-  ctaBookTrial: 'Book my trial class',
-  // For a batch that runs no trial (trialInr === null). Says nothing about a
-  // trial and nothing about a level — it books the class itself.
+  // Non-Foundation batches that DO sell a single first class. Ships the same
+  // string as ctaBookFoundation because the only thing that ever differed
+  // between them was the word "trial", which the studio does not run. The two
+  // keys stay separate so a Foundation CTA can still be worded differently
+  // from an Intermediate one without a code change.
+  ctaBookTrial: 'Book my first class',
+  // For a batch that sells no single class (trialInr === null). Says nothing
+  // about a first class and nothing about a level — it books the batch itself.
   ctaBookSeat: 'Book my seat',
   ctaChatFirst: 'or chat first',
   ctaChatFirstWhatsapp: 'or chat first on WhatsApp',

@@ -29,31 +29,36 @@ describe('offersTrial', () => {
 });
 
 describe('bookLabel', () => {
-  it('calls a Foundation batch with a trial a first class', () => {
+  it('calls a bookable Foundation batch a first class', () => {
     expect(bookLabel(b(500, 'Foundation'), labels())).toBe('Book my first class');
   });
 
-  it('calls a higher-level batch with a trial a trial class', () => {
-    expect(bookLabel(b(500, 'Intermediate'), labels())).toBe('Book my trial class');
-    expect(bookLabel(b(500, 'Advanced'), labels())).toBe('Book my trial class');
+  // Same words as Foundation by default, off a DIFFERENT key, so the studio
+  // can reword one level without touching the other.
+  it('calls a bookable higher-level batch a first class too', () => {
+    expect(bookLabel(b(500, 'Intermediate'), labels())).toBe('Book my first class');
+    expect(bookLabel(b(500, 'Advanced'), labels())).toBe('Book my first class');
   });
 
   // THE reported bug: level was the only input, so every Intermediate and
-  // Advanced batch advertised a "trial class" whether or not one was on offer
-  // — and those are exactly the batches least likely to run one.
-  it('never says "trial" for a batch that has no trial', () => {
+  // Advanced batch advertised a "trial class" whether or not a single class
+  // was on offer — and those are exactly the batches least likely to sell one.
+  // The studio runs no trials at all now, but the level-only rule would still
+  // promise a single class where there is none, so the guard stays.
+  it('offers no single class for a batch that sells none', () => {
     expect(bookLabel(b(null, 'Intermediate'), labels())).toBe('Book my seat');
     expect(bookLabel(b(null, 'Advanced'), labels())).toBe('Book my seat');
   });
 
-  it('never says "trial" for a Foundation batch without one either', () => {
+  it('offers none for a Foundation batch without one either', () => {
     expect(bookLabel(b(null, 'Foundation'), labels())).toBe('Book my seat');
   });
 
   it('follows the edited label at every call site at once', () => {
     const edited = labels({ ctaBookFoundation: 'Reserve my first class' });
     expect(bookLabel(b(500, 'Foundation'), edited)).toBe('Reserve my first class');
-    expect(bookLabel(b(500, 'Advanced'), edited)).toBe('Book my trial class');
+    // Untouched: editing the Foundation key must not move the other levels.
+    expect(bookLabel(b(500, 'Advanced'), edited)).toBe('Book my first class');
   });
 
   it('falls back to the shipped default when the label is blank', () => {

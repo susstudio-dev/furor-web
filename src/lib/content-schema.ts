@@ -343,14 +343,15 @@ const HomePageSchema = z
         // {price} is filled from live batch data. Never hardcode a rupee figure
         // in prose: the copy would lie the day the deposit changes.
         // "Every batch opens with a {price} trial class" was the shipped
-        // default and it was simply untrue: the board can carry batches that
-        // run no trial at all, and the schema now says so (BatchSchema
-        // .trialInr). Universal quantifiers over batch data do not belong in
-        // static copy — the same trap as hardcoding a rupee figure.
+        // default and it was untrue twice over: the studio runs no trial at
+        // all — {price} buys one real class off the batch's own syllabus —
+        // and the board can carry batches that sell no single class either
+        // (BatchSchema.trialInr). Universal quantifiers over batch data do not
+        // belong in static copy — the same trap as hardcoding a rupee figure.
         leadWithPrice: z
           .string()
           .default(
-            'Trial classes from {price} — come once, meet the room, then decide on the full program.',
+            'First class from {price} — come once, meet the room, then decide on the full program.',
           ),
         leadNoPrice: z
           .string()
@@ -358,11 +359,11 @@ const HomePageSchema = z
         spotlitNote: z.string().default('No partner, no experience needed.'),
         higherLevelNote: z.string().default('For dancers with the basics down.'),
         startsTemplate: z.string().default('Starts {date}'),
-        trialPrice: z.string().default('Trial class {price}'),
+        trialPrice: z.string().default('First class {price}'),
         fullProgram: z.string().default('Full program {price} — decide after class one.'),
-        // The whole price block for a card whose batch runs NO trial. Not
-        // `fullProgram`: that line's "decide after class one" describes a
-        // trial, so reusing it would promise one that is not on offer.
+        // The whole price block for a card whose batch sells NO single class.
+        // Not `fullProgram`: that line's "decide after class one" promises a
+        // single class first, which this batch does not offer.
         fullProgramOnly: z.string().default('Full program {price}'),
         // Two forms, because "1 seats left" is what one template produces.
         seatsLeftOne: z.string().default('● {n} seat left'),
@@ -370,8 +371,8 @@ const HomePageSchema = z
         // The count-in strip: the four documented first-class fears, answered at
         // the point of decision. Items 5-7 are backed by live site copy (FAQ,
         // hero) — none of these lines ships unverified. Item 8 used to promise
-        // the trial fee back; the owner corrected that on 2026-08-08 — the paid
-        // trial is NON-REFUNDABLE, so the risk reversal is the size of the
+        // the fee back; the owner corrected that on 2026-08-08 — the paid first
+        // class is NON-REFUNDABLE, so the risk reversal is the size of the
         // commitment, never money back.
         countIn: z
           .array(
@@ -403,11 +404,15 @@ const HomePageSchema = z
               body: '{price} books a single class — no package, no sign-up. You decide on the full program after.',
             },
           ]),
-        /** Substituted for a {price} card body when no trial price is known. */
+        /**
+         * Substituted for a {price} card body when no first-class price is
+         * known. Led with "The token", which framed the fee as a deposit held
+         * against something else; it buys the class outright.
+         */
         countInFallbackBody: z
           .string()
           .default(
-            'The token books a single class — no package, no sign-up. You decide on the full program after.',
+            'Booking covers a single class — no package, no sign-up. You decide on the full program after.',
           ),
         resolveLine: z.string().default("…and on the 1, you're dancing."),
         proofSuffix: z.string().default(', {style} student'),

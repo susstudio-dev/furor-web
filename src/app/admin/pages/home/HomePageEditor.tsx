@@ -76,7 +76,7 @@ export function HomePageEditor({ initial }: { initial: SiteContent }) {
         <Section title="Booking board (the card over the hero)">
           <p className="-mt-1 text-xs text-cream/50">
             The first thing a visitor sees. Words in <code>{'{braces}'}</code> are filled in from
-            live batch data — <code>{'{price}'}</code> is the trial fee, <code>{'{date}'}</code> the
+            live batch data — <code>{'{price}'}</code> is the first-class fee, <code>{'{date}'}</code> the
             start date, <code>{'{n}'}</code> a count. Never type a rupee amount by hand: it would
             be wrong the day you change a deposit.
           </p>
@@ -103,7 +103,7 @@ export function HomePageEditor({ initial }: { initial: SiteContent }) {
               />
             </Field>
           </div>
-          <Field label="Lead — when a trial price is known" hint="Use {price}.">
+          <Field label="Lead — when a first-class price is known" hint="Use {price}.">
             <textarea
               rows={2}
               value={h.board.leadWithPrice}
@@ -146,7 +146,7 @@ export function HomePageEditor({ initial }: { initial: SiteContent }) {
                 className="input"
               />
             </Field>
-            <Field label="Trial price line" hint="Use {price}.">
+            <Field label="First class price line" hint="Use {price}.">
               <input
                 value={h.board.trialPrice}
                 onChange={(e) => patchBoard({ trialPrice: e.target.value })}
@@ -253,7 +253,7 @@ export function HomePageEditor({ initial }: { initial: SiteContent }) {
               </button>
             </div>
             <Field
-              label="Fallback body when no trial price is known"
+              label="Fallback body when no first-class price is known"
               hint="Replaces whichever card uses {price} if there is no bookable batch."
             >
               <textarea

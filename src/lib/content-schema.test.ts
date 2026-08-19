@@ -68,6 +68,32 @@ describe('pages.batches.browser', () => {
   });
 });
 
+// The studio runs no trial classes. What ₹500 buys is one real class off the
+// batch's own syllabus, which is why the schema can say a batch sells none
+// (BatchSchema.trialInr === null) and why the CTA never used to be able to.
+// The word survived in shipped copy long after the concept stopped applying,
+// so this walks every string the site can render — seed prose AND schema
+// defaults, since pages.home.board and labels exist only as defaults — and
+// fails if it comes back. Keys are exempt: `content.trial` and `trialInr` are
+// legacy identifiers deliberately left alone so stored documents keep parsing.
+describe('shipped copy', () => {
+  function strings(node: unknown, path: string): [string, string][] {
+    if (typeof node === 'string') return [[path, node]];
+    if (Array.isArray(node)) return node.flatMap((v, i) => strings(v, `${path}[${i}]`));
+    if (node && typeof node === 'object') {
+      return Object.entries(node).flatMap(([k, v]) => strings(v, `${path}.${k}`));
+    }
+    return [];
+  }
+
+  it('never says "trial" anywhere a visitor can read it', () => {
+    const offenders = strings(doc(), '')
+      .filter(([, v]) => /trial/i.test(v))
+      .map(([k, v]) => `${k}: ${v.slice(0, 80)}`);
+    expect(offenders).toEqual([]);
+  });
+});
+
 describe('pages.home.board', () => {
   const b = () => doc().pages.home.board;
 
@@ -77,13 +103,13 @@ describe('pages.home.board', () => {
     expect(b().headlineAccent).toBe('this week.');
   });
 
-  // The codebase rule at Hero.tsx: the trial price comes from live batch data,
-  // never from a hardcoded string, so the copy cannot go stale on its own.
+  // The codebase rule at Hero.tsx: the first-class price comes from live batch
+  // data, never from a hardcoded string, so the copy cannot go stale on its own.
   it('keeps the price out of prose except as a placeholder', () => {
     expect(b().leadWithPrice).toContain('{price}');
     expect(b().leadWithPrice).not.toMatch(/₹\s?\d/);
     expect(b().leadNoPrice).toBe('Come once, meet the room, then decide on the full program.');
-    expect(b().trialPrice).toBe('Trial class {price}');
+    expect(b().trialPrice).toBe('First class {price}');
     expect(b().fullProgram).toBe('Full program {price} — decide after class one.');
   });
 

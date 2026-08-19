@@ -38,7 +38,7 @@ describe('LabelsSchema', () => {
     expect(l.ctaEnquireWhatsapp).toBe('Enquire on WhatsApp');
     expect(l.ctaDmInstagram).toBe('DM on Instagram');
     expect(l.ctaBookFoundation).toBe('Book my first class');
-    expect(l.ctaBookTrial).toBe('Book my trial class');
+    expect(l.ctaBookTrial).toBe('Book my first class');
   });
 
   it('carries the nav item set that Header and Footer both render', () => {
@@ -85,7 +85,7 @@ describe('label', () => {
   });
 
   it('treats a whitespace-only value as empty', () => {
-    expect(label(labels({ ctaBookTrial: '   ' }), 'ctaBookTrial')).toBe('Book my trial class');
+    expect(label(labels({ ctaBookTrial: '   ' }), 'ctaBookTrial')).toBe('Book my first class');
   });
 
   it('every field falls back to its own shipped literal, not a shared one', () => {
