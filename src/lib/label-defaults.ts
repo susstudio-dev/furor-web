@@ -27,9 +27,12 @@ export const LABEL_DEFAULT_LITERALS = {
   // keys stay separate so a Foundation CTA can still be worded differently
   // from an Intermediate one without a code change.
   ctaBookTrial: 'Book my first class',
-  // For a batch that sells no single class (trialInr === null). Says nothing
-  // about a first class and nothing about a level — it books the batch itself.
-  ctaBookSeat: 'Book my seat',
+  // For a batch that sells no single class. These are Intermediate and
+  // Advanced: nobody is sampling them, so the button names the transaction
+  // that actually happens — the dancer registers for the course and pays the
+  // whole fee. "Book my seat" left the terms vague; this is the studio's own
+  // word for it, already live on the site before this key existed.
+  ctaBookSeat: 'Course Registration',
   ctaChatFirst: 'or chat first',
   ctaChatFirstWhatsapp: 'or chat first on WhatsApp',
   ctaChatOnWhatsapp: 'or chat on WhatsApp',

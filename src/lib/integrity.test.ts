@@ -19,6 +19,32 @@ const doc = () => ({
 type Doc = ReturnType<typeof doc>;
 const check = (d: unknown) => integrityIssues(d as Doc);
 
+describe('singleClassPricing', () => {
+  const doc = (trialInr: number | null, priceInr: number) => ({
+    batches: [{ id: 'b1', slug: 'x', trialInr, priceInr }],
+  });
+
+  it('rejects a single class priced at the full program fee', () => {
+    const issues = integrityIssues(doc(4700, 4700));
+    expect(issues).toHaveLength(1);
+    expect(issues[0].path).toEqual(['batches', 0, 'trialInr']);
+    expect(issues[0].message).toContain('not an offer');
+  });
+
+  it('rejects a single class priced above the full program fee', () => {
+    expect(integrityIssues(doc(8000, 6900))).toHaveLength(1);
+  });
+
+  it('accepts a real discount and a free taster', () => {
+    expect(integrityIssues(doc(500, 6900))).toEqual([]);
+    expect(integrityIssues(doc(0, 6900))).toEqual([]);
+  });
+
+  it('accepts a batch that sells no single class at all', () => {
+    expect(integrityIssues(doc(null, 6900))).toEqual([]);
+  });
+});
+
 describe('integrityIssues', () => {
   it('passes a consistent document', () => {
     expect(check(doc())).toEqual([]);

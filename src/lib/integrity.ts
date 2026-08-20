@@ -183,6 +183,33 @@ function welcomeTracks(doc: Doc, issues: IntegrityIssue[]): void {
   });
 }
 
+/**
+ * A single first class must cost LESS than the programme it samples.
+ *
+ * Stored data said otherwise in production — Intermediate and Advanced
+ * batches carried `trialInr` equal to `priceInr` — and the board dutifully
+ * rendered "First class ₹4,700" beside "Full program ₹4,700". `offersTrial`
+ * now refuses to treat that as an offer so nothing contradictory reaches a
+ * visitor, but silently reinterpreting the owner's data is not the same as
+ * telling them it is wrong. This makes the save say so.
+ */
+function singleClassPricing(doc: Doc, issues: IntegrityIssue[]): void {
+  rowsOf(doc, 'batches').forEach((b, i) => {
+    const trial = b.trialInr;
+    const price = b.priceInr;
+    if (typeof trial !== 'number' || typeof price !== 'number') return;
+    if (trial >= price) {
+      issues.push({
+        path: ['batches', i, 'trialInr'],
+        message:
+          `A single first class at ₹${trial} costs as much as the full program ` +
+          `(₹${price}), so it is not an offer. Either price it below the program ` +
+          `fee or untick "You can book a single class in this batch".`,
+      });
+    }
+  });
+}
+
 /** Every invariant violation in the document. Empty means consistent. */
 export function integrityIssues(doc: unknown): IntegrityIssue[] {
   if (doc == null || typeof doc !== 'object') return [];
@@ -192,5 +219,6 @@ export function integrityIssues(doc: unknown): IntegrityIssue[] {
   references(doc as Doc, issues);
   messageTemplates(doc as Doc, issues);
   welcomeTracks(doc as Doc, issues);
+  singleClassPricing(doc as Doc, issues);
   return issues;
 }

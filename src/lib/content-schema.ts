@@ -362,9 +362,14 @@ const HomePageSchema = z
         trialPrice: z.string().default('First class {price}'),
         fullProgram: z.string().default('Full program {price} — decide after class one.'),
         // The whole price block for a card whose batch sells NO single class.
-        // Not `fullProgram`: that line's "decide after class one" promises a
-        // single class first, which this batch does not offer.
-        fullProgramOnly: z.string().default('Full program {price}'),
+        // Emphatically NOT `fullProgram`: that line's "decide after class one"
+        // promises a single class first. These batches are Intermediate and
+        // Advanced — nobody is sampling them to decide. They know what the
+        // programme is, they register, and they pay the whole fee up front, so
+        // the line says that instead of leaving the terms unstated.
+        fullProgramOnly: z
+          .string()
+          .default('Full program {price} — pay in full to register.'),
         // Two forms, because "1 seats left" is what one template produces.
         seatsLeftOne: z.string().default('● {n} seat left'),
         seatsLeftMany: z.string().default('● {n} seats left'),
@@ -1041,6 +1046,10 @@ const RETIRED_COPY = new Map<string, string>([
   ["The token books a single class — no package, no sign-up. You decide on the full program after.", "Booking covers a single class — no package, no sign-up. You decide on the full program after."],
   // pages.terms.sections[2].body
   ["The paid trial class fee is non-refundable — it books one class, and that seat is held for you whether or not you attend. For full batch programs, refunds are available before the batch starts. Once the batch has begun, refunds are pro-rated for the remaining unattended classes and require at least 7 days' notice. Refunds for missed classes that were eligible for a make-up are not available.", "The single class fee is non-refundable — it books one class, and that seat is held for you whether or not you attend. For full batch programs, refunds are available before the batch starts. Once the batch has begun, refunds are pro-rated for the remaining unattended classes and require at least 7 days' notice. Refunds for missed classes that were eligible for a make-up are not available."],
+  // labels.ctaBookSeat — vague about what the click commits you to
+  ["Book my seat", "Course Registration"],
+  // pages.home.board.fullProgramOnly — left the payment terms unstated
+  ["Full program {price}", "Full program {price} — pay in full to register."],
   // customPages[0].blocks[7].body
   ["When\n\nEvery \nSaturday & Sunday 9:30–10:30 AM\n\nPlease arrive by 9:15 AM for registration for your first trial session on Saturday.\n", "When\n\nEvery \nSaturday & Sunday 9:30–10:30 AM\n\nPlease arrive by 9:15 AM for registration before your first class on Saturday.\n"],
 ]);

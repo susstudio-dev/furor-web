@@ -147,8 +147,7 @@ export function BatchesEditor({ initial }: { initial: SiteContent }) {
                   />
                 ) : (
                   <p className="text-xs text-cream/50">
-                    Booking button will read &ldquo;Book my seat &middot; {formatInr(b.priceInr)}
-                    &rdquo;.
+                    Booking button charges the full course fee, {formatInr(b.priceInr)}.
                   </p>
                 )}
               </Field>

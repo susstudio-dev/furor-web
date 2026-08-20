@@ -5,7 +5,7 @@ import { compareByLevel } from '@/lib/batch-order';
 import { BookTrialLink } from './BookTrialLink';
 import { EnquiryCTA } from './EnquiryCTA';
 import { label } from '@/lib/labels';
-import { bookLabel, bookPriceInr, statusLabel } from '@/lib/book-label';
+import { bookLabel, bookPriceInr, offersTrial, statusLabel } from '@/lib/book-label';
 
 // The booking board — the conversion surface, styled like the lineup board
 // outside a club, overlapping the hero so its lit edge peeks above the fold.
@@ -192,10 +192,10 @@ export function QuickEnroll({
                           program fee is the ask, and the trial line is dropped
                           rather than printed as a ₹0 or an invented deposit. */}
                       <div className="relative mt-3">
-                        {b.trialInr !== null ? (
+                        {offersTrial(b) ? (
                           <>
                             <p className="text-cream font-semibold">
-                              {board.trialPrice.replace('{price}', formatInr(b.trialInr))}
+                              {board.trialPrice.replace('{price}', formatInr(b.trialInr as number))}
                             </p>
                             <p className="text-xs text-cream/60">
                               {board.fullProgram.replace('{price}', formatInr(b.priceInr))}

@@ -194,6 +194,10 @@ describe('pages.home.board', () => {
     expect(b().leadNoPrice).toBe('Come once, meet the room, then decide on the full program.');
     expect(b().trialPrice).toBe('First class {price}');
     expect(b().fullProgram).toBe('Full program {price} — decide after class one.');
+    // No "decide after class one" here: these dancers are not deciding, they
+    // register and pay the whole fee up front.
+    expect(b().fullProgramOnly).toBe('Full program {price} — pay in full to register.');
+    expect(b().fullProgramOnly).not.toMatch(/decide|try|trial/i);
   });
 
   it('ships the two per-card notes and the start-date template', () => {

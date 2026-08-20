@@ -26,6 +26,40 @@ describe('offersTrial', () => {
   it('treats a zero-rupee trial as a trial, not as no trial', () => {
     expect(offersTrial(b(0))).toBe(true);
   });
+
+  // THE reported bug. Production stored Intermediate and Advanced batches with
+  // trialInr EQUAL to priceInr, so the board printed "First class ₹4,700" above
+  // "Full program ₹4,700 — decide after class one" — inviting dancers who
+  // register and pay in full to sample a class and decide afterwards.
+  it('is false when a single class costs the whole program', () => {
+    expect(offersTrial(b(4700, 'Intermediate', 4700))).toBe(false);
+    expect(offersTrial(b(6900, 'Advanced', 6900))).toBe(false);
+  });
+
+  it('is false when a single class somehow costs MORE than the program', () => {
+    expect(offersTrial(b(8000, 'Advanced', 6900))).toBe(false);
+  });
+
+  it('is still true one rupee below the program fee', () => {
+    expect(offersTrial(b(6899, 'Foundation', 6900))).toBe(true);
+  });
+});
+
+describe('a batch whose single class is not a discount', () => {
+  const full = b(4700, 'Intermediate', 4700);
+
+  it('charges and reports the full program fee, not the phantom discount', () => {
+    expect(bookPriceInr(full)).toBe(4700);
+  });
+
+  it('registers for the course rather than offering a class to try', () => {
+    expect(bookLabel(full, labels())).toBe('Course Registration');
+  });
+
+  it('is excluded from the site-wide "from" figure', () => {
+    expect(trialFromInr([full, b(6900, 'Advanced', 6900)])).toBeNull();
+    expect(trialFromInr([full, b(500)])).toBe(500);
+  });
 });
 
 describe('bookLabel', () => {
@@ -46,12 +80,12 @@ describe('bookLabel', () => {
   // The studio runs no trials at all now, but the level-only rule would still
   // promise a single class where there is none, so the guard stays.
   it('offers no single class for a batch that sells none', () => {
-    expect(bookLabel(b(null, 'Intermediate'), labels())).toBe('Book my seat');
-    expect(bookLabel(b(null, 'Advanced'), labels())).toBe('Book my seat');
+    expect(bookLabel(b(null, 'Intermediate'), labels())).toBe('Course Registration');
+    expect(bookLabel(b(null, 'Advanced'), labels())).toBe('Course Registration');
   });
 
   it('offers none for a Foundation batch without one either', () => {
-    expect(bookLabel(b(null, 'Foundation'), labels())).toBe('Book my seat');
+    expect(bookLabel(b(null, 'Foundation'), labels())).toBe('Course Registration');
   });
 
   it('follows the edited label at every call site at once', () => {
@@ -65,7 +99,7 @@ describe('bookLabel', () => {
     expect(bookLabel(b(500, 'Foundation'), labels({ ctaBookFoundation: '' }))).toBe(
       'Book my first class',
     );
-    expect(bookLabel(b(null, 'Advanced'), labels({ ctaBookSeat: '' }))).toBe('Book my seat');
+    expect(bookLabel(b(null, 'Advanced'), labels({ ctaBookSeat: '' }))).toBe('Course Registration');
   });
 });
 
