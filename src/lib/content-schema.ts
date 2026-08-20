@@ -1008,7 +1008,82 @@ export const LabelsSchema = z
   })
   .default({});
 
-export const SiteContentSchema = z.object({
+/**
+ * Copy that shipped as a default and has since been reworded.
+ *
+ * The save path writes the FULLY-DEFAULTED document back to storage
+ * (content-write.ts stringifies the parsed result), so the first admin save
+ * bakes every default of that moment into stored bytes. From then on the
+ * stored value shadows the default permanently: rewording a default still
+ * works on a fresh install and does nothing in production. That is exactly
+ * how the board kept rendering the retired wording after a rename — the
+ * string was no longer anywhere in the code, only in R2.
+ *
+ * A stored string that still matches a retired default BYTE FOR BYTE was
+ * never a decision; it is a persisted default, and upgrading it is what the
+ * reword was meant to do. Anything the studio actually reworded fails the
+ * exact match and is left alone — production’s "Course Registration" button
+ * is a real edit and stays exactly as the owner set it.
+ *
+ * Exact whole-string matches only. Substring rewriting would edit sentences
+ * the studio wrote deliberately, which is not this function’s business.
+ */
+const RETIRED_COPY = new Map<string, string>([
+  // labels.ctaBookTrial
+  ["Book my trial class", "Book my first class"],
+  // pages.home.board.trialPrice
+  ["Trial class {price}", "First class {price}"],
+  // pages.home.board.leadWithPrice
+  ["Trial classes from {price} — come once, meet the room, then decide on the full program.", "First class from {price} — come once, meet the room, then decide on the full program."],
+  // pages.home.board.leadWithPrice, the default before that
+  ["Every batch opens with a {price} trial class — come once, meet the room, then decide on the full program.", "First class from {price} — come once, meet the room, then decide on the full program."],
+  // pages.home.board.countInFallbackBody — framed the fee as a deposit held against something else
+  ["The token books a single class — no package, no sign-up. You decide on the full program after.", "Booking covers a single class — no package, no sign-up. You decide on the full program after."],
+  // pages.terms.sections[2].body
+  ["The paid trial class fee is non-refundable — it books one class, and that seat is held for you whether or not you attend. For full batch programs, refunds are available before the batch starts. Once the batch has begun, refunds are pro-rated for the remaining unattended classes and require at least 7 days' notice. Refunds for missed classes that were eligible for a make-up are not available.", "The single class fee is non-refundable — it books one class, and that seat is held for you whether or not you attend. For full batch programs, refunds are available before the batch starts. Once the batch has begun, refunds are pro-rated for the remaining unattended classes and require at least 7 days' notice. Refunds for missed classes that were eligible for a make-up are not available."],
+  // customPages[0].blocks[7].body
+  ["When\n\nEvery \nSaturday & Sunday 9:30–10:30 AM\n\nPlease arrive by 9:15 AM for registration for your first trial session on Saturday.\n", "When\n\nEvery \nSaturday & Sunday 9:30–10:30 AM\n\nPlease arrive by 9:15 AM for registration before your first class on Saturday.\n"],
+]);
+
+/**
+ * Swap retired defaults for their replacements anywhere in a stored document.
+ *
+ * Runs as a preprocess so every read path and the write path get it from one
+ * place, and so the next admin save persists the upgrade instead of re-baking
+ * the stale string. Returns the input unchanged when nothing matched, so an
+ * already-current document costs one walk and no allocation.
+ */
+function upgradeRetiredCopy(input: unknown): unknown {
+  if (typeof input === 'string') return RETIRED_COPY.get(input) ?? input;
+  if (Array.isArray(input)) {
+    let changed = false;
+    const out = input.map((v) => {
+      const next = upgradeRetiredCopy(v);
+      if (next !== v) changed = true;
+      return next;
+    });
+    return changed ? out : input;
+  }
+  if (input && typeof input === 'object') {
+    let changed = false;
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(input as Record<string, unknown>)) {
+      // JSON.parse yields __proto__ as an OWN key and `out[k] =` would walk
+      // the setter and pollute Object.prototype. Same guard as content-merge.
+      if (k === '__proto__' || k === 'constructor' || k === 'prototype') continue;
+      const next = upgradeRetiredCopy(v);
+      if (next !== v) changed = true;
+      out[k] = next;
+    }
+    return changed ? out : input;
+  }
+  return input;
+}
+
+/** The object shape itself. Exported for roles.test.ts, which enumerates the
+ *  top-level editable sections and cannot reach `.shape` through a preprocess
+ *  wrapper. Parse through `SiteContentSchema`, never through this. */
+export const SiteContentObjectSchema = z.object({
   version: z.literal(1),
   site: SiteSettingsSchema,
   hero: HeroSchema,
@@ -1053,6 +1128,15 @@ export const SiteContentSchema = z.object({
   welcome: WelcomeSchema,
   labels: LabelsSchema,
 });
+
+/**
+ * The parse entry point for every read and write path.
+ *
+ * Wrapped so retired copy is upgraded before validation. Keep this the only
+ * exported parser: a caller reaching for SiteContentObjectSchema.parse would
+ * silently skip the migration.
+ */
+export const SiteContentSchema = z.preprocess(upgradeRetiredCopy, SiteContentObjectSchema);
 
 export type SiteContent = z.infer<typeof SiteContentSchema>;
 export type DanceStyle = z.infer<typeof DanceStyleSchema>;

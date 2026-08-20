@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { SECTION_PATHS, ROLES } from './roles';
-import { SiteContentSchema } from './content-schema';
+import { SiteContentObjectSchema } from './content-schema';
 
 // `version` is a schema literal, not editable content.
 const NOT_EDITABLE = new Set(['version']);
@@ -12,13 +12,13 @@ describe('SECTION_PATHS', () => {
   // every section-scoped account.
   it('covers every writable top-level key of the content document', () => {
     const covered = new Set(Object.values(SECTION_PATHS).flat());
-    const topLevel = Object.keys(SiteContentSchema.shape).filter((k) => !NOT_EDITABLE.has(k));
+    const topLevel = Object.keys(SiteContentObjectSchema.shape).filter((k) => !NOT_EDITABLE.has(k));
     const uncovered = topLevel.filter((k) => !covered.has(k));
     expect(uncovered).toEqual([]);
   });
 
   it('does not grant paths that are not in the schema', () => {
-    const topLevel = new Set(Object.keys(SiteContentSchema.shape));
+    const topLevel = new Set(Object.keys(SiteContentObjectSchema.shape));
     const phantom = Object.values(SECTION_PATHS)
       .flat()
       .filter((p) => !topLevel.has(p.split('.')[0]));

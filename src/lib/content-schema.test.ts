@@ -76,6 +76,89 @@ describe('pages.batches.browser', () => {
 // defaults, since pages.home.board and labels exist only as defaults — and
 // fails if it comes back. Keys are exempt: `content.trial` and `trialInr` are
 // legacy identifiers deliberately left alone so stored documents keep parsing.
+// Production kept rendering "Trial class ₹500" after the rename because the
+// save path stringifies the fully-defaulted document: the first admin save
+// baked the then-current defaults into R2, and stored bytes shadow a default
+// forever. Rewording the default fixed a fresh install and did nothing to the
+// live site. These pin the repair.
+describe('retired copy migration', () => {
+  const stored = () => {
+    const d = JSON.parse(JSON.stringify(seed)) as Record<string, any>;
+    // Shaped like the real R2 document: defaults baked in at an earlier save.
+    d.labels = { ctaBookTrial: 'Book my trial class' };
+    d.pages.home = {
+      ...d.pages.home,
+      board: {
+        trialPrice: 'Trial class {price}',
+        leadWithPrice:
+          'Trial classes from {price} — come once, meet the room, then decide on the full program.',
+      },
+    };
+    return d;
+  };
+
+  it('upgrades a baked-in default the studio never edited', () => {
+    const c = SiteContentSchema.parse(stored());
+    expect(c.labels.ctaBookTrial).toBe('Book my first class');
+    expect(c.pages.home.board.trialPrice).toBe('First class {price}');
+    expect(c.pages.home.board.leadWithPrice).toBe(
+      'First class from {price} — come once, meet the room, then decide on the full program.',
+    );
+  });
+
+  it('upgrades the leadWithPrice default from two rewrites ago too', () => {
+    const d = stored();
+    d.pages.home.board.leadWithPrice =
+      'Every batch opens with a {price} trial class — come once, meet the room, then decide on the full program.';
+    expect(SiteContentSchema.parse(d).pages.home.board.leadWithPrice).toBe(
+      'First class from {price} — come once, meet the room, then decide on the full program.',
+    );
+  });
+
+  // The whole point of matching byte-for-byte. Production's booking button
+  // reads "Course Registration" because the owner typed it; a migration that
+  // went near it would be overwriting a decision, not repairing a default.
+  it('leaves copy the studio actually wrote alone', () => {
+    const d = stored();
+    d.labels.ctaBookTrial = 'Course Registration';
+    d.pages.home.board.trialPrice = 'Trial class {price} — our own wording';
+    const c = SiteContentSchema.parse(d);
+    expect(c.labels.ctaBookTrial).toBe('Course Registration');
+    expect(c.pages.home.board.trialPrice).toBe('Trial class {price} — our own wording');
+  });
+
+  it('rewrites the retired Terms and weekend-page prose', () => {
+    const d = stored();
+    // The seed in this repo already carries the new wording, so plant the
+    // retired strings explicitly — otherwise this asserts nothing.
+    d.pages.terms.sections[2].body =
+      "The paid trial class fee is non-refundable — it books one class, and that seat is held for you whether or not you attend. For full batch programs, refunds are available before the batch starts. Once the batch has begun, refunds are pro-rated for the remaining unattended classes and require at least 7 days' notice. Refunds for missed classes that were eligible for a make-up are not available.";
+    d.customPages[0].blocks[7].body =
+      "When\n\nEvery \nSaturday & Sunday 9:30–10:30 AM\n\nPlease arrive by 9:15 AM for registration for your first trial session on Saturday.\n";
+    const c = SiteContentSchema.parse(d);
+    expect(c.pages.terms.sections[2].body).toContain('The single class fee is non-refundable');
+    expect(c.pages.terms.sections[2].body).not.toMatch(/trial/i);
+    const block = c.customPages[0].blocks[7];
+    expect(block.type).toBe('text');
+    if (block.type !== 'text') throw new Error('expected a text block');
+    expect(block.body).toContain('before your first class on Saturday');
+  });
+
+  it('leaves an already-current document byte-identical', () => {
+    const before = JSON.parse(JSON.stringify(seed));
+    SiteContentSchema.parse(before);
+    expect(before).toEqual(JSON.parse(JSON.stringify(seed)));
+  });
+
+  // A document that has been through the migration must survive the round
+  // trip the save path performs, or the next save would write back garbage.
+  it('is idempotent across a save-shaped round trip', () => {
+    const once = SiteContentSchema.parse(stored());
+    const twice = SiteContentSchema.parse(JSON.parse(JSON.stringify(once)));
+    expect(twice).toEqual(once);
+  });
+});
+
 describe('shipped copy', () => {
   function strings(node: unknown, path: string): [string, string][] {
     if (typeof node === 'string') return [[path, node]];
