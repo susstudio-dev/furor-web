@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { getSession } from '@/lib/auth';
 import { readJSON } from '@/lib/storage';
 import { requireCapability } from '@/lib/guard';
+import { paymentLogStaleness } from '@/lib/payment-log';
 
 // Razorpay webhook ([/api/razorpay/webhook](src/app/api/razorpay/webhook/route.ts))
 // persists every payment event here. This page surfaces them so failed /
@@ -45,6 +46,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ f
 
   const { filter } = await searchParams;
   const all = ((await readJSON<PaymentEvent[]>(EVENTS_KEY)) ?? []).slice().reverse();
+  // The webhook can stop delivering without any error on OUR side — Razorpay
+  // deactivates a webhook after 24h of failed deliveries and never re-enables
+  // it by itself (it happened during the Vercel → Workers cutover). A stale
+  // log must say so, or weeks of payments stay invisible in silence.
+  const stale = paymentLogStaleness(all, new Date());
 
   const filtered =
     filter === 'failed'
@@ -85,6 +91,26 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ f
         confirmation can&apos;t see. Most recent {CAP} kept.
       </p>
 
+      {stale ? (
+        <div className="mt-6 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-5">
+          <p className="font-semibold text-amber-300">
+            {stale.days != null
+              ? `No events for ${stale.days} days.`
+              : 'The event log has no readable timestamps.'}
+          </p>
+          <p className="mt-2 text-sm text-cream/70">
+            If you&apos;ve taken payments since, Razorpay has stopped delivering to this site. Razorpay
+            deactivates a webhook after 24 hours of failed deliveries and{' '}
+            <strong className="text-cream/90">never re-enables it by itself</strong>. Check{' '}
+            <span className="text-cream/90">Razorpay Dashboard → Settings → Webhooks</span>: re-enable
+            (or recreate) the webhook for{' '}
+            <code className="text-ember-400">https://www.dancehyderabad.com/api/razorpay/webhook</code>, then
+            set the same secret on the Worker with{' '}
+            <code className="text-ember-400">wrangler secret put RAZORPAY_WEBHOOK_SECRET</code>.
+          </p>
+        </div>
+      ) : null}
+
       <div className="mt-6 flex flex-wrap gap-2">
         <Tab k="all" label="All" n={counts.all} />
         <Tab k="paid" label="Paid" n={counts.paid} />
@@ -95,9 +121,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ f
         <div className="mt-8 rounded-2xl border border-cream/10 bg-ink-900/40 p-6">
           <p className="text-cream/70">No events yet.</p>
           <p className="mt-2 text-cream/50 text-sm">
-            If you expect events here, check that <code className="text-ember-400">RAZORPAY_WEBHOOK_SECRET</code> is set
-            on Vercel and the webhook URL in the Razorpay dashboard points to{' '}
-            <code className="text-ember-400">/api/razorpay/webhook</code>.
+            If you expect events here: the webhook in the Razorpay dashboard must point to{' '}
+            <code className="text-ember-400">https://www.dancehyderabad.com/api/razorpay/webhook</code> and be{' '}
+            <strong className="text-cream/80">active</strong> (Razorpay deactivates it after 24h of failed
+            deliveries), and its secret must match the Worker&apos;s — set with{' '}
+            <code className="text-ember-400">wrangler secret put RAZORPAY_WEBHOOK_SECRET</code>.
           </p>
         </div>
       ) : (
