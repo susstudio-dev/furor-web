@@ -11,6 +11,7 @@ import { trialFromInr } from '@/lib/book-label';
 import { label } from '@/lib/labels';
 import { HERO_POSTER_ALT_DEFAULT } from '@/lib/hero-defaults';
 import type { HeroPoster } from '@/lib/image-variants';
+import { TonightFloat } from './TonightFloat';
 
 export function Hero({ content, poster }: { content: SiteContent; poster: HeroPoster | null }) {
   const [allowVideo, setAllowVideo] = useState(false);
@@ -198,6 +199,11 @@ export function Hero({ content, poster }: { content: SiteContent; poster: HeroPo
             text link pointing at the card that covers it was two cues fighting
             for the same job — and the card won by sitting on top of it. */}
       </div>
+      {/* The weekly social, floating top-right over the hero art. Dismissible
+          per visit; its schema.org Event node is emitted in page.tsx, so this
+          chip is presentation only. Top-right because the content column owns
+          the left and the QuickEnroll card overlaps the entire bottom band. */}
+      <TonightFloat content={content} />
       {/* Magnetic CTA: enabled by ScriptOnFinePointer mounted in app layout via children */}
       <MagneticInit />
       <HeroSpotlight target={spotRef} />

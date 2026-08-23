@@ -369,60 +369,6 @@ html[data-theme='dark'] .hero-vignette {
   }
 }
 
-/* DEPTH — the giant count behind the styles grid lags the scroll, so the
-   section reads as two planes instead of one flat page. ±32px reproduces the
-   amplitude of the JS parallax this replaced, for no JavaScript at all. */
-@keyframes drift {
-  from { transform: translate3d(0,  32px, 0) }
-  to   { transform: translate3d(0, -32px, 0) }
-}
-@supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
-    .drift {
-      animation: drift linear both;
-      animation-timeline: view();
-      animation-range: cover;
-    }
-  }
-}
-
-/* THE NUDGE — the one place on the page where scrolling *plays* something
-   rather than revealing it. The strip is already the page's metronome; the
-   thumb becomes a third hand on the same instrument, running the style names
-   ahead of the beat on the way down and dragging them back on the way up,
-   like a DJ nudging a record. The marquee keeps playing underneath, so it is
-   never a dead scrubber frozen mid-gesture.
-
-   The mask is load-bearing, not decoration: the track is 200% wide and the
-   marquee travels 0 → -50%, so at its extremes it covers the viewport
-   exactly. Any horizontal shift would expose a bare edge; the 8% fade
-   swallows the 4% worst case whatever the admin's style list length. */
-.strip-nudge {
-  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 8%, #000 92%, transparent 100%);
-          mask-image: linear-gradient(to right, transparent 0, #000 8%, #000 92%, transparent 100%);
-}
-@keyframes stripNudge {
-  from { transform: translate3d(4%, 0, 0) }
-  to   { transform: translate3d(-4%, 0, 0) }
-}
-@supports (animation-timeline: view()) {
-  .strip-nudge {
-    animation: stripNudge linear both;
-    animation-timeline: view();
-    animation-range: cover;
-  }
-  /* Reduced motion keeps this rather than killing it: a scroll-linked
-     translate has zero autonomous motion — it moves only when the user
-     moves — so it is the vestibular-safe form, and it is the replacement for
-     the marquee that reduced motion stops. Quieter, not gone. */
-  @media (prefers-reduced-motion: reduce) {
-    @keyframes stripNudge {
-      from { transform: translate3d(2%, 0, 0) }
-      to   { transform: translate3d(-2%, 0, 0) }
-    }
-  }
-}
-
 /* THE BOOKING PANEL ----------------------------------------------------
    Reads as a pane of lit glass, but nothing behind it ever shows through.
    The fill is fully opaque: at any alpha the hero photograph came through
@@ -460,77 +406,12 @@ html[data-theme='light'] .quick-enroll {
     0 24px 60px -24px rgb(var(--c-ink-500) / 0.5);
 }
 
-/* THE FOLLOW-SPOT ------------------------------------------------------
-   A warm stage light travels the length of the kinetic strip, once every
-   four bars, easing at the turns the way a real followspot operator works
-   the room. The type in that band is 96px, so it genuinely catches the
-   light. Transform-only: no filter, no repaint, no layout.
-
-   Blending is theme-split for the same reason .spotlight is — `screen`
-   brightens letters out of the dark, but on paper it would wash to nothing,
-   so the light theme gets a warm gel tint at plain alpha instead. */
-.strip-light {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: 46%;
-  pointer-events: none;
-  background: radial-gradient(
-    60% 130% at 50% 50%,
-    rgb(var(--c-ember-500) / 0.5),
-    rgb(var(--c-gold-500) / 0.16) 46%,
-    transparent 72%
-  );
-}
-html[data-theme='dark'] .strip-light {
-  mix-blend-mode: screen;
-}
-/* On paper the light has to be a single warm gel. The gold/blue stop that
-   makes the dark theme's beam feel dimensional just reads as a grey smudge
-   behind near-black type, so the light theme gets ember alone, softer. */
-html[data-theme='light'] .strip-light {
-  background: radial-gradient(
-    60% 130% at 50% 50%,
-    rgb(var(--c-ember-500) / 0.2),
-    transparent 70%
-  );
-}
-@keyframes stripLight {
-  from { transform: translate3d(-110%, 0, 0) }
-  to   { transform: translate3d(320%, 0, 0) }
-}
-
-/* On-beat pulse for the kinetic strip separators — the marquee stops being
-   a slide and starts reading as a count. Locked to the global tempo. */
-@keyframes beatPulse {
-  0%, 100% { transform: scale(1); opacity: 0.5; }
-  40%      { transform: scale(1.4); opacity: 1; }
-}
-/* The separators are 96px type. Scaling text that size either re-rasters
-   every frame or goes visibly soft, so the big glyphs pulse on opacity while
-   the small live dots keep the scale. */
-@keyframes beatGlow {
-  0%, 100% { opacity: 0.45 }
-  40%      { opacity: 1 }
-}
 /* One live idiom, on the count. Replaces Tailwind's stock animate-ping, which
    ran at its own 1s rate next to on-tempo indicators and was never guarded
    for reduced motion — including on a position:fixed button. */
 @keyframes beatRing {
   0%        { transform: scale(1); opacity: 1 }
   75%, 100% { transform: scale(2); opacity: 0 }
-}
-.beat-dot {
-  display: inline-block;
-}
-
-/* Moved off tailwind.config so they can derive from the tempo engine: a
-   literal 28s marquee happens to be 10 bars today and silently desyncs the
-   moment --bar changes. Declared (with timings) in the motion gate below. */
-@keyframes marquee {
-  0%   { transform: translateX(0) }
-  100% { transform: translateX(-50%) }
 }
 @keyframes kenburns {
   0%   { transform: scale(1.02) translate(0, 0) }
@@ -656,7 +537,6 @@ html[data-theme='light'] .strip-light {
    Only animation belongs in here. Structural properties (.count-in's box,
    .cine-w's padding) stay outside, or the layout changes with the setting. */
 @media (prefers-reduced-motion: no-preference) {
-  .animate-marquee { animation: marquee calc(var(--bar) * 10) linear infinite }
   /* Phones only get stillness here: this drives an infinite compositor
      animation over ~11.7 MB of GPU texture, for an effect that is hidden
      behind an opaque .hero-scrim-x on light-theme mobile anyway (spec §7.1
@@ -666,10 +546,7 @@ html[data-theme='light'] .strip-light {
     .animate-kenburns { animation: kenburns calc(var(--bar) * 12) ease-in-out infinite alternate }
   }
   .animate-fade-up { animation: fadeUp var(--beat) ease-out both }
-  .beat-dot { animation: beatPulse calc(var(--beat) * 2) ease-in-out infinite }
-  .beat-dot--glyph { animation-name: beatGlow }
   .beat-ring { animation: beatRing calc(var(--beat) * 2) cubic-bezier(0, 0, 0.2, 1) infinite }
-  .strip-light { animation: stripLight calc(var(--bar) * 4) cubic-bezier(0.45, 0, 0.55, 1) infinite }
   .stage-lights {
     animation:
       roomDrift calc(var(--bar) * 9) ease-in-out infinite alternate,
@@ -677,6 +554,10 @@ html[data-theme='light'] .strip-light {
   }
   .cine-i { animation: cineRise calc(var(--beat) * 1.35) cubic-bezier(0.16, 0.8, 0.2, 1) both }
   .hero-fade { animation: cineFade calc(var(--beat) * 1.2) ease-out both }
+  /* The La Rumba chip enters AFTER the hero's own choreography resolves —
+     it is a side note, and arriving mid-headline would upstage the lead. */
+  .tonight-float { animation: cineFade calc(var(--beat) * 1.2) ease-out both;
+                   animation-delay: calc(var(--beat) * 2.4) }
   .count-in { animation: countOut calc(var(--beat) * 0.7) ease-out forwards;
               animation-delay: calc(var(--beat) * 4 + 0.1s) }
   .count-in span { animation: countTick var(--beat) steps(1, end) 1 forwards }
@@ -689,9 +570,6 @@ html[data-theme='light'] .strip-light {
   /* The count collapses rather than freezing mid-count on screen. Its
      reserved height goes with it, which is fine: nothing else has moved. */
   .count-in { display: none }
-  /* The followspot parks centre-stage instead of sitting off-screen: the
-     strip keeps its warm pool of light, the light just stops travelling. */
-  .strip-light { left: 27%; transform: none }
   /* The scrubbed entrance and the strip nudge declare their own reduced-motion
      forms above — they are replacements, not casualties. */
 }

@@ -39,13 +39,10 @@ import { JsonLd } from '@/components/JsonLd';
 import { tonightEventLd } from '@/lib/tonight-event';
 import { todayIso } from '@/lib/format';
 import { Hero } from '@/components/Hero';
-import { KineticStrip } from '@/components/KineticStrip';
-import { TrialBanner } from '@/components/TrialBanner';
 import { StyleFinder } from '@/components/StyleFinder';
 import { EnquiryCTA } from '@/components/EnquiryCTA';
 import { label } from '@/lib/labels';
 import { trialFromInr } from '@/lib/book-label';
-import { TonightTile } from '@/components/TonightTile';
 import { RhythmSignature } from '@/components/RhythmSignature';
 import { Img } from '@/components/Img';
 import { Accentuate } from '@/components/Accentuate';
@@ -148,83 +145,35 @@ export default async function HomePage() {
           than assert something we don't know. */}
       {eventLd ? <JsonLd data={eventLd} /> : null}
 
-      {/* La Rumba sits directly under the booking board, not eleven sections
-          down. Spec §6.2 chose moving this tile over building a separate
-          ribbon: it is richer, already admin-editable, already carries its
-          RSVP CTA, and adds no second La Rumba surface to keep in sync. */}
-      <TonightTile content={content} />
-
-      <KineticStrip styles={sortedStyles} />
-
-      <TrialBanner content={content} />
-
-      {/* What we teach */}
-      {/* `isolate` is load-bearing: without a stacking context the -z-10 child
-          below escapes to the root negative layer and paints *underneath*
-          .stage-lights, which is why this count was invisible. */}
-      {/* overflow-CLIP, not hidden: `hidden` is still a scroll container, and
-          the drifting "8" below hangs 40px past the right edge — so any
-          scrollIntoView or keyboard focus in this section scrolled it 40px
-          left and left every heading and card permanently misaligned. `clip`
-          cannot be scrolled. */}
-      <section className="container-x py-12 sm:py-16 relative isolate overflow-clip">
-        {/* Depth: a giant faint count drifts behind the grid as you scroll —
-            the room has layers, not a flat page. Scroll-driven CSS, no JS. */}
-        <div
-          aria-hidden
-          className="drift pointer-events-none absolute -right-10 -top-6 -z-10 hidden select-none sm:block"
-        >
-          <span className="display block text-[16rem] font-extrabold leading-none text-cream/[0.05]">
-            8
-          </span>
-        </div>
+      {/* What we teach — one compact row, not a six-card gallery. The owner
+          cut the grid (2026-08-23) to keep the home page on batches; the full
+          gallery lives at /dance-styles and these pills keep that path one
+          tap away. The La Rumba tile that sat here now floats over the hero
+          (TonightFloat), and the KineticStrip marquee + weekend TrialBanner
+          ribbon are gone outright — decoration and duplication respectively. */}
+      <section className="container-x py-10 sm:py-12">
         <Reveal>
-          <div className="flex items-end justify-between gap-6 flex-wrap">
-            <div>
-              <div className="flex items-center gap-3">
-                <p className="display text-sm uppercase tracking-widest text-ember-400">{h.whatWeTeach.eyebrow}</p>
-                <RhythmSignature style="salsa" loop width={84} className="text-ember-500/70" />
-              </div>
-              <h2 className="mt-2 display text-3xl font-bold sm:text-5xl max-w-xl">
-                <Accentuate text={h.whatWeTeach.headline} />
-              </h2>
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-4">
+            <div className="flex items-center gap-3">
+              <p className="display text-sm uppercase tracking-widest text-ember-400">{h.whatWeTeach.eyebrow}</p>
+              <RhythmSignature style="salsa" loop width={84} className="text-ember-500/70" />
             </div>
-            <Link href="/dance-styles" className="btn-secondary magnetic">
-              {label(content.labels, 'ctaAllStyles')}
-            </Link>
+            <div className="flex flex-wrap items-center gap-2">
+              {sortedStyles.map((s) => (
+                <Link
+                  key={s.slug}
+                  href={`/dance-styles/${s.slug}`}
+                  className="rounded-full border border-cream/15 bg-ink-900/40 px-4 py-2 text-sm font-semibold text-cream/85 transition hover:border-ember-500/50 hover:text-cream"
+                >
+                  {s.name}
+                </Link>
+              ))}
+              <Link href="/dance-styles" className="px-2 py-2 text-sm text-ember-400 hover:text-ember-300 transition">
+                {label(content.labels, 'ctaAllStyles')} →
+              </Link>
+            </div>
           </div>
         </Reveal>
-          <Reveal stagger className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {sortedStyles.map((s) => (
-            <Link
-              key={s.slug}
-              href={`/dance-styles/${s.slug}`}
-              className="group relative overflow-hidden rounded-3xl border border-cream/10 bg-ink-900/40"
-            >
-              <div className="relative aspect-[4/5]">
-                <Img
-                  src={s.heroImage}
-                  alt={s.name}
-                  seed={`style-${s.slug}`}
-                  label={s.name}
-                  fill
-                  className="object-cover object-[center_30%] transition duration-700 group-hover:scale-[1.04]"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-ink-950 via-ink-950/30 to-transparent" />
-              </div>
-              <div className="absolute inset-x-0 bottom-0 p-6">
-                <div className="flex items-center justify-between">
-                  <p className="display text-3xl font-bold text-cream">{s.name}</p>
-                  <RhythmSignature style={s.slug} width={120} className="opacity-0 group-hover:opacity-100 transition-opacity" />
-                </div>
-                <p className="mt-1 text-sm text-cream/70">{s.tagline}</p>
-                <p className="mt-4 inline-flex items-center text-ember-400 text-sm">
-                  {label(content.labels, 'ctaExplore')}
-                </p>
-              </div>
-            </Link>
-          ))}
-          </Reveal>
       </section>
 
       {/* Next batches strip */}

@@ -36,6 +36,12 @@ const KNOWN_UNWIRED: ReadonlySet<LabelKey> = new Set<LabelKey>([
   // would repeat the number already displayed as that row's value. Wiring it
   // is a copy decision for the owner, not a mechanical one.
   'welcomeCallPhone',
+  // Rendered only by the home page's six-card style gallery, which the owner
+  // cut on 2026-08-23 (the compact style-pill row that replaced it links by
+  // style NAME, and its trailing link is ctaAllStyles). The key stays editable
+  // because /dance-styles cards may want it back; delete it from the schema
+  // instead if that never happens.
+  'ctaExplore',
 ]);
 
 /**
