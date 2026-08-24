@@ -740,6 +740,11 @@ const BatchesPageSchema = z
         startsPrefix: z.string().default('starts'),
         /** Replaces "{startsPrefix} {date}" once the batch has started. */
         startedLine: z.string().default('started {date} — you can still join'),
+        // The board's labeled price flip, so the comparison page stops
+        // framing the ₹6,900 program fee as the cost of showing up.
+        trialPriceLine: z.string().default('First class {price}'),
+        fullProgramLine: z.string().default('Full program {price} — decide after class one.'),
+        fullProgramOnlyLine: z.string().default('Full program {price} — pay in full to register.'),
       })
       .default({}),
   })

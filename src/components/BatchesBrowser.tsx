@@ -7,7 +7,7 @@ import { compareByLevel } from '@/lib/batch-order';
 import { EnquiryCTA } from './EnquiryCTA';
 import { BatchActions } from './BatchActions';
 import { label, type Labels } from '@/lib/labels';
-import { statusLabel } from '@/lib/book-label';
+import { offersTrial, statusLabel } from '@/lib/book-label';
 
 export interface BatchRow {
   batch: Batch;
@@ -431,7 +431,7 @@ export function BatchesBrowser({
                       ) : null}
                     </p>
                   </div>
-                  <div className="lg:col-span-3">
+                  <div className="lg:col-span-2">
                     <p className="text-cream">{row.branchName}</p>
                     <p className="text-cream/60 text-sm">{row.neighborhood}</p>
                   </div>
@@ -443,10 +443,25 @@ export function BatchesBrowser({
                         : `${copy.startsPrefix} ${formatBatchDate(b.startDate)}`}
                     </p>
                   </div>
-                  <div className="lg:col-span-1">
-                    <p className="text-cream font-semibold">{formatInr(b.priceInr)}</p>
+                  <div className="lg:col-span-2">
+                    {offersTrial(b) ? (
+                      <>
+                        <p className="text-cream font-semibold">
+                          {copy.trialPriceLine.replace('{price}', formatInr(b.trialInr as number))}
+                        </p>
+                        <p className="text-cream/60 text-xs">
+                          {copy.fullProgramLine.replace('{price}', formatInr(b.priceInr))}
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-cream font-semibold">
+                        {copy.fullProgramOnlyLine.replace('{price}', formatInr(b.priceInr))}
+                      </p>
+                    )}
                     {typeof b.seatsLeft === 'number' ? (
-                      <p className="text-cream/60 text-xs">{copy.seatsTemplate.replace('{n}', String(b.seatsLeft))}</p>
+                      <p className="text-cream/60 text-xs">
+                        {copy.seatsTemplate.replace('{n}', String(b.seatsLeft))}
+                      </p>
                     ) : null}
                   </div>
                   <div className="lg:col-span-2 flex flex-wrap gap-2 justify-start lg:justify-end items-center">
