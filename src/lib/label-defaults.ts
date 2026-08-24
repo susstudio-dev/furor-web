@@ -49,6 +49,9 @@ export const LABEL_DEFAULT_LITERALS = {
   // {book} is filled with the batch's own booking verb (bookLabel), so the
   // WhatsApp fallback can never disagree with the paid button beside it.
   ctaBookOnWhatsapp: '{book} on WhatsApp',
+  // Shown instead of a payment button when a batch's seatsLeft is exactly 0 —
+  // a live buy button on a full room is a trust failure.
+  ctaSeatsFullWhatsapp: 'Full — WhatsApp for the next batch',
 
   // — Navigation —
   navHome: 'Home',

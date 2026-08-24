@@ -981,6 +981,7 @@ export const LabelsSchema = z
     ctaCall: z.string().default(L.ctaCall),
     ctaWhatsapp: z.string().default(L.ctaWhatsapp),
     ctaBookOnWhatsapp: z.string().default(L.ctaBookOnWhatsapp),
+    ctaSeatsFullWhatsapp: z.string().default(L.ctaSeatsFullWhatsapp),
 
     // — Navigation —
     navHome: z.string().default(L.navHome),

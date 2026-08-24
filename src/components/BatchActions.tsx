@@ -45,8 +45,11 @@ export function BatchActions({
   const book = bookLabel(batch, labels);
   const noLinkLabel = primaryLabelWhenNoLink ?? label(labels, 'ctaEnquireWhatsapp');
   const chatLabel = whatsappLabelWhenLink ?? label(labels, 'ctaChatFirst');
+  // seatsLeft === 0 is a full room: the paid button disappears and WhatsApp
+  // takes over — the studio can still offer the next batch in conversation.
+  const seatsFull = batch.seatsLeft === 0;
 
-  if (batch.razorpayLink) {
+  if (batch.razorpayLink && !seatsFull) {
     return (
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
         <BookTrialLink
@@ -76,7 +79,7 @@ export function BatchActions({
       whatsappNumber={whatsappNumber}
       ctx={ctx}
       variant="batch-row"
-      label={noLinkLabel}
+      label={seatsFull ? label(labels, 'ctaSeatsFullWhatsapp') : noLinkLabel}
       labels={labels}
       templates={templates}
     />

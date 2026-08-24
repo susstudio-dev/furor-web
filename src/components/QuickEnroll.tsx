@@ -227,7 +227,7 @@ export function QuickEnroll({
                       )}
 
                       <div className="relative mt-auto pt-4">
-                        {b.razorpayLink ? (
+                        {b.razorpayLink && b.seatsLeft !== 0 ? (
                           <>
                             <BookTrialLink
                               href={b.razorpayLink}
@@ -268,7 +268,11 @@ export function QuickEnroll({
                             variant="batch-row"
                             labels={content.labels}
                             templates={content.site.whatsappTemplates}
-                            label={label(content.labels, 'ctaBookOnWhatsapp').replace('{book}', book)}
+                            label={
+                              b.seatsLeft === 0
+                                ? label(content.labels, 'ctaSeatsFullWhatsapp')
+                                : label(content.labels, 'ctaBookOnWhatsapp').replace('{book}', book)
+                            }
                             className="w-full justify-center magnetic"
                           />
                         )}
