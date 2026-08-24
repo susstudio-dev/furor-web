@@ -239,7 +239,7 @@ export function SiteEditor({ initial }: { initial: SiteContent }) {
               <input value={c.tonight.when} onChange={(e) => patchTonight({ when: e.target.value })} className="input" />
             </Field>
             <div className="grid sm:grid-cols-2 gap-3">
-              <Field label="CTA label" hint="Default: WhatsApp to RSVP">
+              <Field label="CTA label" hint="Default: Say you’re coming">
                 <input value={c.tonight.ctaLabel} onChange={(e) => patchTonight({ ctaLabel: e.target.value })} className="input" />
               </Field>
               <Field label="WhatsApp message context" hint="Inserted into 'Hi Furor, I'd like to come to ___.'">

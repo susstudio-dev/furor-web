@@ -471,7 +471,7 @@ export function HomePageEditor({ initial }: { initial: SiteContent }) {
               />
             </Field>
           </div>
-          <Field label="Start date + price line" hint="Use {date} and {price}.">
+          <Field label="Start date line" hint="Use {date}. The price is shown separately, below.">
             <input
               value={h.styleFinder.startsTemplate}
               onChange={(e) => patchFinder({ startsTemplate: e.target.value })}

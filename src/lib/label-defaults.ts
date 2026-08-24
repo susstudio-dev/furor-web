@@ -39,7 +39,7 @@ export const LABEL_DEFAULT_LITERALS = {
   ctaEnquire: 'Enquire',
   ctaGrabSeatWhatsapp: 'Grab a seat on WhatsApp',
   ctaTalkToUs: 'Talk to us',
-  talkToUsHint: 'We answer in minutes during studio hours.',
+  ctaTalkToUsHint: 'We answer in minutes during studio hours.',
   ctaAllStyles: 'All styles',
   ctaExplore: 'Explore →',
   ctaGetDirections: 'Get directions',

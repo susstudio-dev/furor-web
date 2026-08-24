@@ -7,7 +7,7 @@ import { formatBatchDate, formatInr, todayIso } from '@/lib/format';
 import { EnquiryCTA } from './EnquiryCTA';
 import { label } from '@/lib/labels';
 import { BookTrialLink } from './BookTrialLink';
-import { bookLabel, bookPriceInr } from '@/lib/book-label';
+import { bookLabel, bookPriceInr, offersTrial } from '@/lib/book-label';
 
 // Beginners have exactly two tracks, split by when they run:
 //   • Weekend mornings → Latin (Salsa + Bachata)
@@ -49,17 +49,30 @@ const TRACKS: Track[] = [
   },
 ];
 
-// Always returns a Foundation batch (or undefined) for the track. Prefers a
-// weekend batch in the track's time-of-day, then any weekend Foundation batch,
-// then any Foundation batch of that style. Never returns Intermediate/Advanced.
-function findFoundationBatch(content: SiteContent, track: Track): Batch | undefined {
-  const pool = visibleBatches(content).filter(
-    (b) => b.level === 'Foundation' && b.styleSlugs.some((s) => track.styleSlugs.includes(s)),
-  );
+// Applies the weekend/time-of-day preference within one pool of Foundation
+// batches: a weekend batch in the track's time-of-day, then any weekend
+// Foundation batch, then any Foundation batch of that style.
+function pickPreferred(pool: Batch[], track: Track): Batch | undefined {
   const isWeekend = (b: Batch) => b.daysOfWeek.some((d) => d === 'Sat' || d === 'Sun');
   const matchesTod = (b: Batch) => (track.tod === 'AM' ? /am/i.test(b.time) : /pm/i.test(b.time));
   const weekend = pool.filter(isWeekend);
   return weekend.find(matchesTod) ?? weekend[0] ?? pool.find(matchesTod) ?? pool[0];
+}
+
+// Always returns a Foundation batch (or undefined) for the track. Never
+// returns Intermediate/Advanced.
+function findFoundationBatch(content: SiteContent, track: Track): Batch | undefined {
+  const pool = visibleBatches(content).filter(
+    (b) => b.level === 'Foundation' && b.styleSlugs.some((s) => track.styleSlugs.includes(s)),
+  );
+  const today = todayIso();
+  // A batch that already started (but is still inside its join-grace window)
+  // is the option hardest to join — a beginner should be pointed at it only
+  // when nothing upcoming exists for this track. Apply the same
+  // weekend/time-of-day preference within each group.
+  const notStarted = pool.filter((b) => b.startDate >= today);
+  const started = pool.filter((b) => b.startDate < today);
+  return pickPreferred(notStarted, track) ?? pickPreferred(started, track);
 }
 
 export function StyleFinder({ content }: { content: SiteContent }) {
@@ -75,6 +88,9 @@ export function StyleFinder({ content }: { content: SiteContent }) {
 
   const reset = () => setTrack(null);
   const f = content.pages.home.styleFinder;
+  // The board's own labeled price templates, reused here rather than
+  // restated — see the price block below.
+  const board = content.pages.home.board;
   const today = todayIso();
 
   return (
@@ -123,10 +139,32 @@ export function StyleFinder({ content }: { content: SiteContent }) {
                   {recommendedBatch.time}
                 </p>
                 <p className="text-cream/70 text-sm">
-                  {(recommendedBatch.startDate < today ? f.startedTemplate : f.startsTemplate)
-                    .replace('{date}', formatBatchDate(recommendedBatch.startDate))
-                    .replace('{price}', formatInr(recommendedBatch.priceInr))}
+                  {(recommendedBatch.startDate < today ? f.startedTemplate : f.startsTemplate).replace(
+                    '{date}',
+                    formatBatchDate(recommendedBatch.startDate),
+                  )}
                 </p>
+                {/* The board's labeled price flip, reused rather than restated,
+                    so this card never shows an unlabeled full-program figure
+                    directly above a differently-priced booking button — the
+                    same defect Task 14 fixed on /batches. */}
+                {offersTrial(recommendedBatch) ? (
+                  <>
+                    <p className="mt-2 text-cream font-semibold">
+                      {board.trialPrice.replace(
+                        '{price}',
+                        formatInr(recommendedBatch.trialInr as number),
+                      )}
+                    </p>
+                    <p className="text-cream/60 text-xs">
+                      {board.fullProgram.replace('{price}', formatInr(recommendedBatch.priceInr))}
+                    </p>
+                  </>
+                ) : (
+                  <p className="mt-2 text-cream font-semibold">
+                    {board.fullProgramOnly.replace('{price}', formatInr(recommendedBatch.priceInr))}
+                  </p>
+                )}
               </div>
             ) : (
               <p className="mt-4 text-cream/70">

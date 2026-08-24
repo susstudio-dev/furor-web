@@ -59,7 +59,7 @@ export function FloatingTalkToUs({
             <p className="display text-sm uppercase tracking-widest text-cream/60">
               {label(labels, 'ctaTalkToUs')}
             </p>
-            <p className="mt-1 text-cream/90 text-sm">{label(labels, 'talkToUsHint')}</p>
+            <p className="mt-1 text-cream/90 text-sm">{label(labels, 'ctaTalkToUsHint')}</p>
             <div className="mt-4 grid gap-2">
               <EnquiryCTA
                 whatsappNumber={whatsappNumber}

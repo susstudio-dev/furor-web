@@ -256,7 +256,7 @@ describe('pages.home visit-us, next-batches and Why Furor', () => {
     expect(h().visitUs.callTemplate).toBe('Call {phone}');
     expect(h().visitUs.mapTitle).toBe('Map to {studio}');
     expect(h().visitUs.photoAlt).toBe('Inside {studio}');
-    expect(h().nextBatches.starts).toBe('Starts {date} · {price}');
+    expect(h().nextBatches.starts).toBe('Starts {date}');
     expect(h().nextBatches.seatsLeft).toBe('{n} seats left');
     expect(h().nextBatches.combinedSuffix).toBe(' · taught together');
   });
@@ -278,7 +278,8 @@ describe('pages.home.styleFinder', () => {
     expect(f().question).toBe('When can you make it?');
     expect(f().recommendEyebrow).toBe('We recommend');
     expect(f().nextBatchLabel).toBe('Next beginner batch');
-    expect(f().startsTemplate).toBe('Starts {date} · {price}');
+    expect(f().startsTemplate).toBe('Starts {date}');
+    expect(f().startedTemplate).toBe('Started {date}');
   });
 
   it('ships the lead exactly as it renders', () => {

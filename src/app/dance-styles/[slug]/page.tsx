@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { getPublicContent, batchesForStyle, formatBatchDate, formatInr, styleBySlug, batchStyleLabel } from '@/lib/content';
+import { getPublicContent, batchesForStyle, formatBatchDate, formatInr, styleBySlug, batchStyleLabel, todayIso } from '@/lib/content';
 import { EnquiryCTA } from '@/components/EnquiryCTA';
 import { BatchActions } from '@/components/BatchActions';
 import { statusLabel } from '@/lib/book-label';
@@ -36,6 +36,13 @@ export default async function StylePage({ params }: { params: Promise<{ slug: st
   const style = styleBySlug(content, slug);
   if (!style) notFound();
   const batches = batchesForStyle(content, style.slug);
+  // batchesForStyle draws from visibleBatches(), which now includes started
+  // batches still inside their join-grace window (content-helpers.ts) — so a
+  // bare "starts {date}" here can print a past date beside a live booking
+  // button. Reuse the /batches row copy (pages.batches.browser) rather than
+  // invent a second hardcoded string for the same started-vs-starts fact.
+  const today = todayIso();
+  const batchesCopy = content.pages.batches.browser;
 
   const faqLd = {
     '@context': 'https://schema.org',
@@ -156,7 +163,10 @@ export default async function StylePage({ params }: { params: Promise<{ slug: st
                       {combined ? `${batchStyleLabel(content, b.styleSlugs)} · ` : ''}{b.level} · {branch.name}
                     </p>
                     <p className="text-cream/70 text-sm">
-                      {b.daysOfWeek.join('–')} · {b.time} · starts {formatBatchDate(b.startDate)}
+                      {b.daysOfWeek.join('–')} · {b.time} ·{' '}
+                      {b.startDate < today
+                        ? batchesCopy.startedLine.replace('{date}', formatBatchDate(b.startDate))
+                        : `${batchesCopy.startsPrefix} ${formatBatchDate(b.startDate)}`}
                     </p>
                     <p className="text-cream/70 text-sm">{formatInr(b.priceInr)} {b.status === 'Filling Fast' ? <span className="pill ml-2 bg-gold-500/15 text-gold-400">{statusLabel(b.status, content.labels)}</span> : null}</p>
                   </div>

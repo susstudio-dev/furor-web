@@ -26,12 +26,21 @@ already applies to fresh installs, so production matches.
    Razorpay page. The site promises "No forms".
 5. **Sanity-check seats.** `seatsLeft: 20` with status "Filling Fast" reads
    as a lie. Set real numbers or clear the field to hide the count.
+6. **Keep the weekly stat current.** The home page's La Rumba band now
+   publicly shows "{n} dancing with us this week" from Site → "Students this
+   week" — the first public render of that number. It only changes when you
+   edit it in /admin/site, so update it weekly or it will read as stale.
+   Blank the field (or clear the statTemplate line in Pages → Home if you
+   want the whole line gone) to hide it entirely.
 
 ## Copy updates to apply on production /admin
 
 The code update carries these for fresh content; production stores its own
 copy, so apply them once in /admin (Pages → FAQs / Home / About / Legal,
-Site → Tonight, Instructors, Labels):
+Site → Tonight, Instructors, Labels). Not listed below: the Stories page
+eyebrow and the Labels → navBlog item both said "Blog" and now upgrade to
+"Stories" automatically the next time anyone saves in /admin — no manual
+edit needed for those two.
 
 - FAQs: add first question "Can I try one class before committing?" (₹500,
   one real class, ends with "tap Book my first class / WhatsApp us").
@@ -47,7 +56,6 @@ Site → Tonight, Instructors, Labels):
   sentence. Bachata foundation outcome: replace "booty vibe" line.
 - Tonight chip button: "WhatsApp to RSVP" → "Say you're coming" (entry is at
   the venue; no pre-booking).
-- Stories page eyebrow "Blog" → "Stories"; Labels → navBlog → "Stories".
 - Terms headline "Terms & Services" → "Terms of Service"; Terms wording:
   prefer "first class" over "trial class" anywhere it survives.
 - Privacy "what we collect": drop "our website forms" (there are no forms).

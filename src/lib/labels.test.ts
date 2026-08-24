@@ -71,6 +71,24 @@ describe('LABEL_DEFAULTS', () => {
   it('is derived from the schema, so it can never drift from it', () => {
     expect(LABEL_DEFAULTS).toEqual(labels());
   });
+
+  // src/app/admin/labels/LabelsEditor.tsx renders label inputs by filtering
+  // ALL_KEYS against exactly these six group prefixes (its GROUPS array) — a
+  // key that matches none of them gets no input box, so the owner can never
+  // see or edit it, and the "N of N labels" counter silently over-reports.
+  // That is exactly how `talkToUsHint` shipped invisible: it read as a CTA
+  // key by convention but didn't start with "cta". Pin the invariant here so
+  // the next orphaned key fails a test instead of shipping unwired.
+  it('every key starts with one of the six prefixes LabelsEditor groups by', () => {
+    const prefixes = ['cta', 'nav', 'empty', 'badge', 'aria', 'welcome'];
+    for (const key of Object.keys(LABEL_DEFAULTS)) {
+      expect(
+        prefixes.some((p) => key.startsWith(p)),
+        `labels.${key} matches no admin group prefix (${prefixes.join(', ')}) — LabelsEditor.tsx ` +
+          `will render no input for it and the "N of N labels" counter will lie.`,
+      ).toBe(true);
+    }
+  });
 });
 
 describe('label', () => {

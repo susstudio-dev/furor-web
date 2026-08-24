@@ -463,7 +463,16 @@ const HomePageSchema = z
       .object({
         eyebrow: z.string().default(''),
         headline: z.string().default(''),
-        starts: z.string().default('Starts {date} · {price}'),
+        // 'Starts {date} · {price}' is a RETIRED_COPY key below (it upgrades
+        // pages.home.styleFinder.startsTemplate) — a retired string can never
+        // remain some OTHER field's live default, or upgradeRetiredCopy would
+        // keep rewriting a freshly-defaulted value on every round trip
+        // (upgrade runs BEFORE zod fills in defaults, so a field that still
+        // defaults to the retired string arrives untouched on first parse,
+        // then gets rewritten the next time the same value is fed back in —
+        // non-idempotent). This field is unrendered (see comment above), so
+        // dropping the price segment costs nothing.
+        starts: z.string().default('Starts {date}'),
         /** Renders inside a .pill — keep it short. */
         seatsLeft: z.string().default('{n} seats left'),
         /** Appended after the studio name when one batch teaches two styles. */
@@ -546,8 +555,13 @@ const HomePageSchema = z
         question: z.string().default('When can you make it?'),
         recommendEyebrow: z.string().default('We recommend'),
         nextBatchLabel: z.string().default('Next beginner batch'),
-        startsTemplate: z.string().default('Starts {date} · {price}'),
-        startedTemplate: z.string().default('Started {date} · {price}'),
+        // Date only — no {price}. The result card now carries its price as
+        // the board's own labeled flip (trialPrice/fullProgram/fullProgramOnly,
+        // just below) instead of an unlabeled full-program figure bolted onto
+        // this line, which used to sit directly above a differently-priced
+        // booking button (the same defect Task 14 fixed on /batches).
+        startsTemplate: z.string().default('Starts {date}'),
+        startedTemplate: z.string().default('Started {date}'),
       })
       .default({}),
     /** The eyebrow above the Why Furor block. Its headline and points already
@@ -1017,7 +1031,7 @@ export const LabelsSchema = z
     ctaEnquire: z.string().default(L.ctaEnquire),
     ctaGrabSeatWhatsapp: z.string().default(L.ctaGrabSeatWhatsapp),
     ctaTalkToUs: z.string().default(L.ctaTalkToUs),
-    talkToUsHint: z.string().default(L.talkToUsHint),
+    ctaTalkToUsHint: z.string().default(L.ctaTalkToUsHint),
     ctaAllStyles: z.string().default(L.ctaAllStyles),
     ctaExplore: z.string().default(L.ctaExplore),
     ctaGetDirections: z.string().default(L.ctaGetDirections),
@@ -1133,6 +1147,20 @@ const RETIRED_COPY = new Map<string, string>([
   ["WhatsApp to RSVP", "Say you’re coming"],
   // welcome.signoffHeadline — the page addresses one person, not a crowd.
   ["See you all in class! 💃🕺", "See you in class! 💃🕺"],
+  // pages.home.styleFinder.startsTemplate — price moved out of this line
+  // into the board's own labeled price flip (trialPrice/fullProgram), so an
+  // unlabeled full-program figure no longer sits directly above the finder's
+  // differently-priced booking button. This entry intentionally covers TWO
+  // fields that shipped with this exact string: styleFinder.startsTemplate
+  // above, and the retired, unrendered pages.home.nextBatches.starts (see its
+  // own comment) — both had to move off this literal so neither remains a
+  // live default the migration would keep rewriting.
+  ["Starts {date} · {price}", "Starts {date}"],
+  // labels.navBlog and pages.stories.intro.eyebrow — the only two whole-string
+  // "Blog" leaves in the document. "Stories" is what the page is actually
+  // called everywhere else on the site; the nav item and the page's own
+  // eyebrow were the last two places still saying "Blog".
+  ["Blog", "Stories"],
 ]);
 
 /**
