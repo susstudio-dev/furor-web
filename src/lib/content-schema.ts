@@ -114,7 +114,7 @@ export const TonightSchema = z
     headline: z.string().default(''),
     body: z.string().default(''),
     when: z.string().default(''),
-    ctaLabel: z.string().default('WhatsApp to RSVP'),
+    ctaLabel: z.string().default('Say you’re coming'),
     ctaContext: z.string().default(''),
     // Structured facts for the schema.org Event node. `when` above stays the
     // human sentence shown on the tile; these are what a search engine needs.
@@ -888,7 +888,7 @@ const WelcomeSchema = z
         'A personal water bottle / sipper — refill at the studio',
       ]),
     // Sign-off block
-    signoffHeadline: z.string().default('See you all in class! 💃🕺'),
+    signoffHeadline: z.string().default('See you in class! 💃🕺'),
     signoffBody: z
       .string()
       .default('Any questions before then? Just message us on WhatsApp — we reply fast.'),
@@ -1129,6 +1129,10 @@ const RETIRED_COPY = new Map<string, string>([
   // suppresses sends; the visitor has to be happy putting these words in
   // their own mouth.
   ["Hi Furor, the style finder suggested {style} {level}{where} for me. Please tell me about the next batch.", "Hi Furor! {style} {level}{where} looks right for me. When does the next batch start?"],
+  // tonight.ctaLabel — "RSVP" contradicted the FAQ's "no pre-booking needed".
+  ["WhatsApp to RSVP", "Say you’re coming"],
+  // welcome.signoffHeadline — the page addresses one person, not a crowd.
+  ["See you all in class! 💃🕺", "See you in class! 💃🕺"],
 ]);
 
 /**
@@ -1178,7 +1182,7 @@ export const SiteContentObjectSchema = z.object({
     headline: '',
     body: '',
     when: '',
-    ctaLabel: 'WhatsApp to RSVP',
+    ctaLabel: 'Say you’re coming',
     ctaContext: '',
   }),
   trial: TrialSchema.default({

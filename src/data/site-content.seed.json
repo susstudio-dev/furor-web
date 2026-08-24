@@ -29,7 +29,7 @@
     "headline": "La Rumba · Latin Social",
     "body": "Hyderabad's weekly Latin social at Over the Moon Brew Co, Gachibowli. All levels welcome. Entry at the Venue.",
     "when": "Every Saturday · 7 PM",
-    "ctaLabel": "WhatsApp to RSVP",
+    "ctaLabel": "Say you’re coming",
     "ctaContext": "the La Rumba Latin social Saturday at Gachibowli",
     "venueName": "Over the Moon Brew Co",
     "venueStreet": "",
@@ -73,7 +73,7 @@
       "slug": "salsa",
       "name": "Salsa",
       "tagline": "The original Latin classic — fast, playful, infinitely connecting.",
-      "description": "Salsa is the heartbeat of Latin dance — a partner dance born of Cuban Son, Mambo and Puerto Rican rhythms. We teach foundation On1 style as well as the New York On2, in addition to Afro Rumba, Cha-Cha, Boogaloo, Son/Palladium/Classic On2, and Pachanga, building from the ground up so leading and following feel natural rather than memorised.",
+      "description": "Salsa is the heartbeat of Latin dance — a partner dance born of Cuban Son, Mambo and Puerto Rican rhythms. We build you up from zero, so leading and following feel natural rather than memorised. As you grow, the deeper styles open up: foundation On1 and New York On2, plus Afro Rumba, Cha-Cha, Boogaloo, Son/Palladium/Classic On2, and Pachanga.",
       "whoItsFor": "If you've never partner-danced before and want one dance that opens every social floor in the world — this is it.",
       "heroImage": "/photos/DSC09730.jpg",
       "heroVideo": "",
@@ -89,7 +89,7 @@
         },
         {
           "q": "What should I wear?",
-          "a": "Anything you can move in for attire. Smooth-soled shoes if you have them for the social floor — we don't sell anything. In the classroom, in-studio, we recommend fresh socks for beginners to start out with."
+          "a": "Anything you can move in. In the studio we recommend fresh socks for beginners — you turn more easily. For the socials, smooth-soled shoes help but aren’t required; avoid sticky rubber soles if you can."
         },
         {
           "q": "How fit do I need to be?",
@@ -108,7 +108,7 @@
       "heroImage": "/photos/DSC09698.jpg",
       "heroVideo": "",
       "levelOutcomes": {
-        "foundation": "Basic step, side basic, simple turns and the iconic Bachata booty vibe. Enough to dance every song at the social.",
+        "foundation": "Basic step, side basic, simple turns and the body movement that makes Bachata unmistakable. Enough to dance every song at the social.",
         "intermediate": "Modern combinations, More complex lead/follow techniques, partner connection drills.",
         "advanced": "Musicality, different kinds of turns, body movement and isolations, and the freedom to interpret a song as you hear it."
       },
@@ -288,6 +288,7 @@
       "startDate": "2026-07-04",
       "priceInr": 4700,
       "reservationInr": 500,
+      "trialInr": null,
       "seatsLeft": 20,
       "status": "Open",
       "razorpayLink": "https://forms.gle/FD9Ds1jsRKPPxx5G7"
@@ -307,6 +308,7 @@
       "startDate": "2026-07-18",
       "priceInr": 6900,
       "reservationInr": 500,
+      "trialInr": null,
       "seatsLeft": 18,
       "status": "Open",
       "razorpayLink": "https://pages.razorpay.com/BachataL2July2026"
@@ -337,7 +339,7 @@
       "name": "Mitali Sharma",
       "photo": "/uploads/38ceffc6-7c00-42e0-bec4-ae90c32497c1.png",
       "role": "Resident Instructor — Hyderabad",
-      "shortBio": "Mitali Sharma was a Corporate Senior Manager who transitioned into a full-time career in dance. During her corporate career, she led and trained teams across global markets, developing strong expertise in leadership, structured training, and team building. This foundation naturally translates into her dance instruction, where she emphasizes discipline, clarity, progression, and a supportive learning environment.\n\nShe is currently a full-time dancer and instructor at Furor Hyderabad, the oldest and one of the most respected Latin dance schools in Hyderabad and in India. Her Latin dance journey began with Furor and later expanded into seven years of intensive training in the United States.\n\nShe trained full-time under internationally acclaimed instructors including Rishikesh Chhabra, Alex Diaz, David Princess, Mariela, Sara Sandoval, and Camilo Forero. I have also been a member of their advanced competition teams, achieving placements at prestigious events such as the Las Vegas Super Congress, Battle of the Next Gen (Miami), Pune International Dance Congress (PIDC), and India International Dance Congress (IIDC).\n\nWith over 13 years of comprehensive Latin dance training and competitive experience, she brings both technical depth and performance excellence to her work with students and the team. Over the years, she has earned multiple titles and recognitions. Her goal is to continue contributing meaningfully to the Latin dance community by developing stronger, more confident and technically refined dancers. \n\nIn addition to her role with Furor, Mitali is the creative force and owner behind Fae Dance Studio - a dance and fitness studio in Sainikpuri, Hyderabad.",
+      "shortBio": "Mitali Sharma was a Corporate Senior Manager who transitioned into a full-time career in dance. During her corporate career, she led and trained teams across global markets, developing strong expertise in leadership, structured training, and team building. This foundation naturally translates into her dance instruction, where she emphasizes discipline, clarity, progression, and a supportive learning environment.\n\nShe is currently a full-time dancer and instructor at Furor Hyderabad, the oldest and one of the most respected Latin dance schools in Hyderabad and in India. Her Latin dance journey began with Furor and later expanded into seven years of intensive training in the United States.\n\nShe trained full-time under internationally acclaimed instructors including Rishikesh Chhabra, Alex Diaz, David Princess, Mariela, Sara Sandoval, and Camilo Forero. She has also been a member of their advanced competition teams, achieving placements at prestigious events such as the Las Vegas Super Congress, Battle of the Next Gen (Miami), Pune International Dance Congress (PIDC), and India International Dance Congress (IIDC).\n\nWith over 13 years of comprehensive Latin dance training and competitive experience, she brings both technical depth and performance excellence to her work with students and the team. Over the years, she has earned multiple titles and recognitions. Her goal is to continue contributing meaningfully to the Latin dance community by developing stronger, more confident and technically refined dancers. \n\nIn addition to her role with Furor, Mitali is the creative force and owner behind Fae Dance Studio - a dance and fitness studio in Sainikpuri, Hyderabad.",
       "branchSlugs": [
         "jubilee-hills",
         "pup-unleash-huda-colony"
@@ -425,7 +427,7 @@
       "name": "Venkat K",
       "photo": "/uploads/5c036ae5-d9c2-48e0-9001-4c8e5f00945f.jpg",
       "role": "Team — Hyderabad",
-      "shortBio": "Salsa, Bachata, and West Coast Swing Enthusiast. Software Engineer and Yoga Practitioner. Exploring balance through movement, rhythm, and awareness.\n\nIn his own words \"I began his salsa journey at Furor in late 2022 and have been fortunate to learn under the guidance of Rish, whose passion for Latin dance and emphasis on strong foundations and technique have greatly influenced my growth as a dancer. I am excited to be part of Team Hyderabad, continuing my journey of learning, sharing, and inspiring others through dance.\"",
+      "shortBio": "Salsa, Bachata, and West Coast Swing Enthusiast. Software Engineer and Yoga Practitioner. Exploring balance through movement, rhythm, and awareness.\n\nIn his own words: \"I began my salsa journey at Furor in late 2022 and have been fortunate to learn under the guidance of Rish, whose passion for Latin dance and emphasis on strong foundations and technique have greatly influenced my growth as a dancer. I am excited to be part of Team Hyderabad, continuing my journey of learning, sharing, and inspiring others through dance.\"",
       "branchSlugs": [
         "pup-unleash-huda-colony"
       ],
@@ -443,7 +445,7 @@
       "name": "DJ Ravi Kiran",
       "photo": "/uploads/3484ba1a-f1dc-482f-bc49-9d1c648f017d.jpg",
       "role": "Resident DJ — Hyderabad",
-      "shortBio": "DJ Ravi | International DJ (Asia)\nWinner – War of DJs, All India DJ Competition 2025\nWith over 8 years of experience, DJ Ravi has established himself as one of Asia's premier Latin DJs, specializing in Salsa, Bachata, and Kizomba. His deep command of each genre — and the sub-genres within them — allows him to craft seamless, immersive sets that keep dancers moving from the first beat to the last.\nWhat sets DJ Ravi apart is his consistency. Whether headlining weekly socials, guest DJing across India, Vietnam, and Thailand, or commanding the stage at festivals and congresses, he delivers the same hallmark experience: impeccable song selection, masterful transitions, and a dance floor energy that's impossible to ignore.\nHis credentials speak for themselves — crowned winner at the prestigious War of DJs, an all-India competition held in Goa that brought together the country's top talent.",
+      "shortBio": "DJ Ravi | International DJ (Asia)\n\nWinner — War of DJs, the all-India DJ competition held in Goa in 2025 that brought together the country's top talent.\n\nWith over 8 years of experience, DJ Ravi has established himself as one of Asia's premier Latin DJs, specializing in Salsa, Bachata, and Kizomba. His deep command of each genre — and the sub-genres within them — lets him craft seamless, immersive sets that keep dancers moving from the first beat to the last.\n\nWhat sets DJ Ravi apart is his consistency. Whether headlining weekly socials, guest DJing across India, Vietnam and Thailand, or commanding the stage at festivals and congresses, he delivers the same hallmark experience: impeccable song selection, masterful transitions, and a dance-floor energy that’s impossible to ignore.",
       "branchSlugs": [],
       "styleSlugs": [
         "salsa",
@@ -606,8 +608,8 @@
             "body": "Beginner Latin covers Salsa or Bachata. West Coast Swing for the latest Pop hits. Tell us what catches your ear — morning or evening batches both run."
           },
           {
-            "title": "Register on WhatsApp",
-            "body": "Block your seat with a small token. We send dates, the studio address and what to bring — all on WhatsApp."
+            "title": "Book your first class — ₹500",
+            "body": "One real class, no package — ₹500 holds your seat. Book right here on the site, or WhatsApp us and we’ll do it together. We send dates, the studio address and what to bring."
           },
           {
             "title": "Show up and dance",
@@ -627,7 +629,7 @@
     "about": {
       "intro": {
         "eyebrow": "About",
-        "headline": "Sixteen years. Five cities. One love letter to dance",
+        "headline": "Sixteen years. Five cities. One love letter to dance.",
         "lead": ""
       },
       "introParagraphs": [
@@ -759,23 +761,27 @@
       "intro": {
         "eyebrow": "FAQs",
         "headline": "The questions we hear most.",
-        "lead": "Anything missing? WhatsApp us and we'll answer in minutes."
+        "lead": "Anything missing? WhatsApp us — we answer fast, usually within minutes during studio hours."
       },
       "sections": [
         {
           "section": "Getting started",
           "items": [
             {
+              "q": "Can I try one class before committing?",
+              "a": "Yes — that’s exactly how most people start. ₹500 books one real class in any Foundation batch: no package, no sign-up, and you dance the actual syllabus, not a demo. If it clicks, you decide on the full program after. Tap any ‘Book my first class’ button to grab your spot, or WhatsApp us and we’ll help you pick a batch."
+            },
+            {
               "q": "I have never danced before. Can I still join?",
               "a": "Yes. Most of our students walk in having never partner-danced before. Our Foundation track is built for absolute beginners — we teach you the basic step, the connection, and the social etiquette from scratch."
             },
             {
               "q": "Do I need a partner to join?",
-              "a": "No. We rotate partners in class — it is the fastest way to learn and also how social dancing works. You will dance with leaders and followers of every level."
+              "a": "No. We rotate partners in class — it’s the fastest way to learn and how social dancing works. Every partner dance has two roles: one person leads (suggests each move) and one follows. We teach you yours from step one, and you’ll dance with everyone in the room."
             },
             {
               "q": "What should I wear to class?",
-              "a": "Anything comfortable that lets you move. For the parties Smooth-soled shoes help (you turn easier) but they are not required for your first class - for the studio we recommend fresh socks. Avoid sticky rubber soles if you can."
+              "a": "Anything comfortable that lets you move. In the studio we recommend fresh socks for beginners. For the socials, smooth-soled shoes help (you turn more easily) but they’re not required — avoid sticky rubber soles if you can."
             },
             {
               "q": "How fit do I need to be?",
@@ -792,7 +798,7 @@
             },
             {
               "q": "What does it cost?",
-              "a": "Foundation Salsa and Bachata are ₹6,900 for the full 2-month batch (20 hours). Intermediate courses are ₹4,700 - monthly (16 hours). Pricing is per person, not per couple."
+              "a": "Foundation Salsa and Bachata are ₹6,900 for the full 2-month batch (20 hours). Intermediate courses are ₹4,700 monthly (16 hours). Pricing is per person, not per couple — and your first class is just ₹500, so you can meet the room before committing."
             },
             {
               "q": "What if I miss a class?",
@@ -800,7 +806,7 @@
             },
             {
               "q": "Where are batches held?",
-              "a": "All Furor Hyderabad Latin beginner batches are at our Jubilee Hills studio — 2nd Floor, Alcazar Mall, Road No. 36, Jubilee Hills, Hyderabad 500033. West Coast Swing beginners are at PUP - also in Jubilee Hills."
+              "a": "We dance at two Hyderabad venues — Jubilee Hills (2nd Floor, Alcazar Mall, Road No. 36) and PUP Unleash, HUDA Colony. Every batch card names its venue, and your booking confirmation includes the exact address and a map link."
             }
           ]
         },
@@ -828,7 +834,7 @@
       ],
       "closingCta": {
         "headline": "Still have questions?",
-        "body": "WhatsApp is the fastest way to reach us — we answer in minutes."
+        "body": "WhatsApp is the fastest way to reach us — we answer fast during studio hours."
       }
     },
     "contact": {
@@ -867,7 +873,7 @@
     },
     "stories": {
       "intro": {
-        "eyebrow": "Blog",
+        "eyebrow": "Stories",
         "headline": "From the studio.",
         "lead": "Festivals, socials, bootcamps and the everyday inside Furor Hyderabad."
       }
@@ -896,7 +902,7 @@
       "sections": [
         {
           "heading": "What we collect",
-          "body": "When you contact us — through our website forms, WhatsApp, Instagram, email or in person — we collect the information you choose to share with us. Typically that is your name, phone number, and the class or batch you are interested in."
+          "body": "When you contact us — on WhatsApp, Instagram, email or in person — we collect the information you choose to share with us. Typically that is your name, phone number, and the class or batch you are interested in."
         },
         {
           "heading": "How we use it",
@@ -923,8 +929,8 @@
     "terms": {
       "intro": {
         "eyebrow": "Legal",
-        "headline": "Terms & Services",
-        "lead": "Furor in Hyderabad is managed by VASISHTHA ENTERPRISES "
+        "headline": "Terms of Service",
+        "lead": "Furor in Hyderabad is managed by VASISHTHA ENTERPRISES"
       },
       "lastUpdated": "14 May 2026",
       "sections": [
@@ -1054,7 +1060,7 @@
       "Fresh socks (for footwear)",
       "A personal water bottle / sipper — refill at the studio"
     ],
-    "signoffHeadline": "See you all in class! 💃🕺",
+    "signoffHeadline": "See you in class! 💃🕺",
     "signoffBody": "Any questions before then? Just message us on WhatsApp — we reply fast.",
     "signoffName": "Cheers, Rish",
     "signoffTagline": "Furor Hyderabad · Dance for Life",

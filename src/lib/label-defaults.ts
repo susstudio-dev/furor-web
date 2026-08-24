@@ -58,7 +58,7 @@ export const LABEL_DEFAULT_LITERALS = {
   navDanceStyles: 'Dance Styles',
   navInstructors: 'Instructors',
   navBatches: 'Batches & Pricing',
-  navBlog: 'Blog',
+  navBlog: 'Stories',
   navFaqs: 'FAQs',
   navContact: 'Contact',
   navExplore: 'Explore',

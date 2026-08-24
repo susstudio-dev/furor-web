@@ -39,7 +39,7 @@ describe('navLabel', () => {
   it('renders the shipped copy by default', () => {
     expect(navLabel(byId('dance-styles'), labels())).toBe('Dance Styles');
     expect(navLabel(byId('batches'), labels())).toBe('Batches & Pricing');
-    expect(navLabel(byId('blog'), labels())).toBe('Blog');
+    expect(navLabel(byId('blog'), labels())).toBe('Stories');
   });
 
   it('renders the edited copy', () => {

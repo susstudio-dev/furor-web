@@ -46,7 +46,7 @@ describe('LabelsSchema', () => {
     expect(l.navHome).toBe('Home');
     expect(l.navDanceStyles).toBe('Dance Styles');
     expect(l.navBatches).toBe('Batches & Pricing');
-    expect(l.navBlog).toBe('Blog');
+    expect(l.navBlog).toBe('Stories');
     expect(l.navExplore).toBe('Explore');
   });
 

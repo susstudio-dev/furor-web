@@ -77,7 +77,7 @@ export function TonightFloat({ content }: { content: SiteContent }) {
             variant="batch-row"
             labels={content.labels}
             templates={content.site.whatsappTemplates}
-            label={t.ctaLabel || 'WhatsApp to RSVP'}
+            label={t.ctaLabel || 'Say you’re coming'}
           />
         </div>
       </div>
