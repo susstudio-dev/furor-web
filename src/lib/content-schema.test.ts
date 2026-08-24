@@ -395,3 +395,12 @@ describe('pages.home.rumba defaults', () => {
     expect(home.rumba.statTemplate).toContain('{n}');
   });
 });
+
+describe('welcome La Rumba invite defaults', () => {
+  it('ships heading and body with live-fact placeholders', () => {
+    const w = SiteContentObjectSchema.shape.welcome.parse(undefined);
+    expect(w.rumbaHeading).toBe('Your first La Rumba');
+    expect(w.rumbaBody).toContain('{when}');
+    expect(w.rumbaBody).toContain('{venue}');
+  });
+});

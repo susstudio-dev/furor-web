@@ -889,6 +889,14 @@ const WelcomeSchema = z
       .default('Any questions before then? Just message us on WhatsApp — we reply fast.'),
     signoffName: z.string().default('Cheers, Rish'),
     signoffTagline: z.string().default('Furor Hyderabad · Dance for Life'),
+    // The social offered at the moment of maximum enthusiasm — the product
+    // principle "the social is the product" finally reaches the funnel's
+    // peak-end. {when} and {venue} fill from `tonight` at render time; the
+    // block is skipped entirely when the social is unconfigured.
+    rumbaHeading: z.string().default('Your first La Rumba'),
+    rumbaBody: z.string().default(
+      'Class is one half — the social is the other. La Rumba runs {when} at {venue}, entry at the venue. Come watch this Saturday; by the end of your batch you\'ll be dancing it.',
+    ),
     // Payment-not-confirmed state
     unconfirmedBadge: z.string().default('Payment not confirmed'),
     unconfirmedHeadline: z.string().default('We couldn’t confirm your payment yet'),

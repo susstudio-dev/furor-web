@@ -53,6 +53,9 @@ interface Props {
   /** Decided server-side from the redirect params (welcome-confirm.ts), so a
    *  failed payment never flashes the confirmation hero. */
   paymentState: WelcomeState;
+  /** The weekly social's live facts, or null when unconfigured — the invite
+   *  block renders only with real day/venue words to fill its template. */
+  tonight: { headline: string; when: string; venueName: string } | null;
 }
 
 // Renders an admin-editable copy template, replacing {placeholders} with live
@@ -95,6 +98,7 @@ export function WelcomeView({
   bundle,
   pinMissed,
   paymentState,
+  tonight,
 }: Props) {
   // Both decisions — which batch, and whether the payment is confirmed —
   // arrived from the server. This effect only reports them. It used to also
@@ -370,6 +374,24 @@ export function WelcomeView({
           </div>
         </Reveal>
       </section>
+
+      {/* Your first La Rumba — the social at the peak-end */}
+      {tonight ? (
+        <section className="container-x pb-10">
+          <Reveal className="rounded-3xl border border-ember-500/30 bg-ember-500/5 p-8 sm:p-10">
+            <p className="display text-sm uppercase tracking-widest text-ember-400">
+              {tonight.headline}
+            </p>
+            <p className="mt-2 display text-2xl font-bold">{copy.rumbaHeading}</p>
+            <p className="mt-3 max-w-2xl text-cream/80">
+              <Filled
+                template={copy.rumbaBody}
+                vars={{ when: tonight.when, venue: tonight.venueName }}
+              />
+            </p>
+          </Reveal>
+        </section>
+      ) : null}
 
       {/* Sign-off */}
       <section className="container-x pb-24">

@@ -251,6 +251,18 @@ export default async function WelcomePage({
       bundle={bundle}
       pinMissed={pinMissed}
       paymentState={paymentState}
+      tonight={
+        content.tonight.enabled &&
+        content.tonight.headline &&
+        content.tonight.when &&
+        content.tonight.venueName
+          ? {
+              headline: content.tonight.headline,
+              when: content.tonight.when,
+              venueName: content.tonight.venueName,
+            }
+          : null
+      }
     />
   );
 }
