@@ -8,6 +8,7 @@ import { saveSiteContent } from '@/lib/admin-save';
 import { formatBatchDate, formatInr, todayIso, addDaysIso } from '@/lib/format';
 import { DEFAULT_JOIN_GRACE_DAYS, isJoinable } from '@/lib/content-helpers';
 import { levelMismatchedTracks, tracksForBatch } from '@/lib/welcome-tracks';
+import { batchHealth } from '@/lib/batch-health';
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
 
@@ -63,6 +64,31 @@ export function BatchesEditor({ initial }: { initial: SiteContent }) {
 
   return (
     <>
+      {(() => {
+        const health = batchHealth(c, todayIso());
+        if (!health.stylesWithoutFoundation.length && !health.suspiciousLinks.length) return null;
+        return (
+          <div className="mt-6 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-5 grid gap-2">
+            {health.stylesWithoutFoundation.length ? (
+              <p className="text-sm text-amber-300">
+                <strong>
+                  No bookable Foundation batch for {health.stylesWithoutFoundation.join(', ')}.
+                </strong>{' '}
+                Beginners for {health.stylesWithoutFoundation.length === 1 ? 'this style' : 'these styles'}{' '}
+                currently have nothing to book on the public site.
+              </p>
+            ) : null}
+            {health.suspiciousLinks.map((s) => (
+              <p key={s.batchId} className="text-sm text-amber-300">
+                A booking link below points at <code className="text-amber-200">{s.host}</code> — not a
+                Razorpay address. That button collects no payment and reports a false conversion. Paste
+                the batch&apos;s Razorpay Payment Page URL, or clear the field so WhatsApp becomes the
+                booking path.
+              </p>
+            ))}
+          </div>
+        );
+      })()}
       <div className="mt-6 flex items-center gap-3">
         <button onClick={add} className="btn-primary">+ Add batch</button>
         <p className="text-cream/50 text-sm">{c.batches.length} total</p>
