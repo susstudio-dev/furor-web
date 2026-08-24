@@ -177,6 +177,13 @@
   .on-accent .accent {
     color: rgb(var(--c-on-ember));
   }
+  /* Dark theme: ember-600 rendered the accented word dimmer than the cream
+     headline around it — the emphasised word was the weakest word in the
+     line. Use the bright accent red. (.on-accent still wins inside the deep
+     ember CTA panels — higher specificity.) */
+  html[data-theme='dark'] .accent {
+    color: rgb(var(--c-ember-400));
+  }
 }
 
 /* Photo treatment — applies to every <img> rendered inside Next/Image */

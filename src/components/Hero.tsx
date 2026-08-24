@@ -223,6 +223,7 @@ function HeroSpotlight({ target }: { target: React.RefObject<HTMLDivElement | nu
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (!window.matchMedia('(pointer: fine)').matches) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const el = target.current;
     if (!el) return;
     const section = el.closest('section');
@@ -262,6 +263,7 @@ function MagneticInit() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (!window.matchMedia('(pointer: fine)').matches) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const targets = Array.from(document.querySelectorAll<HTMLElement>('.magnetic'));
     const onMove = (e: MouseEvent) => {
       for (const el of targets) {
