@@ -4,6 +4,8 @@ import type { Metadata } from 'next';
 import { getPublicContent } from '@/lib/content';
 import { JsonLd } from '@/components/JsonLd';
 import { articleLd, breadcrumbLd, fitDescription, fitTitle } from '@/lib/seo';
+import { EnquiryCTA } from '@/components/EnquiryCTA';
+import { label } from '@/lib/labels';
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -66,7 +68,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
     </article>
 
     {related.length > 0 ? (
-      <section className="container-x pb-24 max-w-3xl">
+      <section className="container-x pb-12 max-w-3xl">
         <h2 className="display text-sm uppercase tracking-widest text-ember-400">More from the studio</h2>
         <ul className="mt-6 grid gap-3">
           {related.map((s) => (
@@ -91,6 +93,22 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
         </p>
       </section>
     ) : null}
+
+    {/* Every story used to dead-end; the next step is now one tap away. */}
+    <section className="container-x pb-24 max-w-3xl">
+      <div className="hairline pt-6 flex flex-wrap items-center gap-3">
+        <EnquiryCTA
+          whatsappNumber={content.site.whatsappNumber}
+          ctx={{ source: 'primary' }}
+          variant="primary"
+          labels={content.labels}
+          templates={content.site.whatsappTemplates}
+        />
+        <Link href="/batches" className="btn-secondary">
+          {label(content.labels, 'navBatches')}
+        </Link>
+      </div>
+    </section>
     </>
   );
 }
