@@ -122,7 +122,7 @@ export function BatchesEditor({ initial }: { initial: SiteContent }) {
                     Hidden from the site — this batch is past its joinable window. Update the start
                     date (or set "Joinable until") to show it again.
                   </p>
-                ) : b.startDate && b.startDate < todayIso() ? (
+                ) : b.startDate && b.startDate < todayIso() && isJoinable(b, todayIso()) ? (
                   <p className="mt-1.5 text-xs text-gold-400">
                     Started {formatBatchDate(b.startDate)} — still bookable until{' '}
                     {formatBatchDate(b.joinUntil || addDaysIso(b.startDate, DEFAULT_JOIN_GRACE_DAYS))}.
