@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import type { Batch, BatchesPage, WhatsappTemplates } from '@/lib/content-schema';
-import { formatBatchDate, formatInr } from '@/lib/format';
+import { formatBatchDate, formatInr, todayIso } from '@/lib/format';
 import { compareByLevel } from '@/lib/batch-order';
 import { EnquiryCTA } from './EnquiryCTA';
 import { BatchActions } from './BatchActions';
@@ -94,6 +94,7 @@ export function BatchesBrowser({
   copy,
 }: Props) {
   const [now] = useState(() => new Date());
+  const today = todayIso();
   const multiBranch = studios.length > 1;
 
   const enriched: Enriched[] = useMemo(
@@ -436,7 +437,11 @@ export function BatchesBrowser({
                   </div>
                   <div className="lg:col-span-3">
                     <p className="text-cream">{b.daysOfWeek.join('–')} · {b.time}</p>
-                    <p className="text-cream/60 text-sm">{copy.startsPrefix} {formatBatchDate(b.startDate)}</p>
+                    <p className="text-cream/60 text-sm">
+                      {b.startDate < today
+                        ? copy.startedLine.replace('{date}', formatBatchDate(b.startDate))
+                        : `${copy.startsPrefix} ${formatBatchDate(b.startDate)}`}
+                    </p>
                   </div>
                   <div className="lg:col-span-1">
                     <p className="text-cream font-semibold">{formatInr(b.priceInr)}</p>

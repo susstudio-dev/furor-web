@@ -180,3 +180,29 @@ describe('buildWhatsAppHref', () => {
     );
   });
 });
+
+describe('started-batch prefill', () => {
+  const t = templates();
+  const mkBatch = (startDate: string) =>
+    ({
+      id: 'b1', styleSlugs: ['salsa'], level: 'Foundation', branchSlug: 'jh',
+      daysOfWeek: ['Sat', 'Sun'], time: '9:30–10:30 AM', startDate,
+      priceInr: 6900, trialInr: 500, seatsLeft: null, status: 'Open',
+      razorpayLink: null, welcomeNote: '', joinUntil: '',
+    }) as any;
+  const ctxFor = (startDate: string) => ({
+    source: 'batch_row' as const,
+    style: { slug: 'salsa', name: 'Salsa' },
+    branch: { slug: 'jh', name: 'Jubilee Hills' },
+    batch: mkBatch(startDate),
+  });
+
+  it('asks to join a batch that has already started', () => {
+    const msg = buildPrefilledMessage(ctxFor('2020-01-01'), t);
+    expect(msg).toContain('Can I still join?');
+    expect(msg).not.toContain('starting');
+  });
+  it('keeps the starting-soon wording for a future batch', () => {
+    expect(buildPrefilledMessage(ctxFor('2099-01-01'), t)).toContain('starting');
+  });
+});

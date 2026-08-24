@@ -6,6 +6,7 @@ import { BookTrialLink } from './BookTrialLink';
 import { EnquiryCTA } from './EnquiryCTA';
 import { label } from '@/lib/labels';
 import { bookLabel, bookPriceInr, offersTrial, statusLabel } from '@/lib/book-label';
+import { todayIso } from '@/lib/format';
 
 // The booking board — the conversion surface, styled like the lineup board
 // outside a club, overlapping the hero so its lit edge peeks above the fold.
@@ -63,6 +64,7 @@ export function QuickEnroll({
 }) {
   const batches = pickBoard(content);
   const board = content.pages.home.board;
+  const today = todayIso();
   const branchOf = (slug: string) => content.studios.find((s) => s.slug === slug);
   // Real proof at the point of decision — rendered from the content document
   // so the admin stays the source of truth; nothing renders if it's removed.
@@ -183,7 +185,12 @@ export function QuickEnroll({
                       <div className="relative mt-4 space-y-1 text-sm">
                         <p className="text-cream">{b.daysOfWeek.join('–')} · {b.time}</p>
                         <p className="text-cream/60">{branch?.name ?? b.branchSlug}</p>
-                        <p className="text-cream/60">{board.startsTemplate.replace('{date}', formatBatchDate(b.startDate))}</p>
+                        <p className="text-cream/60">
+                          {(b.startDate < today ? board.startedTemplate : board.startsTemplate).replace(
+                            '{date}',
+                            formatBatchDate(b.startDate),
+                          )}
+                        </p>
                       </div>
 
                       {/* The price flip: where a trial exists it IS the

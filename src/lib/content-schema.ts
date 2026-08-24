@@ -43,6 +43,14 @@ export const WhatsappTemplatesSchema = z
       .default(
         "Hi Furor, I'm interested in the {style} {level} batch at {branch} ({days}, {time}, starting {date}). Please share details.",
       ),
+    /** The per-batch prefill once the batch has already started (grace
+     *  window). "starting {date}" in a sent message about a July batch in
+     *  August embarrasses the sender; this asks the honest question. */
+    batchStarted: z
+      .string()
+      .default(
+        "Hi Furor, I'd like to join the {style} {level} batch at {branch} ({days}, {time} — it started {date}). Can I still join?",
+      ),
     styleFinder: z
       .string()
       .default(
@@ -385,6 +393,7 @@ const HomePageSchema = z
         // Two forms, because "1 seats left" is what one template produces.
         seatsLeftOne: z.string().default('● {n} seat left'),
         seatsLeftMany: z.string().default('● {n} seats left'),
+        startedTemplate: z.string().default('Started {date} · you can still join'),
         // The count-in strip: the four documented first-class fears, answered at
         // the point of decision. Items 5-7 are backed by live site copy (FAQ,
         // hero) — none of these lines ships unverified. Item 8 used to promise
@@ -502,6 +511,7 @@ const HomePageSchema = z
         recommendEyebrow: z.string().default('We recommend'),
         nextBatchLabel: z.string().default('Next beginner batch'),
         startsTemplate: z.string().default('Starts {date} · {price}'),
+        startedTemplate: z.string().default('Started {date} · {price}'),
       })
       .default({}),
     /** The eyebrow above the Why Furor block. Its headline and points already
@@ -692,6 +702,8 @@ const BatchesPageSchema = z
         resultCount: z.string().default('{n} of {total} batches'),
         seatsTemplate: z.string().default('{n} seats'),
         startsPrefix: z.string().default('starts'),
+        /** Replaces "{startsPrefix} {date}" once the batch has started. */
+        startedLine: z.string().default('started {date} — you can still join'),
       })
       .default({}),
   })

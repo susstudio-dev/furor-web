@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import type { Batch, SiteContent, Studio } from '@/lib/content-schema';
 import { visibleBatches } from '@/lib/content-helpers';
-import { formatBatchDate, formatInr } from '@/lib/format';
+import { formatBatchDate, formatInr, todayIso } from '@/lib/format';
 import { EnquiryCTA } from './EnquiryCTA';
 import { label } from '@/lib/labels';
 
@@ -73,6 +73,7 @@ export function StyleFinder({ content }: { content: SiteContent }) {
 
   const reset = () => setTrack(null);
   const f = content.pages.home.styleFinder;
+  const today = todayIso();
 
   return (
     <section id="style-finder" className="container-x py-12 sm:py-16 scroll-mt-24">
@@ -120,7 +121,7 @@ export function StyleFinder({ content }: { content: SiteContent }) {
                   {recommendedBatch.time}
                 </p>
                 <p className="text-cream/70 text-sm">
-                  {f.startsTemplate
+                  {(recommendedBatch.startDate < today ? f.startedTemplate : f.startsTemplate)
                     .replace('{date}', formatBatchDate(recommendedBatch.startDate))
                     .replace('{price}', formatInr(recommendedBatch.priceInr))}
                 </p>

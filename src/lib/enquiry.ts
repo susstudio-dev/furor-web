@@ -1,4 +1,4 @@
-import { formatBatchDate } from './format';
+import { formatBatchDate, todayIso } from './format';
 import type { Batch, DanceStyle, Studio } from './content-schema';
 import type { WhatsappTemplates } from './content-schema';
 
@@ -54,7 +54,8 @@ function fill(template: string, vars: Record<string, string>): string {
 export function buildPrefilledMessage(ctx: EnquiryContext, t: WhatsappTemplates): string {
   // Per-batch: most specific
   if (ctx.batch && ctx.style && ctx.branch) {
-    return fill(t.batch, {
+    const template = ctx.batch.startDate < todayIso() ? t.batchStarted : t.batch;
+    return fill(template, {
       style: ctx.style.name,
       level: ctx.batch.level,
       branch: ctx.branch.name,
