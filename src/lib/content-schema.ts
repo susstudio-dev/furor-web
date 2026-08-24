@@ -974,6 +974,7 @@ export const LabelsSchema = z
     ctaNotifyWhatsapp: z.string().default(L.ctaNotifyWhatsapp),
     ctaGrabSeatWhatsapp: z.string().default(L.ctaGrabSeatWhatsapp),
     ctaTalkToUs: z.string().default(L.ctaTalkToUs),
+    talkToUsHint: z.string().default(L.talkToUsHint),
     ctaSeeAllBatches: z.string().default(L.ctaSeeAllBatches),
     ctaAllStyles: z.string().default(L.ctaAllStyles),
     ctaExplore: z.string().default(L.ctaExplore),

@@ -59,9 +59,7 @@ export function FloatingTalkToUs({
             <p className="display text-sm uppercase tracking-widest text-cream/60">
               {label(labels, 'ctaTalkToUs')}
             </p>
-            <p className="mt-1 text-cream/90 text-sm">
-              We answer in minutes during studio hours.
-            </p>
+            <p className="mt-1 text-cream/90 text-sm">{label(labels, 'talkToUsHint')}</p>
             <div className="mt-4 grid gap-2">
               <EnquiryCTA
                 whatsappNumber={whatsappNumber}
@@ -92,10 +90,9 @@ export function FloatingTalkToUs({
           aria-expanded={open}
           aria-label={open ? label(labels, 'ariaCloseTalkToUs') : label(labels, 'ariaOpenTalkToUs')}
         >
-          <span className="relative flex h-2 w-2">
-            <span className="beat-ring absolute inset-0 rounded-full bg-on-ember/40" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-on-ember" />
-          </span>
+          {/* Static dot — the board's "Booking open" badge keeps the only
+              pulse in the arrival viewport (one live idiom per screen). */}
+          <span className="relative inline-flex h-2 w-2 rounded-full bg-on-ember" />
           <span className="hidden sm:inline">{label(labels, 'ctaTalkToUs')}</span>
         </button>
       </div>

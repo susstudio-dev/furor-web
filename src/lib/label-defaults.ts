@@ -40,6 +40,7 @@ export const LABEL_DEFAULT_LITERALS = {
   ctaNotifyWhatsapp: 'Notify me on WhatsApp',
   ctaGrabSeatWhatsapp: 'Grab a seat on WhatsApp',
   ctaTalkToUs: 'Talk to us',
+  talkToUsHint: 'We answer in minutes during studio hours.',
   ctaSeeAllBatches: 'See all batches',
   ctaAllStyles: 'All styles',
   ctaExplore: 'Explore →',
