@@ -37,11 +37,9 @@ export const LABEL_DEFAULT_LITERALS = {
   ctaChatFirstWhatsapp: 'or chat first on WhatsApp',
   ctaChatOnWhatsapp: 'or chat on WhatsApp',
   ctaEnquire: 'Enquire',
-  ctaNotifyWhatsapp: 'Notify me on WhatsApp',
   ctaGrabSeatWhatsapp: 'Grab a seat on WhatsApp',
   ctaTalkToUs: 'Talk to us',
   talkToUsHint: 'We answer in minutes during studio hours.',
-  ctaSeeAllBatches: 'See all batches',
   ctaAllStyles: 'All styles',
   ctaExplore: 'Explore →',
   ctaGetDirections: 'Get directions',
@@ -70,12 +68,10 @@ export const LABEL_DEFAULT_LITERALS = {
   // — Empty states —
   emptyNoBatches:
     "No batches match these filters yet. Chat with us — we'll tell you when one opens.",
-  emptyNextBatchSoon: 'Next {style} batch coming soon.',
   emptyNewBatchesTitle: 'New batches drop every week.',
   emptyNewBatchesBody: "Tell us your style — we'll hold you a seat in the next one.",
   emptyNoFinderBatch:
     'No upcoming {track} beginner batch listed yet — chat with us and we’ll tell you when the next one starts.',
-  emptyNoFoundationForStyle: 'Danced before? No Foundation batch open for {style} right now.',
 
   // — Badges. These are DISPLAY labels for the status enum; the enum VALUES
   //   are live URL state in BatchesBrowser and never change.

@@ -11,6 +11,7 @@ export type EnquirySource =
   | 'style_finder'
   | 'quick_enroll'
   | 'sticky_bar'
+  | 'rumba_band'
   | 'footer';
 
 export type EnquiryChannel = 'whatsapp' | 'instagram';

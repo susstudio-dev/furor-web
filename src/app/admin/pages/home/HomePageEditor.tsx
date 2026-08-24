@@ -5,9 +5,8 @@ import type { Pages, SiteContent } from '@/lib/content-schema';
 import { SaveBar } from '@/components/admin/SaveBar';
 import { Field, EditorStyles } from '@/components/admin/fields';
 import { saveSiteContent } from '@/lib/admin-save';
-import { CharCount } from '@/components/admin/CharCount';
-import { PILL_CHAR_LIMIT } from '@/lib/labels';
 import { SeoFields } from '@/components/admin/SeoFields';
+import { ImageUploader } from '@/components/admin/ImageUploader';
 
 type HomePage = Pages['home'];
 
@@ -52,6 +51,17 @@ export function HomePageEditor({ initial }: { initial: SiteContent }) {
           ...prev.pages.home,
           styleFinder: { ...prev.pages.home.styleFinder, ...patch },
         },
+      },
+    }));
+    setDirty(true);
+  }
+
+  function patchRumba(patch: Partial<HomePage['rumba']>) {
+    setC((prev) => ({
+      ...prev,
+      pages: {
+        ...prev.pages,
+        home: { ...prev.pages.home, rumba: { ...prev.pages.home.rumba, ...patch } },
       },
     }));
     setDirty(true);
@@ -318,7 +328,7 @@ export function HomePageEditor({ initial }: { initial: SiteContent }) {
           </Field>
         </Section>
 
-        <Section title="What we teach (dance-styles section header)">
+        <Section title="What we teach (style pill row)">
           <Field label="Eyebrow">
             <input
               value={h.whatWeTeach.eyebrow}
@@ -328,71 +338,79 @@ export function HomePageEditor({ initial }: { initial: SiteContent }) {
               className="input"
             />
           </Field>
-          <Field label="Headline" hint="Wrap a word in *asterisks* to give it the accent style.">
-            <input
-              value={h.whatWeTeach.headline}
-              onChange={(e) =>
-                patchHome({ whatWeTeach: { ...h.whatWeTeach, headline: e.target.value } })
-              }
-              className="input"
-            />
-          </Field>
         </Section>
 
-        <Section title="Next batches strip">
+        <Section title="La Rumba band (replaces the old batches strip)">
+          <p className="-mt-1 text-xs text-cream/50">
+            The social as proof: photos, a student&apos;s words, the weekly count. Day, time and
+            venue come from the Tonight settings — edit those under Site.
+          </p>
           <Field label="Eyebrow">
-            <input
-              value={h.nextBatches.eyebrow}
-              onChange={(e) =>
-                patchHome({ nextBatches: { ...h.nextBatches, eyebrow: e.target.value } })
-              }
-              className="input"
-            />
+            <input value={h.rumba.eyebrow} onChange={(e) => patchRumba({ eyebrow: e.target.value })} className="input" />
           </Field>
           <Field label="Headline">
-            <input
-              value={h.nextBatches.headline}
-              onChange={(e) =>
-                patchHome({ nextBatches: { ...h.nextBatches, headline: e.target.value } })
-              }
-              className="input"
-            />
+            <input value={h.rumba.headline} onChange={(e) => patchRumba({ headline: e.target.value })} className="input" />
           </Field>
-          <Field label="Start date + price line" hint="Use {date} and {price}.">
-            <input
-              value={h.nextBatches.starts}
-              onChange={(e) =>
-                patchHome({ nextBatches: { ...h.nextBatches, starts: e.target.value } })
-              }
-              className="input"
-            />
+          <Field label="Body">
+            <textarea rows={3} value={h.rumba.body} onChange={(e) => patchRumba({ body: e.target.value })} className="input" />
           </Field>
-          <Field label="Seats-left chip" hint="Use {n} for the number of seats.">
-            <input
-              value={h.nextBatches.seatsLeft}
-              onChange={(e) =>
-                patchHome({ nextBatches: { ...h.nextBatches, seatsLeft: e.target.value } })
-              }
-              className="input"
-            />
-            <CharCount
-              text={h.nextBatches.seatsLeft}
-              max={PILL_CHAR_LIMIT}
-              note="shown in a small rounded chip — longer text gets cut off on phones"
-            />
-          </Field>
-          <Field
-            label="Combined-styles suffix"
-            hint="Added after the studio name when one batch teaches two dances. Keep the leading separator."
-          >
-            <input
-              value={h.nextBatches.combinedSuffix}
-              onChange={(e) =>
-                patchHome({ nextBatches: { ...h.nextBatches, combinedSuffix: e.target.value } })
-              }
-              className="input"
-            />
-          </Field>
+          {h.rumba.photos.map((p, i) => (
+            <div key={i} className="rounded-xl border border-cream/10 p-3 grid gap-2">
+              <div className="flex items-center justify-between">
+                <p className="text-xs uppercase tracking-widest text-cream/50">Photo {i + 1}</p>
+                <button
+                  type="button"
+                  onClick={() => patchRumba({ photos: h.rumba.photos.filter((_, j) => j !== i) })}
+                  className="text-xs text-cream/40 hover:text-ember-400"
+                >
+                  Remove
+                </button>
+              </div>
+              <ImageUploader
+                label="Image"
+                value={p.src}
+                onChange={(v) => {
+                  const next = h.rumba.photos.slice();
+                  next[i] = { ...p, src: v };
+                  patchRumba({ photos: next });
+                }}
+                aspect="wide"
+              />
+              <Field label="Description" hint="Alt text — describe what's happening.">
+                <input
+                  value={p.alt}
+                  onChange={(e) => {
+                    const next = h.rumba.photos.slice();
+                    next[i] = { ...p, alt: e.target.value };
+                    patchRumba({ photos: next });
+                  }}
+                  className="input"
+                />
+              </Field>
+            </div>
+          ))}
+          {h.rumba.photos.length < 3 ? (
+            <div>
+              <button
+                type="button"
+                onClick={() => patchRumba({ photos: [...h.rumba.photos, { src: '', alt: '' }] })}
+                className="text-sm text-ember-400 hover:text-ember-300"
+              >
+                + Add photo
+              </button>
+            </div>
+          ) : null}
+          <div className="grid gap-3 sm:grid-cols-3">
+            <Field label="Weekly stat line" hint="Use {n} — the students-this-week count from Site settings. Blank hides it.">
+              <input value={h.rumba.statTemplate} onChange={(e) => patchRumba({ statTemplate: e.target.value })} className="input" />
+            </Field>
+            <Field label="RSVP button">
+              <input value={h.rumba.rsvpLabel} onChange={(e) => patchRumba({ rsvpLabel: e.target.value })} className="input" />
+            </Field>
+            <Field label="First-class link" hint="The current first-class price is appended automatically.">
+              <input value={h.rumba.classLink} onChange={(e) => patchRumba({ classLink: e.target.value })} className="input" />
+            </Field>
+          </div>
         </Section>
 
         <Section title="Style finder">

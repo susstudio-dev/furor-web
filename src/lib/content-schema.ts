@@ -458,6 +458,7 @@ const HomePageSchema = z
     whatWeTeach: SectionHeaderSchema.default({ eyebrow: '', headline: '' }),
     // Was a bare SectionHeaderSchema; the eyebrow and headline keep their exact
     // shape and their stored values, and the three card templates join them.
+    // Retired render site 2026-08-24 (strip replaced by the rumba band). Fields kept so stored documents parse; not editable in admin.
     nextBatches: z
       .object({
         eyebrow: z.string().default(''),
@@ -467,6 +468,36 @@ const HomePageSchema = z
         seatsLeft: z.string().default('{n} seats left'),
         /** Appended after the studio name when one batch teaches two styles. */
         combinedSuffix: z.string().default(' · taught together'),
+      })
+      .default({}),
+    // The La Rumba proof band — replaced the Next-batches strip on
+    // 2026-08-24 (the strip duplicated the board's cards; this shows the
+    // life around the classes instead). Facts — day, time, venue — render
+    // from `tonight`, never duplicated here; only words and proof assets.
+    rumba: z
+      .object({
+        eyebrow: z.string().default('Saturday night'),
+        headline: z.string().default('Class teaches you. Saturday makes it yours.'),
+        body: z
+          .string()
+          .default(
+            'La Rumba is our weekly Latin social — every level on one floor, beginners very much included. Come watch, come dance, come meet the people you’ll learn beside.',
+          ),
+        photos: z
+          .array(z.object({ src: z.string(), alt: z.string() }))
+          .default([
+            { src: '/photos/DSC_0095.jpg', alt: 'La Rumba social — a packed floor on a Saturday night' },
+            { src: '/photos/DSC09776.jpg', alt: 'Pure joy — two dancers laughing through a song' },
+            { src: '/photos/DSC_0052.jpg', alt: 'A formal turn in emerald — Bachata at the social' },
+          ]),
+        /** Which testimonial anchors the band; falls back to the first stored
+         *  testimonial when the id no longer exists. */
+        testimonialId: z.string().default('test-004'),
+        /** {n} = site.stats.studentsThisWeek. Blank hides the line. */
+        statTemplate: z.string().default('{n} dancing with us this week'),
+        rsvpLabel: z.string().default('Say you’re coming — WhatsApp'),
+        /** Anchors to #start-this-week; the page appends " · ₹500" live. */
+        classLink: z.string().default('or book your first class'),
       })
       .default({}),
     howItWorks: z
@@ -971,11 +1002,9 @@ export const LabelsSchema = z
     ctaChatFirstWhatsapp: z.string().default(L.ctaChatFirstWhatsapp),
     ctaChatOnWhatsapp: z.string().default(L.ctaChatOnWhatsapp),
     ctaEnquire: z.string().default(L.ctaEnquire),
-    ctaNotifyWhatsapp: z.string().default(L.ctaNotifyWhatsapp),
     ctaGrabSeatWhatsapp: z.string().default(L.ctaGrabSeatWhatsapp),
     ctaTalkToUs: z.string().default(L.ctaTalkToUs),
     talkToUsHint: z.string().default(L.talkToUsHint),
-    ctaSeeAllBatches: z.string().default(L.ctaSeeAllBatches),
     ctaAllStyles: z.string().default(L.ctaAllStyles),
     ctaExplore: z.string().default(L.ctaExplore),
     ctaGetDirections: z.string().default(L.ctaGetDirections),
@@ -999,11 +1028,9 @@ export const LabelsSchema = z
 
     // — Empty states —
     emptyNoBatches: z.string().default(L.emptyNoBatches),
-    emptyNextBatchSoon: z.string().default(L.emptyNextBatchSoon),
     emptyNewBatchesTitle: z.string().default(L.emptyNewBatchesTitle),
     emptyNewBatchesBody: z.string().default(L.emptyNewBatchesBody),
     emptyNoFinderBatch: z.string().default(L.emptyNoFinderBatch),
-    emptyNoFoundationForStyle: z.string().default(L.emptyNoFoundationForStyle),
 
     // — Badges. These are DISPLAY labels for the status enum; the enum VALUES
     //   are live URL state in BatchesBrowser and never change.

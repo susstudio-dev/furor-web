@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { getPublicContent, nextBatchPerStyle, visibleBatches, formatBatchDate, formatInr, batchStyleLabel } from '@/lib/content';
+import { getPublicContent, visibleBatches, formatInr } from '@/lib/content';
 import { resolvePageMeta } from '@/lib/page-meta';
 import { heroPoster } from '@/lib/image-variants';
 
@@ -49,7 +49,7 @@ import { Accentuate } from '@/components/Accentuate';
 import { Reveal } from '@/components/Reveal';
 import { QuickEnroll } from '@/components/QuickEnroll';
 import { StickyTrialBar } from '@/components/StickyTrialBar';
-import { BatchActions } from '@/components/BatchActions';
+import { RumbaBand } from '@/components/RumbaBand';
 
 // Render per request so admin edits show immediately and no stale/blip HTML is
 // cached. The GitHub Pages export workflow strips this line (static export
@@ -69,7 +69,6 @@ export default async function HomePage() {
   const content = await getPublicContent();
   const sortedStyles = content.danceStyles.slice().sort((a, b) => a.displayOrder - b.displayOrder);
   const sortedStudios = content.studios.slice().sort((a, b) => a.displayOrder - b.displayOrder);
-  const nextPerStyle = nextBatchPerStyle(content);
   // todayIso() is passed in rather than read inside the builder so the node is
   // deterministic and the IST business date is the one that decides which
   // Saturday is "next".
@@ -176,101 +175,8 @@ export default async function HomePage() {
         </Reveal>
       </section>
 
-      {/* Next batches strip */}
-      <section className="container-x py-12">
-        <Reveal>
-          <div className="flex items-end justify-between gap-6 flex-wrap">
-            <div>
-              <div className="flex items-center gap-3">
-                <p className="display text-sm uppercase tracking-widest text-ember-400">{h.nextBatches.eyebrow}</p>
-                <RhythmSignature style="bachata" loop width={84} className="text-ember-500/70" />
-              </div>
-              <h2 className="mt-2 display text-3xl font-bold sm:text-4xl">
-                {h.nextBatches.headline}
-              </h2>
-            </div>
-            <Link href="/batches" className="btn-secondary magnetic">
-              {label(content.labels, 'ctaSeeAllBatches')}
-            </Link>
-          </div>
-        </Reveal>
-        <Reveal stagger className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {sortedStyles.map((s) => {
-            const hit = nextPerStyle.get(s.slug);
-            const b = hit?.batch;
-            // True when this style has no Foundation batch and we are showing
-            // a higher level instead. Labelled rather than hidden: a beginner
-            // should not be quietly pointed at an Advanced room, and an
-            // experienced dancer should still find their lane.
-            const isFallback = hit?.isFallback ?? false;
-            const branch = b ? content.studios.find((st) => st.slug === b.branchSlug) : undefined;
-            const combined = b && b.styleSlugs.length > 1;
-            return (
-              <div
-                key={s.slug}
-                className="rounded-2xl border border-cream/10 bg-ink-900/40 p-5"
-              >
-                <p className="display text-xl font-bold">
-                  {combined ? batchStyleLabel(content, b!.styleSlugs) : s.name}
-                </p>
-                {b && branch ? (
-                  <>
-                    <p className="mt-2 text-sm text-cream/70">
-                      {b.level} · {branch.name}
-                      {combined ? h.nextBatches.combinedSuffix : ''}
-                    </p>
-                    {isFallback ? (
-                      <p className="mt-1 text-sm text-gold-400">
-                        {label(content.labels, 'emptyNoFoundationForStyle').replace('{style}', s.name)}
-                      </p>
-                    ) : null}
-                    <p className="mt-1 text-cream">{b.daysOfWeek.join('–')} · {b.time}</p>
-                    <p className="text-sm text-cream/60 mt-1">
-                      {h.nextBatches.starts
-                        .replace('{date}', formatBatchDate(b.startDate))
-                        .replace('{price}', formatInr(b.priceInr))}
-                    </p>
-                    {typeof b.seatsLeft === 'number' ? (
-                      <p className="pill mt-3 bg-gold-500/15 text-gold-400">
-                        {h.nextBatches.seatsLeft.replace('{n}', String(b.seatsLeft))}
-                      </p>
-                    ) : null}
-                    <div className="mt-4">
-                      <BatchActions
-                        batch={b}
-                        style={{ slug: s.slug, name: s.name }}
-                        branch={{ slug: branch.slug, name: branch.name }}
-                        whatsappNumber={content.site.whatsappNumber}
-                        labels={content.labels}
-                        templates={content.site.whatsappTemplates}
-                      />
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <p className="mt-2 text-cream/60">
-                      {label(content.labels, 'emptyNextBatchSoon').replace('{style}', s.name)}
-                    </p>
-                    <div className="mt-4">
-                      <EnquiryCTA
-                        whatsappNumber={content.site.whatsappNumber}
-                        ctx={{
-                          source: 'batch_row',
-                          style: { slug: s.slug, name: s.name },
-                        }}
-                        variant="batch-row"
-                        labels={content.labels}
-                        templates={content.site.whatsappTemplates}
-                        label={label(content.labels, 'ctaNotifyWhatsapp')}
-                      />
-                    </div>
-                  </>
-                )}
-              </div>
-            );
-          })}
-        </Reveal>
-      </section>
+      {/* The social is the product: proof band with the zero-fear door. */}
+      <RumbaBand content={content} trialFrom={trialFrom} />
 
       {/* Why Furor */}
       {content.whyFuror.points.length > 0 ? (

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import seed from '@/data/site-content.seed.json';
-import { SiteContentSchema, BatchSchema } from './content-schema';
+import { SiteContentSchema, SiteContentObjectSchema, BatchSchema } from './content-schema';
 
 const doc = () => SiteContentSchema.parse(seed);
 
@@ -383,5 +383,15 @@ describe('BatchSchema joinUntil', () => {
   });
   it('rejects a non-date value', () => {
     expect(() => BatchSchema.parse({ ...base, joinUntil: 'soon' })).toThrow();
+  });
+});
+
+describe('pages.home.rumba defaults', () => {
+  it('ships the La Rumba band copy and three real photos', () => {
+    const home = SiteContentObjectSchema.shape.pages.parse(undefined).home;
+    expect(home.rumba.headline).toBe('Class teaches you. Saturday makes it yours.');
+    expect(home.rumba.photos).toHaveLength(3);
+    expect(home.rumba.testimonialId).toBe('test-004');
+    expect(home.rumba.statTemplate).toContain('{n}');
   });
 });
