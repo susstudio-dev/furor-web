@@ -221,7 +221,7 @@ export default async function HomePage() {
                     </p>
                     {isFallback ? (
                       <p className="mt-1 text-sm text-gold-400">
-                        Danced before? No Foundation batch open for {s.name} right now.
+                        {label(content.labels, 'emptyNoFoundationForStyle').replace('{style}', s.name)}
                       </p>
                     ) : null}
                     <p className="mt-1 text-cream">{b.daysOfWeek.join('–')} · {b.time}</p>

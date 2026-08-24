@@ -46,6 +46,9 @@ export const LABEL_DEFAULT_LITERALS = {
   ctaGetDirections: 'Get directions',
   ctaCall: 'Call',
   ctaWhatsapp: 'WhatsApp',
+  // {book} is filled with the batch's own booking verb (bookLabel), so the
+  // WhatsApp fallback can never disagree with the paid button beside it.
+  ctaBookOnWhatsapp: '{book} on WhatsApp',
 
   // — Navigation —
   navHome: 'Home',
@@ -68,6 +71,7 @@ export const LABEL_DEFAULT_LITERALS = {
   emptyNewBatchesBody: "Tell us your style — we'll hold you a seat in the next one.",
   emptyNoFinderBatch:
     'No upcoming {track} beginner batch listed yet — chat with us and we’ll tell you when the next one starts.',
+  emptyNoFoundationForStyle: 'Danced before? No Foundation batch open for {style} right now.',
 
   // — Badges. These are DISPLAY labels for the status enum; the enum VALUES
   //   are live URL state in BatchesBrowser and never change.

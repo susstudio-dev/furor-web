@@ -268,7 +268,7 @@ export function QuickEnroll({
                             variant="batch-row"
                             labels={content.labels}
                             templates={content.site.whatsappTemplates}
-                            label={`${book} on WhatsApp`}
+                            label={label(content.labels, 'ctaBookOnWhatsapp').replace('{book}', book)}
                             className="w-full justify-center magnetic"
                           />
                         )}

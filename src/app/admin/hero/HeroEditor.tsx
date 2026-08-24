@@ -42,6 +42,23 @@ export function HeroEditor({ initial }: { initial: SiteContent }) {
             className="input"
           />
         </Field>
+        <Field label="Trust badge" hint="The small pill above the headline. Leave blank to hide it.">
+          <input
+            value={c.hero.badge}
+            onChange={(e) => patch({ badge: e.target.value })}
+            className="input"
+          />
+        </Field>
+        <Field
+          label="Reassurance line"
+          hint="The quiet line under the booking buttons. Leave blank to hide it."
+        >
+          <input
+            value={c.hero.reassurance}
+            onChange={(e) => patch({ reassurance: e.target.value })}
+            className="input"
+          />
+        </Field>
         <ImageUploader
           label="Poster image"
           value={c.hero.posterImage}

@@ -101,6 +101,11 @@ export const HeroSchema = z.object({
   // night actually looks like, so it gets a real description rather than the
   // alt="" an audit flagged as missing text.
   posterAlt: z.string().default(HERO_POSTER_ALT_DEFAULT),
+  // The trust badge over the headline and the reassurance line under the
+  // CTAs — shipped literals promoted to editable fields ("only the truth,
+  // and all of it is editable"). Blank hides the element.
+  badge: z.string().default("India's largest Latin dance school"),
+  reassurance: z.string().default('One real class. No partner needed. You decide.'),
 });
 
 export const TonightSchema = z
@@ -975,6 +980,7 @@ export const LabelsSchema = z
     ctaGetDirections: z.string().default(L.ctaGetDirections),
     ctaCall: z.string().default(L.ctaCall),
     ctaWhatsapp: z.string().default(L.ctaWhatsapp),
+    ctaBookOnWhatsapp: z.string().default(L.ctaBookOnWhatsapp),
 
     // — Navigation —
     navHome: z.string().default(L.navHome),
@@ -995,6 +1001,7 @@ export const LabelsSchema = z
     emptyNewBatchesTitle: z.string().default(L.emptyNewBatchesTitle),
     emptyNewBatchesBody: z.string().default(L.emptyNewBatchesBody),
     emptyNoFinderBatch: z.string().default(L.emptyNoFinderBatch),
+    emptyNoFoundationForStyle: z.string().default(L.emptyNoFoundationForStyle),
 
     // — Badges. These are DISPLAY labels for the status enum; the enum VALUES
     //   are live URL state in BatchesBrowser and never change.

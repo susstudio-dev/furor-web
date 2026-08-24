@@ -152,9 +152,11 @@ export function Hero({ content, poster }: { content: SiteContent; poster: HeroPo
           <span>7</span>
           <span>8</span>
         </p>
-        <p className="pill bg-ember-500/15 text-ember-400 hero-fade" style={{ animationDelay: '60ms' }}>
-          India&apos;s largest Latin dance school
-        </p>
+        {content.hero.badge ? (
+          <p className="pill hero-badge bg-ember-500/15 hero-fade" style={{ animationDelay: '60ms' }}>
+            {content.hero.badge}
+          </p>
+        ) : null}
         <h1 className="mt-5 display text-[2.4rem] font-extrabold leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl max-w-[18ch] sm:max-w-4xl">
           <CinematicHeadline text={content.hero.headline} />
         </h1>
@@ -190,9 +192,9 @@ export function Hero({ content, poster }: { content: SiteContent; poster: HeroPo
           {/* No refund promise here: the trial fee is non-refundable
               (owner, 2026-08-08). The reassurance is the small commitment
               itself — one class, not a package — not money back. */}
-          <p className="mt-2.5 text-sm text-cream/65">
-            One real class. No partner needed. You decide.
-          </p>
+          {content.hero.reassurance ? (
+            <p className="mt-2.5 text-sm text-cream/65">{content.hero.reassurance}</p>
+          ) : null}
         </div>
         {/* No scroll cue here: the QuickEnroll card overlaps this space and its
             lit top edge + "Booking open" pulse already pull the eye down. A

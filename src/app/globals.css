@@ -618,3 +618,12 @@ html[data-theme='light'] .spot-beam {
     transparent 58%
   );
 }
+
+/* The hero trust badge. ember-400 on light-theme paper measured under AA at
+   12px, so light uses the deep link-red; dark keeps the bright accent. */
+.hero-badge {
+  color: rgb(var(--c-ember-300));
+}
+html[data-theme='dark'] .hero-badge {
+  color: rgb(var(--c-ember-400));
+}
