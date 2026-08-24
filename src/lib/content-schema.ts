@@ -229,6 +229,18 @@ export const BatchSchema = z.preprocess(
     ).min(1),
     time: z.string().min(1),
     startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'YYYY-MM-DD'),
+    // The last calendar day this batch may still be sold to a new joiner.
+    // Blank means startDate + 14 days (DEFAULT_JOIN_GRACE_DAYS in
+    // content-helpers.ts): the Terms promise mid-batch joins with make-up
+    // classes, so a batch must not vanish from every public surface the
+    // morning after it starts — which is exactly how the site dropped to a
+    // single visible class in Aug 2026. Defaulted so stored documents parse
+    // with no migration.
+    joinUntil: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, 'YYYY-MM-DD')
+      .or(z.literal(''))
+      .default(''),
     priceInr: z.number().int().nonnegative(),
     // What the trial class costs — and, by being nullable, WHETHER this batch
     // runs one at all. `null` means no trial: the booking CTA then advertises

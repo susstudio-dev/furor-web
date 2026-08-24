@@ -1,11 +1,27 @@
-import type { SiteContent } from './content-schema';
-import { todayIso } from './format';
+import type { Batch, SiteContent } from './content-schema';
+import { addDaysIso, todayIso } from './format';
 import { levelRank } from './batch-order';
+
+/** How long a batch stays publicly joinable past its start date when the
+ *  studio has not set an explicit joinUntil. The Terms promise mid-batch
+ *  joins with make-ups, so a started batch is still a sellable product. */
+export const DEFAULT_JOIN_GRACE_DAYS = 14;
+
+/** Whether this batch may still be sold today: not Closed, and today is on
+ *  or before its explicit joinUntil (or startDate + the default grace). */
+export function isJoinable(
+  b: Pick<Batch, 'startDate' | 'status' | 'joinUntil'>,
+  today: string,
+): boolean {
+  if (b.status === 'Closed') return false;
+  const until = b.joinUntil || addDaysIso(b.startDate, DEFAULT_JOIN_GRACE_DAYS);
+  return today <= until;
+}
 
 export function visibleBatches(content: SiteContent) {
   const today = todayIso();
   return content.batches
-    .filter((b) => b.startDate >= today && b.status !== 'Closed')
+    .filter((b) => isJoinable(b, today))
     .sort((a, b) => a.startDate.localeCompare(b.startDate));
 }
 

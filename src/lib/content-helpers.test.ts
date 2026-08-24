@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { nextBatchPerStyle } from './content-helpers';
+import { nextBatchPerStyle, visibleBatches, isJoinable } from './content-helpers';
 import type { SiteContent } from './content-schema';
 
 // The per-style strip on the home page. It used to pick purely by date, one
@@ -27,6 +27,7 @@ const batch = (over: Partial<SiteContent['batches'][number]> & { id: string }) =
     status: 'Open',
     razorpayLink: null,
     welcomeNote: '',
+    joinUntil: '',
     ...over,
   }) as SiteContent['batches'][number];
 
@@ -87,13 +88,37 @@ describe('nextBatchPerStyle', () => {
     expect(map.get('bachata')?.batch.id).toBe('combo');
   });
 
-  it('ignores past-dated and closed batches', () => {
+  it('ignores lapsed (past-grace) and closed batches', () => {
     const map = nextBatchPerStyle(
       content([
-        batch({ id: 'past', startDate: future(-9) }),
+        batch({ id: 'past', startDate: future(-20) }),
         batch({ id: 'closed', status: 'Closed', startDate: future(1) }),
       ]),
     );
     expect(map.has('salsa')).toBe(false);
+  });
+});
+
+describe('grace-window visibility', () => {
+  it('keeps a batch visible through the 14-day default grace after start', () => {
+    expect(visibleBatches(content([batch({ id: 'g', startDate: future(-13) })]))).toHaveLength(1);
+    expect(visibleBatches(content([batch({ id: 'g', startDate: future(-15) })]))).toHaveLength(0);
+  });
+  it('honours an explicit joinUntil over the default grace', () => {
+    expect(
+      visibleBatches(content([batch({ id: 'g', startDate: future(-30), joinUntil: future(1) })])),
+    ).toHaveLength(1);
+    expect(
+      visibleBatches(content([batch({ id: 'g', startDate: future(-3), joinUntil: future(-1) })])),
+    ).toHaveLength(0);
+  });
+  it('never shows a Closed batch regardless of dates', () => {
+    expect(
+      visibleBatches(content([batch({ id: 'g', startDate: future(5), status: 'Closed' })])),
+    ).toHaveLength(0);
+  });
+  it('isJoinable answers the same question for a bare batch shape', () => {
+    expect(isJoinable({ startDate: '2026-08-20', status: 'Open', joinUntil: '' }, '2026-08-24')).toBe(true);
+    expect(isJoinable({ startDate: '2026-08-01', status: 'Open', joinUntil: '' }, '2026-08-24')).toBe(false);
   });
 });

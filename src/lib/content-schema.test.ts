@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import seed from '@/data/site-content.seed.json';
-import { SiteContentSchema } from './content-schema';
+import { SiteContentSchema, BatchSchema } from './content-schema';
 
 const doc = () => SiteContentSchema.parse(seed);
 
@@ -366,5 +366,22 @@ describe('BatchSchema trialInr', () => {
     const r = raw();
     r.batches[0].trialInr = -1;
     expect(() => SiteContentSchema.parse(r)).toThrow();
+  });
+});
+
+describe('BatchSchema joinUntil', () => {
+  const base = {
+    id: 'b1', styleSlugs: ['salsa'], level: 'Foundation', branchSlug: 'jh',
+    daysOfWeek: ['Sat'], time: '9:30–10:30 AM', startDate: '2026-09-01',
+    priceInr: 6900, status: 'Open',
+  };
+  it('defaults to empty when absent, so stored documents parse unchanged', () => {
+    expect(BatchSchema.parse(base).joinUntil).toBe('');
+  });
+  it('accepts a YYYY-MM-DD value', () => {
+    expect(BatchSchema.parse({ ...base, joinUntil: '2026-10-01' }).joinUntil).toBe('2026-10-01');
+  });
+  it('rejects a non-date value', () => {
+    expect(() => BatchSchema.parse({ ...base, joinUntil: 'soon' })).toThrow();
   });
 });
