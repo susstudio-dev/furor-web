@@ -4,7 +4,7 @@ import type { Metadata } from 'next';
 import { getPublicContent } from '@/lib/content';
 import { JsonLd } from '@/components/JsonLd';
 import { articleLd, breadcrumbLd, fitDescription, fitTitle } from '@/lib/seo';
-import { EnquiryCTA } from '@/components/EnquiryCTA';
+import { buildWhatsAppHref } from '@/lib/enquiry';
 import { label } from '@/lib/labels';
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -94,21 +94,40 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
       </section>
     ) : null}
 
-    {/* Every story used to dead-end; the next step is now one tap away. */}
+    {/* Every story used to dead-end; the next step is now one tap away.
+        This is a hand-rolled anchor rather than <EnquiryCTA> because that
+        client component pulls a ~23 KB chunk onto a route that otherwise
+        ships almost no app JS, which broke this route's bundle budget. The
+        trade-off: this CTA does not fire the GA4 `enquiry_click` event —
+        the floating Talk-to-us pill on the same page still does. */}
     <section className="container-x pb-24 max-w-3xl">
       <div className="hairline pt-6 flex flex-wrap items-center gap-3">
-        <EnquiryCTA
-          whatsappNumber={content.site.whatsappNumber}
-          ctx={{ source: 'primary' }}
-          variant="primary"
-          labels={content.labels}
-          templates={content.site.whatsappTemplates}
-        />
+        <a
+          href={buildWhatsAppHref(
+            content.site.whatsappNumber,
+            { source: 'primary' },
+            content.site.whatsappTemplates,
+          )}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn-primary"
+        >
+          <WhatsAppGlyph />
+          {label(content.labels, 'ctaChatWhatsapp')}
+        </a>
         <Link href="/batches" className="btn-secondary">
           {label(content.labels, 'navBatches')}
         </Link>
       </div>
     </section>
     </>
+  );
+}
+
+function WhatsAppGlyph() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M19.05 4.91A10 10 0 0 0 4.7 18.13L4 22l3.97-1.04A10 10 0 1 0 19.05 4.91Zm-7 15.13a8.06 8.06 0 0 1-4.1-1.13l-.3-.18-2.36.62.63-2.3-.19-.3A8.07 8.07 0 1 1 12.05 20Zm4.42-6.05c-.24-.12-1.43-.7-1.65-.78s-.38-.12-.55.12-.62.78-.76.94-.28.18-.52.06-1.03-.38-1.96-1.21a7.4 7.4 0 0 1-1.36-1.7c-.14-.24 0-.37.1-.49.1-.1.24-.27.36-.4.12-.13.16-.22.24-.37.08-.16.04-.3-.02-.42-.06-.12-.55-1.32-.75-1.81-.2-.48-.4-.42-.55-.43h-.47a.92.92 0 0 0-.66.31 2.78 2.78 0 0 0-.87 2.07c0 1.22.89 2.4 1.02 2.57.13.16 1.76 2.69 4.27 3.77.6.26 1.06.41 1.42.52.6.19 1.14.16 1.57.1.48-.07 1.43-.58 1.63-1.14.2-.56.2-1.04.14-1.14-.06-.1-.22-.16-.46-.28Z" />
+    </svg>
   );
 }
