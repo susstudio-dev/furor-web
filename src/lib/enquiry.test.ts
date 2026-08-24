@@ -16,6 +16,7 @@ const batch = {
   daysOfWeek: ['Sat', 'Sun'] as Array<'Sat' | 'Sun'>,
   time: '9:30 AM – 10:30 AM',
   startDate: '2026-09-05',
+  joinUntil: '',
   priceInr: 6000,
   trialInr: 500,
   status: 'Open' as const,

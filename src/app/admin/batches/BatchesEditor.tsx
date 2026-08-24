@@ -5,7 +5,8 @@ import { randomId } from '@/lib/id';
 import type { Batch, SiteContent } from '@/lib/content-schema';
 import { SaveBar } from '@/components/admin/SaveBar';
 import { saveSiteContent } from '@/lib/admin-save';
-import { formatInr, todayIso } from '@/lib/format';
+import { formatBatchDate, formatInr, todayIso, addDaysIso } from '@/lib/format';
+import { DEFAULT_JOIN_GRACE_DAYS, isJoinable } from '@/lib/content-helpers';
 import { levelMismatchedTracks, tracksForBatch } from '@/lib/welcome-tracks';
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
@@ -36,6 +37,7 @@ export function BatchesEditor({ initial }: { initial: SiteContent }) {
       // batch created between 00:00 and 05:30 IST was dated *yesterday* and
       // went invisible on every public surface the instant it was saved.
       startDate: todayIso(),
+      joinUntil: '',
       priceInr: 6500,
       trialInr: 500,
       seatsLeft: null,
@@ -115,12 +117,28 @@ export function BatchesEditor({ initial }: { initial: SiteContent }) {
                     visibleBatches() and vanish from every public surface. That
                     happened silently to five of six batches, leaving one class
                     visible site-wide with nothing on screen to explain it. */}
-                {b.startDate && b.startDate < todayIso() ? (
+                {b.startDate && !isJoinable(b, todayIso()) && b.status !== 'Closed' ? (
                   <p className="mt-1.5 text-xs text-ember-400">
-                    Hidden from the site — this start date has passed. Update it to show this batch
-                    again.
+                    Hidden from the site — this batch is past its joinable window. Update the start
+                    date (or set "Joinable until") to show it again.
+                  </p>
+                ) : b.startDate && b.startDate < todayIso() ? (
+                  <p className="mt-1.5 text-xs text-gold-400">
+                    Started {formatBatchDate(b.startDate)} — still bookable until{' '}
+                    {formatBatchDate(b.joinUntil || addDaysIso(b.startDate, DEFAULT_JOIN_GRACE_DAYS))}.
                   </p>
                 ) : null}
+              </Field>
+              <Field
+                label="Joinable until (optional)"
+                hint="Last day this batch can still be booked. Blank = start date + 14 days, so late joiners keep seeing it (make-ups cover missed classes)."
+              >
+                <input
+                  type="date"
+                  value={b.joinUntil || ''}
+                  onChange={(e) => patch(i, { joinUntil: e.target.value })}
+                  className="input"
+                />
               </Field>
               <Field label="Price (INR)" hint="Full course fee — shown on the cards.">
                 <input type="number" min={0} value={b.priceInr} onChange={(e) => patch(i, { priceInr: Number(e.target.value) })} className="input" />
