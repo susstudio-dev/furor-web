@@ -17,6 +17,7 @@ import type { SiteContent } from '@/lib/content-schema';
 // Renders nothing until mounted: the server can't know this visit's dismissal
 // state, and the hero's own choreography runs ~1.2s anyway — the chip fading
 // in after it is sequencing, not lag.
+// Desktop-only since 2026-08-24; phones meet La Rumba in the home RumbaBand.
 const DISMISS_KEY = 'tonight-float-dismissed';
 
 export function TonightFloat({ content }: { content: SiteContent }) {
@@ -44,15 +45,18 @@ export function TonightFloat({ content }: { content: SiteContent }) {
     }
   }
 
+  // Desktop-only: below lg the chip landed on top of the hero badge and
+  // headline on every phone — the primary audience. Mobile gets La Rumba
+  // as the in-flow RumbaBand section instead (two front doors, spec §3.1).
   return (
-    <div className="tonight-float absolute right-3 top-3 z-20 w-[14rem] sm:right-6 sm:top-6 sm:w-[17rem]">
+    <div className="tonight-float hidden lg:block absolute right-6 top-6 z-20 w-[17rem]">
       <div className="relative overflow-clip rounded-2xl border border-ember-500/40 bg-ink-900/85 p-4 shadow-xl shadow-ink-950/40 backdrop-blur">
         <div className="pointer-events-none absolute -top-10 -right-10 h-24 w-24 rounded-full bg-ember-500/25 blur-2xl" />
         <button
           type="button"
           onClick={dismiss}
           aria-label="Hide this"
-          className="absolute right-1.5 top-1.5 inline-flex h-8 w-8 items-center justify-center rounded-full text-cream/50 transition hover:bg-cream/10 hover:text-cream"
+          className="absolute right-0.5 top-0.5 inline-flex h-11 w-11 items-center justify-center rounded-full text-cream/50 transition hover:bg-cream/10 hover:text-cream"
         >
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden>
             <path d="M1 1l10 10M11 1L1 11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
