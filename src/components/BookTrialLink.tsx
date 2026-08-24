@@ -15,7 +15,7 @@ interface Props {
   batch: Batch;
   styleSlug?: string;
   branchSlug?: string;
-  source: 'quick_enroll' | 'batch_row' | 'style_page' | 'hero';
+  source: 'quick_enroll' | 'batch_row' | 'style_page' | 'hero' | 'style_finder';
   className?: string;
   children: React.ReactNode;
 }

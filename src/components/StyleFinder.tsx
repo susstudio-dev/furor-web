@@ -6,6 +6,8 @@ import { visibleBatches } from '@/lib/content-helpers';
 import { formatBatchDate, formatInr, todayIso } from '@/lib/format';
 import { EnquiryCTA } from './EnquiryCTA';
 import { label } from '@/lib/labels';
+import { BookTrialLink } from './BookTrialLink';
+import { bookLabel, bookPriceInr } from '@/lib/book-label';
 
 // Beginners have exactly two tracks, split by when they run:
 //   • Weekend mornings → Latin (Salsa + Bachata)
@@ -131,41 +133,60 @@ export function StyleFinder({ content }: { content: SiteContent }) {
                 {label(content.labels, 'emptyNoFinderBatch').replace('{track}', track.name)}
               </p>
             )}
-            <div className="mt-5 flex flex-wrap gap-3">
-              <EnquiryCTA
-                whatsappNumber={content.site.whatsappNumber}
-                instagramHandle={content.site.instagramHandle}
-                ctx={{
-                  source: 'style_finder',
-                  style: { slug: track.ctaSlug, name: track.name },
-                  branch: branch ? { slug: branch.slug, name: branch.name } : undefined,
-                  styleFinderRecommendation: {
-                    styleName: track.name,
-                    level: 'Foundation',
-                    branchName: branch?.name,
-                  },
-                }}
-                variant="primary"
-                labels={content.labels}
-                templates={content.site.whatsappTemplates}
-              />
-              <EnquiryCTA
-                whatsappNumber={content.site.whatsappNumber}
-                instagramHandle={content.site.instagramHandle}
-                ctx={{
-                  source: 'style_finder',
-                  style: { slug: track.ctaSlug, name: track.name },
-                  styleFinderRecommendation: {
-                    styleName: track.name,
-                    level: 'Foundation',
-                    branchName: branch?.name,
-                  },
-                }}
-                channel="instagram"
-                variant="secondary"
-                labels={content.labels}
-                templates={content.site.whatsappTemplates}
-              />
+            <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-3">
+              {recommendedBatch && branch && recommendedBatch.razorpayLink && recommendedBatch.seatsLeft !== 0 ? (
+                <>
+                  {/* The board's grammar at the finder's moment of maximum
+                      intent: pay is primary with the price on the button,
+                      WhatsApp demotes to the chat-first link. */}
+                  <BookTrialLink
+                    href={recommendedBatch.razorpayLink}
+                    batch={recommendedBatch}
+                    styleSlug={track.ctaSlug}
+                    branchSlug={recommendedBatch.branchSlug}
+                    source="style_finder"
+                    className="inline-flex min-h-[44px] items-center gap-2 rounded-full bg-ember-600 px-5 py-2.5 text-sm font-semibold text-on-ember transition hover:bg-ember-700"
+                  >
+                    {bookLabel(recommendedBatch, content.labels)} ·{' '}
+                    {formatInr(bookPriceInr(recommendedBatch))}
+                  </BookTrialLink>
+                  <EnquiryCTA
+                    whatsappNumber={content.site.whatsappNumber}
+                    ctx={{
+                      source: 'style_finder',
+                      style: { slug: track.ctaSlug, name: track.name },
+                      branch: { slug: branch.slug, name: branch.name },
+                      batch: recommendedBatch,
+                    }}
+                    variant="link"
+                    labels={content.labels}
+                    templates={content.site.whatsappTemplates}
+                    label={label(content.labels, 'ctaChatFirst')}
+                  />
+                </>
+              ) : (
+                <EnquiryCTA
+                  whatsappNumber={content.site.whatsappNumber}
+                  ctx={{
+                    source: 'style_finder',
+                    style: { slug: track.ctaSlug, name: track.name },
+                    branch: branch ? { slug: branch.slug, name: branch.name } : undefined,
+                    styleFinderRecommendation: {
+                      styleName: track.name,
+                      level: 'Foundation',
+                      branchName: branch?.name,
+                    },
+                  }}
+                  variant="primary"
+                  labels={content.labels}
+                  templates={content.site.whatsappTemplates}
+                  label={
+                    recommendedBatch?.seatsLeft === 0
+                      ? label(content.labels, 'ctaSeatsFullWhatsapp')
+                      : undefined
+                  }
+                />
+              )}
             </div>
           </div>
         )}

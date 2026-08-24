@@ -54,7 +54,7 @@ export const WhatsappTemplatesSchema = z
     styleFinder: z
       .string()
       .default(
-        'Hi Furor, the style finder suggested {style} {level}{where} for me. Please tell me about the next batch.',
+        'Hi Furor! {style} {level}{where} looks right for me. When does the next batch start?',
       ),
     /** Substituted into {where} when a studio is known; dropped entirely when not. */
     styleFinderWhere: z.string().default(' at {branch}'),
@@ -1120,6 +1120,10 @@ const RETIRED_COPY = new Map<string, string>([
   ["Full program {price}", "Full program {price} — pay in full to register."],
   // customPages[0].blocks[7].body
   ["When\n\nEvery \nSaturday & Sunday 9:30–10:30 AM\n\nPlease arrive by 9:15 AM for registration for your first trial session on Saturday.\n", "When\n\nEvery \nSaturday & Sunday 9:30–10:30 AM\n\nPlease arrive by 9:15 AM for registration before your first class on Saturday.\n"],
+  // site.whatsappTemplates.styleFinder — read like a machine wrote it, which
+  // suppresses sends; the visitor has to be happy putting these words in
+  // their own mouth.
+  ["Hi Furor, the style finder suggested {style} {level}{where} for me. Please tell me about the next batch.", "Hi Furor! {style} {level}{where} looks right for me. When does the next batch start?"],
 ]);
 
 /**

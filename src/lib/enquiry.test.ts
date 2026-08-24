@@ -52,7 +52,7 @@ describe('WhatsappTemplatesSchema', () => {
       "Hi Furor, I'm interested in the {style} {level} batch at {branch} ({days}, {time}, starting {date}). Please share details.",
     );
     expect(t.styleFinder).toBe(
-      'Hi Furor, the style finder suggested {style} {level}{where} for me. Please tell me about the next batch.',
+      'Hi Furor! {style} {level}{where} looks right for me. When does the next batch start?',
     );
     expect(t.styleFinderWhere).toBe(' at {branch}');
     expect(t.style).toBe("Hi Furor, I'm interested in {style} classes — please share details.");
@@ -121,7 +121,7 @@ describe('buildPrefilledMessage', () => {
         templates(),
       ),
     ).toBe(
-      'Hi Furor, the style finder suggested Salsa Foundation at Jubilee Hills for me. Please tell me about the next batch.',
+      'Hi Furor! Salsa Foundation at Jubilee Hills looks right for me. When does the next batch start?',
     );
   });
 
@@ -135,7 +135,7 @@ describe('buildPrefilledMessage', () => {
         templates(),
       ),
     ).toBe(
-      'Hi Furor, the style finder suggested Salsa Foundation for me. Please tell me about the next batch.',
+      'Hi Furor! Salsa Foundation looks right for me. When does the next batch start?',
     );
   });
 
