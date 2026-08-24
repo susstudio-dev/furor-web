@@ -895,7 +895,7 @@ const WelcomeSchema = z
     // block is skipped entirely when the social is unconfigured.
     rumbaHeading: z.string().default('Your first La Rumba'),
     rumbaBody: z.string().default(
-      'Class is one half — the social is the other. La Rumba runs {when} at {venue}, entry at the venue. Come watch this Saturday; by the end of your batch you\'ll be dancing it.',
+      'Class is one half — the social is the other. La Rumba runs {when} at {venue}, entry at the venue. Come watch this Saturday; by the end of your batch you’ll be dancing it.',
     ),
     // Payment-not-confirmed state
     unconfirmedBadge: z.string().default('Payment not confirmed'),
