@@ -140,12 +140,15 @@ export function Hero({ content, poster }: { content: SiteContent; poster: HeroPo
           16px and the board's top edge climbs 32px up a 667px viewport. The
           board is the conversion surface and it starts below the fold — 32px
           of card peeking beats 32px of empty space. */}
-      <div className="container-x relative z-10 pt-8 pb-28 sm:pt-10 sm:pb-44 lg:pt-12 lg:pb-48">
+      <div className="container-x relative z-10 pt-5 pb-28 sm:pt-10 sm:pb-44 lg:pt-12 lg:pb-48">
         {/* The count-in every dancer knows — 5, 6, 7, 8 — then the words move
             on 1. Pure CSS, on tempo; collapses to nothing on reduced motion. */}
+        {/* On phones the count-in floats top-right of the content column so it
+            plays without permanently reserving ~32px of fold height; sm+ keeps
+            it in flow above the badge. */}
         <p
           aria-hidden
-          className="count-in display text-sm font-bold uppercase tracking-[0.4em] text-ember-400 mb-3"
+          className="count-in absolute right-5 top-5 sm:static display text-sm font-bold uppercase tracking-[0.4em] text-ember-400 mb-0 sm:mb-3"
         >
           <span>5</span>
           <span>6</span>
@@ -153,7 +156,7 @@ export function Hero({ content, poster }: { content: SiteContent; poster: HeroPo
           <span>8</span>
         </p>
         {content.hero.badge ? (
-          <p className="pill hero-badge bg-ember-500/15 hero-fade" style={{ animationDelay: '60ms' }}>
+          <p className="pill hero-badge bg-ember-500/15 hero-fade">
             {content.hero.badge}
           </p>
         ) : null}
@@ -162,7 +165,7 @@ export function Hero({ content, poster }: { content: SiteContent; poster: HeroPo
         </h1>
         <p
           className="mt-4 max-w-2xl text-lg text-cream/80 sm:text-xl hero-fade"
-          style={{ animationDelay: '0.95s' }}
+          style={{ animationDelay: '0.3s' }}
         >
           {content.hero.subHeadline}
         </p>
@@ -171,7 +174,7 @@ export function Hero({ content, poster }: { content: SiteContent; poster: HeroPo
             "See batches" button is gone — the booking board this button anchors
             to already links there. The .downbeat class fires the button's
             one-shot accent at the exact moment the count-in above resolves. */}
-        <div className="mt-6 hero-fade" style={{ animationDelay: '1.15s' }}>
+        <div className="mt-6 hero-fade" style={{ animationDelay: '0.45s' }}>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
             <a href="#start-this-week" className="btn-primary magnetic downbeat">
               {/* Site-wide CTA, not a per-batch one: it anchors to the board
