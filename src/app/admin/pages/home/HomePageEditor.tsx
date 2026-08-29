@@ -133,7 +133,10 @@ export function HomePageEditor({ initial }: { initial: SiteContent }) {
             />
           </Field>
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Note on the spotlit beginner card">
+            <Field
+              label="Note on beginner cards"
+              hint="Shows on every Foundation card; loudest on the spotlit one."
+            >
               <input
                 value={h.board.spotlitNote}
                 onChange={(e) => patchBoard({ spotlitNote: e.target.value })}

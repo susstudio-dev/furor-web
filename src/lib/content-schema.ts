@@ -381,7 +381,11 @@ const HomePageSchema = z
         leadNoPrice: z
           .string()
           .default('Come once, meet the room, then decide on the full program.'),
+        /** Renders on EVERY Foundation card, not just the spotlit one — the
+         *  spotlight sets how loudly the note is printed, never whether the
+         *  card gets one. Kept its original key so stored documents parse. */
         spotlitNote: z.string().default('No partner, no experience needed.'),
+        /** Renders on everything above Foundation. */
         higherLevelNote: z.string().default('For dancers with the basics down.'),
         startsTemplate: z.string().default('Starts {date}'),
         trialPrice: z.string().default('First class {price}'),

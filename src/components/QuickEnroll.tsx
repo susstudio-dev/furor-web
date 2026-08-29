@@ -6,6 +6,7 @@ import { BookTrialLink } from './BookTrialLink';
 import { EnquiryCTA } from './EnquiryCTA';
 import { label } from '@/lib/labels';
 import { bookLabel, bookPriceInr, offersTrial, statusLabel } from '@/lib/book-label';
+import { cardNote } from '@/lib/board-card-copy';
 import { todayIso } from '@/lib/format';
 
 // The booking board — the conversion surface, styled like the lineup board
@@ -132,6 +133,10 @@ export function QuickEnroll({
                   // dancer.
                   const spotlit = i === 0 && foundation;
                   const book = bookLabel(b, content.labels);
+                  // What this card says about who it's for. Keyed on the
+                  // level, so the spotlight sets the volume — never whether
+                  // the card gets a line at all. See board-card-copy.ts.
+                  const note = cardNote(b, spotlit, board);
                   return (
                     <div
                       key={b.id}
@@ -172,13 +177,15 @@ export function QuickEnroll({
                         </span>
                       </div>
 
-                      {spotlit ? (
-                        <p className="relative mt-2 text-sm text-cream/80">
-                          {board.spotlitNote}
-                        </p>
-                      ) : !foundation ? (
-                        <p className="relative mt-2 text-xs text-cream/55">
-                          {board.higherLevelNote}
+                      {note ? (
+                        <p
+                          className={`relative mt-2 ${
+                            note.tone === 'loud'
+                              ? 'text-sm text-cream/80'
+                              : 'text-xs text-cream/55'
+                          }`}
+                        >
+                          {note.text}
                         </p>
                       ) : null}
 
