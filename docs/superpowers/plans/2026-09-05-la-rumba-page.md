@@ -19,7 +19,7 @@ Every task's requirements implicitly include this section.
 - **The retired word.** `content-schema.test.ts` sweeps schema defaults *and* seed prose and fails if the word the studio stopped using for a single paid class (t-r-i-a-l) reappears in any renderable string. Write in the "first class" vocabulary. Code identifiers like `trialFromInr` are exempt — only rendered strings matter.
 - **Typographic apostrophes.** Use `’` (U+2019), never `'`, in any string the site renders. There is already a commit fixing exactly this regression in La Rumba copy.
 - **Stored bytes shadow defaults forever.** The first admin save bakes current defaults into R2, so a default that is wrong at ship time can never be fixed by editing the default. Get them right once.
-- **Server-rendered.** Add no new `'use client'` component. `EnquiryCTA` is already a client component present on every route. `client-bundle.test.ts` guards this.
+- **Public routes stay server-rendered.** Add no new `'use client'` component to any *public* surface — `EnquiryCTA` is already a client component present on every route, and `client-bundle.test.ts` guards the public bundle. This does not bind `src/app/admin/**`: every admin editor is a client component by necessity, and Task 5's editor is expected to be one.
 - **Blank hides the element** — the convention throughout this content document.
 - **Running the tests:** this shell has `NODE_ENV=production` exported, which makes 2 unrelated `preview-token` tests throw. Always run `NODE_ENV=test npx vitest run`. Typecheck with `npx tsc --noEmit`. `next lint` is NOT configured (it prompts interactively) — do not use it as a gate.
 - **This is a slow HDD.** A cold `next dev` boot is ~3 minutes and a first route compile ~60s. Budget for it; do not assume a hang.
@@ -51,7 +51,7 @@ Every task's requirements implicitly include this section.
 | `src/components/Header.tsx` | Read `navItemsFor()`. |
 | `src/components/Footer.tsx` | Read `navItemsFor()`. |
 | `src/components/RumbaBand.tsx` | Full-bleed night treatment + link through. |
-| `src/app/globals.css` | `.full-bleed` + `.rumba-night` utilities. |
+| `src/app/globals.css` | `.rumba-night` utility (the bleed needs no CSS). |
 | `src/app/admin/pages/page.tsx` | Index card for the new editor. |
 
 **Deliberately NOT modified:** `src/app/admin/labels/LabelsEditor.tsx`. See Task 4 — the spec was wrong about this.
@@ -1372,20 +1372,11 @@ MSG
 - Consumes: `pages.home.rumba.pageLink` (Task 1); the `/la-rumba` route (Task 3).
 - Produces: no new exports.
 
-- [ ] **Step 1: Add the CSS utilities**
+- [ ] **Step 1: Add the CSS utility**
 
 In `src/app/globals.css`, inside the same `@layer components` block that defines `.container-x`:
 
 ```css
-  /* Escapes the page's shared max-width so a section can span the viewport.
-     The band is not badly built — it is invisible, because it has the same
-     container width, the same ground and the same rhythm as every other
-     section on the page. Breaking the container is the gear change. */
-  .full-bleed {
-    width: 100vw;
-    margin-left: calc(50% - 50vw);
-    margin-right: calc(50% - 50vw);
-  }
   /* The band's own night.
      
      Its photographs are of a dark room, and the light theme's cream ground
@@ -1433,16 +1424,25 @@ In `src/app/globals.css`, inside the same `@layer components` block that defines
 
 If either token block in `globals.css` gains a colour later, this list needs the same addition — the alternative (a `[data-theme]` wrapper) cannot work here, because the section must be dark while the page around it is light.
 
-- [ ] **Step 2: Apply them to the band**
+- [ ] **Step 2: Apply it to the band**
 
-In `src/components/RumbaBand.tsx`, change the opening `<section>` to wrap its content in a bleed:
+The bleed needs no CSS at all. `<main>` in `layout.tsx` is unconstrained, so the
+section is already full-width — `container-x` on the `<section>` itself is the
+only thing narrowing it. Move that class to an inner wrapper and the section
+spans the viewport with **no `100vw` and no negative margins**, which matters:
+this codebase sets no `overflow-x: hidden` and no `scrollbar-gutter`, so the
+usual `width: 100vw; margin-left: calc(50% - 50vw)` idiom would overflow
+horizontally by the scrollbar's width on every desktop that shows one.
+
+In `src/components/RumbaBand.tsx`, change the opening `<section>` from
+`className="container-x py-12 sm:py-16"` to:
 
 ```tsx
-    <section className="full-bleed rumba-night py-16 sm:py-24">
+    <section className="rumba-night py-16 sm:py-24">
       <div className="container-x">
 ```
 
-and close the extra `</div>` before `</section>`. Bump the photo grid so the images carry more weight on the wider ground:
+and close that extra `</div>` immediately before the closing `</section>`. Bump the photo grid so the images carry more weight on the wider ground:
 
 ```tsx
         <Reveal stagger className="mt-10 grid gap-3 sm:gap-4 grid-cols-2 md:grid-cols-3">
@@ -1481,7 +1481,7 @@ In `src/app/admin/pages/home/HomePageEditor.tsx`, beside the existing `classLink
 
 Run: `npx tsc --noEmit && NODE_ENV=test npx vitest run`, then with `next dev` running load `/` and check the band at **1600px and 390px, in both light and dark themes** (the theme toggle is in the header).
 
-The section should span the full viewport width with no horizontal scrollbar, sit visibly darker than the sections above and below it in light theme, and show a working link to `/la-rumba`. Horizontal overflow is the classic `100vw` failure — if a scrollbar appears, that is this change, not a pre-existing bug.
+The section should span the full viewport width, sit visibly darker than the sections above and below it **in light theme** (that is the failure mode worth checking — the colour tokens invert, so a mistake here renders the band cream), and show a working link to `/la-rumba`. Confirm there is no horizontal scrollbar at 390px.
 
 - [ ] **Step 6: Commit**
 
@@ -1492,7 +1492,7 @@ feat: the home La Rumba band reads like a night, and leads somewhere
 
 The band was not badly built, it was invisible: same container width, same
 ground and same rhythm as every other section, with photographs of a dark room
-flattened by the light theme. It now breaks full-bleed and carries its own night
+flattened by the light theme. It now spans the viewport and carries its own night
 in both themes, so the scroll changes gear when it arrives.
 
 It also stops being a dead end — pageLink takes the reader to /la-rumba, and
@@ -1509,7 +1509,7 @@ MSG
 - [ ] `/la-rumba` renders; `/sitemap.xml` lists it; nav shows "La Rumba".
 - [ ] Set `tonight.enabled` false → page 404s AND the nav item disappears. Set it back to true.
 - [ ] Edit the page in `/admin/pages/la-rumba`, save, confirm the change appears on `/la-rumba`.
-- [ ] Home band: full-bleed, dark in both themes, no horizontal scrollbar at 390px, links through.
+- [ ] Home band: spans the viewport, dark in BOTH themes, no horizontal scrollbar at 390px, links through.
 
 ## Owner review before shipping
 
