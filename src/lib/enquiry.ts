@@ -12,6 +12,7 @@ export type EnquirySource =
   | 'quick_enroll'
   | 'sticky_bar'
   | 'rumba_band'
+  | 'la_rumba_page'
   | 'footer';
 
 export type EnquiryChannel = 'whatsapp' | 'instagram';
