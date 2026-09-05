@@ -511,6 +511,11 @@ const HomePageSchema = z
         rsvpLabel: z.string().default('Say you’re coming — WhatsApp'),
         /** Anchors to #start-this-week; the page appends " · ₹500" live. */
         classLink: z.string().default('or book your first class'),
+        /** Link through to /la-rumba. Defaults to real copy on purpose: a blank
+         *  default would ship the page with nothing on the home page pointing at
+         *  it. Blank still hides it, as everywhere else in this document — but
+         *  that has to be the owner's decision, not an accident of the default. */
+        pageLink: z.string().default('See what a Saturday looks like'),
       })
       .default({}),
     howItWorks: z
@@ -789,6 +794,127 @@ const PagesSchema = z
   .object({
     home: HomePageSchema,
     about: AboutPageSchema,
+    // The La Rumba page at /la-rumba.
+    //
+    // COPY ONLY. Every fact about the social — the day, the hour, the venue,
+    // the locality — renders from `content.tonight` at request time and is
+    // deliberately absent here, exactly as RumbaBand does it. The alternative
+    // is two stored copies of "Saturday 7 PM at Over the Moon" that disagree
+    // the night the venue changes, and nothing in the system to notice.
+    //
+    // What the page may not say is as load-bearing as what it says: entry is
+    // paid at the venue and varies by the night, and the format varies week to
+    // week (owner, 2026-08-25). So there is no price field and no schedule
+    // field — the page converts to WhatsApp for both, which is the only channel
+    // that can actually be current.
+    laRumba: z
+      .object({
+        seoTitle: z.string().default(''),
+        seoDescription: z.string().default(''),
+        intro: PageIntroSchema.default({
+          eyebrow: 'The weekly social',
+          headline: 'La Rumba',
+          lead: 'Our Latin social night in Hyderabad — every level on one floor, beginners very much included. Come to dance, or come to watch.',
+        }),
+        heroPhoto: z
+          .object({ src: z.string(), alt: z.string() })
+          .default({
+            src: '/photos/DSC_0095.jpg',
+            alt: 'A packed floor at La Rumba, mid-song',
+          }),
+        /** The hero's ask. Deliberately distinct from `weekly.ctaLabel`: the
+         *  hero asks for a commitment ("say you're coming"), the weekly block
+         *  asks for information ("what's on this Saturday?"). They share a
+         *  WhatsApp context because they open the same conversation, but two
+         *  buttons on one page carrying the identical sentence reads as a bug. */
+        heroCtaLabel: z.string().default('Say you’re coming'),
+        reassure: z
+          .object({
+            eyebrow: z.string().default('Before you talk yourself out of it'),
+            headline: z.string().default('You don’t need a partner, or a single step.'),
+            items: z
+              .array(
+                z.object({
+                  title: z.string().default(''),
+                  body: z.string().default(''),
+                }),
+              )
+              .default([
+                {
+                  title: 'Come on your own.',
+                  body: 'You don’t need to bring anyone. Partners change through the night — that is what makes it a social rather than a performance.',
+                },
+                {
+                  title: 'Watching is allowed.',
+                  body: 'Take a table, watch a set, leave when you like. Nobody is going to pull you onto the floor.',
+                },
+                {
+                  title: 'Every level is in the room.',
+                  body: 'All levels are welcome, and all levels turn up. Nobody is auditioning you.',
+                },
+                {
+                  title: 'Wear what you’d wear out.',
+                  body: 'Anything you can move in. Smooth soles make turning easier; nothing else matters.',
+                },
+              ]),
+          })
+          .default({}),
+        gallery: z
+          .object({
+            eyebrow: z.string().default('The room'),
+            headline: z.string().default('What the room actually looks like.'),
+            photos: z
+              .array(z.object({ src: z.string(), alt: z.string() }))
+              .default([
+                { src: '/photos/DSC09776.jpg', alt: 'Two dancers laughing through a song' },
+                { src: '/photos/DSC_0052.jpg', alt: 'A turn in an emerald dress — Bachata on the floor' },
+                { src: '/photos/DSC09698.jpg', alt: 'A black-and-white shot of a couple turning by the bar' },
+                { src: '/photos/DSC09730.jpg', alt: 'Two dancers laughing mid-turn, hand in hand' },
+                { src: '/photos/DSC09736.jpg', alt: 'A couple connecting hands on a crowded floor' },
+                { src: '/photos/DSC_0166.jpg', alt: 'A turn in a royal blue dress, hand raised overhead' },
+                { src: '/photos/DSC_9973.jpg', alt: 'A dancer’s arm raised mid-turn under the room’s lights' },
+              ]),
+          })
+          .default({}),
+        voices: z
+          .object({
+            eyebrow: z.string().default('In their words'),
+            headline: z.string().default('From people who dance here.'),
+            /** Resolved against `content.testimonials`; ids that no longer
+             *  exist are skipped rather than rendered as a hole. */
+            testimonialIds: z.array(z.string()).default(['test-004']),
+          })
+          .default({}),
+        // The spine of the page. Entry and format both vary, so this block does
+        // not hedge — it says so plainly and hands the visitor the one channel
+        // that can answer for this particular Saturday.
+        weekly: z
+          .object({
+            eyebrow: z.string().default('One thing to know'),
+            headline: z.string().default('Every week is a little different.'),
+            body: z
+              .string()
+              .default(
+                'Entry is sorted at the venue, and what happens on the night changes week to week. Message us and we’ll tell you exactly what’s on this week — before you travel across town.',
+              ),
+            ctaLabel: z.string().default('Ask what’s on this week'),
+            ctaContext: z.string().default('what’s on at La Rumba this week'),
+          })
+          .default({}),
+        classCta: z
+          .object({
+            eyebrow: z.string().default('From the floor to the classroom'),
+            headline: z.string().default('Liked the room? Learn the dance.'),
+            body: z
+              .string()
+              .default(
+                'Our beginner batches run every weekend — no partner, no experience needed.',
+              ),
+            ctaLabel: z.string().default('See beginner batches'),
+          })
+          .default({}),
+      })
+      .default({}),
     faqs: FaqsPageSchema,
     contact: ContactPageSchema,
     instructorsPage: InstructorsPageSchema,

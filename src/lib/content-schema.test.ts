@@ -405,3 +405,63 @@ describe('welcome La Rumba invite defaults', () => {
     expect(w.rumbaBody).toContain('{venue}');
   });
 });
+
+describe('pages.laRumba', () => {
+  const lr = () => SiteContentSchema.parse(seed).pages.laRumba;
+
+  it('ships an intro, a hero photo and the five body blocks', () => {
+    const p = lr();
+    expect(p.intro.headline).toBe('La Rumba');
+    expect(p.heroPhoto.src).toBe('/photos/DSC_0095.jpg');
+    expect(p.reassure.items.length).toBeGreaterThanOrEqual(4);
+    expect(p.gallery.photos.length).toBeGreaterThanOrEqual(6);
+    expect(p.voices.testimonialIds).toContain('test-004');
+    expect(p.weekly.ctaContext).toBeTruthy();
+    expect(p.classCta.ctaLabel).toBeTruthy();
+  });
+
+  // The hero asks for a commitment; the weekly block asks for information.
+  // Printing one sentence on both buttons reads as a copy-paste bug.
+  it('gives the hero a different ask from the weekly block', () => {
+    expect(lr().heroCtaLabel).not.toBe(lr().weekly.ctaLabel);
+  });
+
+  it('parses a stored document that has never heard of the page', () => {
+    const doc = JSON.parse(JSON.stringify(seed));
+    delete doc.pages.laRumba;
+    expect(() => SiteContentSchema.parse(doc)).not.toThrow();
+  });
+
+  // The fact base lives in `tonight`, which RumbaBand already renders from and
+  // never duplicates. A default that repeats the day, the hour or the venue is
+  // a second copy that silently contradicts the first the night the social moves.
+  it('duplicates no fact that `tonight` already owns', () => {
+    const json = JSON.stringify(lr());
+    for (const fact of ['Saturday', '7 PM', 'Over the Moon', 'Gachibowli']) {
+      expect(json).not.toContain(fact);
+    }
+  });
+
+  // Entry varies by the night and the format varies week to week (owner,
+  // 2026-08-25), so a default naming a price or promising a shape is a lie the
+  // moment it ships — and stored bytes would then shadow the fix forever.
+  it('promises no price and no fixed format', () => {
+    const json = JSON.stringify(lr());
+    expect(json).not.toMatch(/₹|cover charge|entry fee/i);
+    expect(json).not.toMatch(/\blesson\b|\bworkshop\b|\bset list\b/i);
+  });
+
+  // Straight apostrophes in rendered copy are a shipped regression here once
+  // already ("fix: welcome La Rumba copy uses the site's typographic apostrophe").
+  it('uses the typographic apostrophe throughout', () => {
+    expect(JSON.stringify(lr())).not.toMatch(/[a-z]'[a-z]/i);
+  });
+});
+
+describe('pages.home.rumba.pageLink', () => {
+  // A blank default would ship the new page with nothing on the home page
+  // pointing at it. Blank must stay possible, but as the owner's choice.
+  it('defaults to real copy so the band links through out of the box', () => {
+    expect(SiteContentSchema.parse(seed).pages.home.rumba.pageLink).toBeTruthy();
+  });
+});
