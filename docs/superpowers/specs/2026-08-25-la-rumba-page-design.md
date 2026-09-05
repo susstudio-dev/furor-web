@@ -125,8 +125,12 @@ not be reachable or indexed.
   `'la-rumba': 'navLaRumba'` entry in `NAV_LABEL_KEY`. Placed after `batches` —
   classes first, then the social.
 - `src/lib/label-defaults.ts`: `navLaRumba: 'La Rumba'`.
-- `src/app/admin/labels/LabelsEditor.tsx`: surface `navLaRumba`.
-  **Required** — `labels-wired.test.ts` fails a label key with no admin field.
+- ~~`src/app/admin/labels/LabelsEditor.tsx`: surface `navLaRumba`.~~
+  **Corrected 2026-09-05 during planning — no edit needed, and the stated reason
+  was backwards.** `labels-wired.test.ts` excludes `src/app/admin/**` and
+  requires a key to be rendered *outside* the admin; `NAV_LABEL_KEY` in `nav.ts`
+  satisfies it. And `LabelsEditor` groups keys by prefix (`k.startsWith('nav')`),
+  so `navLaRumba` shows up in its "Menu items" group on its own.
 - `src/lib/page-meta.ts`: add `'laRumba'` to `PageMetaKey` and
   `PAGE_SEO_DEFAULTS`. Update the "eleven routes" comment to twelve.
 - `src/app/sitemap.ts`: add `/la-rumba` to `fixed`, `changeFrequency: 'weekly'`,
@@ -149,8 +153,10 @@ mobile nav lists. `nav.test.ts` covers the resulting rule.
 
 - `src/app/admin/pages/la-rumba/page.tsx` + `LaRumbaPageEditor.tsx`, following
   `AboutPageEditor` — the closest existing shape (intro + gallery + sections).
-- Must call `requireSubject()`; `admin-pages-guarded.test.ts` fails any admin
-  page that does not guard server-side.
+- Must call `requireWriteAccess('pages')` — the capability the other page
+  editors use. (The spec originally said `requireSubject()`; corrected
+  2026-09-05. `admin-pages-guarded.test.ts` accepts either, but the blanket
+  guard would let a read-only admin open a write form.)
 - Add a card to the `PAGES` list in `src/app/admin/pages/page.tsx`.
 - The editor states, in a hint, that day / time / venue are **not** edited here —
   they come from the Site editor's social block — so nobody types a second copy
