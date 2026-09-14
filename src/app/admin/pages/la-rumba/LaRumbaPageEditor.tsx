@@ -325,7 +325,7 @@ export function LaRumbaPageEditor({ initial }: { initial: SiteContent }) {
               className="input"
             />
           </Field>
-          <Field label="Button label" hint="The first-class price is added automatically.">
+          <Field label="Button label" hint="The first-class price is added automatically when a batch offers a first-class price.">
             <input
               value={p.classCta.ctaLabel}
               onChange={(e) => patch({ classCta: { ...p.classCta, ctaLabel: e.target.value } })}

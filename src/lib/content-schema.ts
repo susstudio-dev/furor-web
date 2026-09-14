@@ -898,7 +898,7 @@ const PagesSchema = z
                 'Entry is sorted at the venue, and what happens on the night changes week to week. Message us and we’ll tell you exactly what’s on this week — before you travel across town.',
               ),
             ctaLabel: z.string().default('Ask what’s on this week'),
-            ctaContext: z.string().default('what’s on at La Rumba this week'),
+            ctaContext: z.string().default('La Rumba this week'),
           })
           .default({}),
         classCta: z

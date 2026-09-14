@@ -60,7 +60,7 @@ export default async function LaRumbaPage() {
       {eventLd ? <JsonLd data={eventLd} /> : null}
 
       {/* 1 — Hero. The name at wordmark scale over one real photograph. */}
-      <section className="relative isolate overflow-hidden">
+      <section className="rumba-night relative isolate overflow-hidden">
         <div className="absolute inset-0 -z-10">
           <Img
             src={p.heroPhoto.src}
@@ -92,7 +92,7 @@ export default async function LaRumbaPage() {
           <div className="mt-8">
             <EnquiryCTA
               whatsappNumber={content.site.whatsappNumber}
-              ctx={{ source: 'la_rumba_page', customNote: p.weekly.ctaContext }}
+              ctx={{ source: 'la_rumba_hero', customNote: p.weekly.ctaContext }}
               variant="primary"
               labels={content.labels}
               templates={content.site.whatsappTemplates}
@@ -206,7 +206,7 @@ export default async function LaRumbaPage() {
           <div className="mt-6">
             <EnquiryCTA
               whatsappNumber={content.site.whatsappNumber}
-              ctx={{ source: 'la_rumba_page', customNote: p.weekly.ctaContext }}
+              ctx={{ source: 'la_rumba_weekly', customNote: p.weekly.ctaContext }}
               variant="primary"
               labels={content.labels}
               templates={content.site.whatsappTemplates}

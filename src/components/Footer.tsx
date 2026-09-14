@@ -107,7 +107,7 @@ export function Footer({ content, flush = false }: { content: SiteContent; flush
               {label(content.labels, 'navExplore')}
             </h3>
             <ul className="mt-3 space-y-2 text-sm text-cream/80">
-              {/* Same seven destinations, same order, one source of truth with
+              {/* Same eight destinations, same order, one source of truth with
                   the header. `home` is deliberately excluded — the brand mark
                   above already links there. */}
               {navItemsFor({ socialEnabled: content.tonight.enabled }).filter(
