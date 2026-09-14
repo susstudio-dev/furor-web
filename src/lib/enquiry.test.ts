@@ -8,6 +8,11 @@ const templates = () => doc().site.whatsappTemplates;
 
 const style = { slug: 'salsa', name: 'Salsa' };
 const branch = { slug: 'jubilee-hills', name: 'Jubilee Hills' };
+// Batch fixtures use absolute date extremes (far future and far past) so that
+// buildPrefilledMessage's comparison of startDate < todayIso() does not depend
+// on the calendar. Tests written with dates near the present rot as the calendar
+// advances, changing which branch is taken. Fixed dates ensure the test's meaning
+// never changes.
 const batch = {
   id: 'batch-001',
   styleSlugs: ['salsa'],
@@ -15,7 +20,7 @@ const batch = {
   branchSlug: 'jubilee-hills',
   daysOfWeek: ['Sat', 'Sun'] as Array<'Sat' | 'Sun'>,
   time: '9:30 AM – 10:30 AM',
-  startDate: '2026-09-05',
+  startDate: '2099-01-01',
   joinUntil: '',
   priceInr: 6000,
   trialInr: 500,
@@ -103,7 +108,14 @@ describe('buildPrefilledMessage', () => {
 
   it('fills the batch template, which is the most specific', () => {
     expect(buildPrefilledMessage({ source: 'batch_row', style, branch, batch }, templates())).toBe(
-      "Hi Furor, I'm interested in the Salsa Foundation batch at Jubilee Hills (Sat–Sun, 9:30 AM – 10:30 AM, starting 5 September 2026). Please share details.",
+      "Hi Furor, I'm interested in the Salsa Foundation batch at Jubilee Hills (Sat–Sun, 9:30 AM – 10:30 AM, starting 1 January 2099). Please share details.",
+    );
+  });
+
+  it('fills the batchStarted template when a batch has already begun', () => {
+    const startedBatch = { ...batch, startDate: '2020-01-01' };
+    expect(buildPrefilledMessage({ source: 'batch_row', style, branch, batch: startedBatch }, templates())).toBe(
+      "Hi Furor, I'd like to join the Salsa Foundation batch at Jubilee Hills (Sat–Sun, 9:30 AM – 10:30 AM — it started 1 January 2020). Can I still join?",
     );
   });
 
