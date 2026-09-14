@@ -1,6 +1,6 @@
 import { fitDescription, fitTitle } from './seo';
 
-// The eleven routes that own their own <title> and meta description. Every
+// The twelve routes that own their own <title> and meta description. Every
 // other route derives both from a record it already renders (a dance style, a
 // story, a custom page), so there is nothing here to make editable.
 export type PageMetaKey =
@@ -14,7 +14,8 @@ export type PageMetaKey =
   | 'stories'
   | 'privacy'
   | 'terms'
-  | 'welcome';
+  | 'welcome'
+  | 'laRumba';
 
 /**
  * The literals each route shipped before seoTitle / seoDescription existed.
@@ -80,6 +81,11 @@ export const PAGE_SEO_DEFAULTS: Record<PageMetaKey, { title: string; description
   welcome: {
     title: 'You’re in — Furor Hyderabad',
     description: 'Your intake details and next steps.',
+  },
+  laRumba: {
+    title: 'La Rumba — Latin Social Night',
+    description:
+      'La Rumba, the weekly Latin social in Hyderabad. All levels welcome, no partner needed.',
   },
 };
 

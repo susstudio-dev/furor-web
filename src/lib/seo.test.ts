@@ -100,6 +100,7 @@ describe('PAGE_SEO_DEFAULTS', () => {
         'faqs',
         'home',
         'instructorsPage',
+        'laRumba',
         'privacy',
         'stories',
         'terms',
