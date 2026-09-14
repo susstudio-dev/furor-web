@@ -6,7 +6,7 @@ import type { SiteContent } from '@/lib/content-schema';
 import { BrandMark } from './BrandMark';
 import { ThemeToggle } from './ThemeToggle';
 import { FacebookIcon, InstagramIcon, YouTubeIcon } from './SocialIcons';
-import { NAV_ITEMS, navLabel, type NavItem } from '@/lib/nav';
+import { navItemsFor, navLabel, type NavItem } from '@/lib/nav';
 import { label } from '@/lib/labels';
 
 type NavWithChildren = NavItem & { children?: { label: string; href: string }[] };
@@ -32,7 +32,9 @@ export function Header({ content }: { content: SiteContent }) {
   // The branch keys on the STABLE ID, not the rendered text. `item.label ===
   // 'Dance Styles'` was one rename in /admin/labels away from emptying this
   // dropdown with no error anywhere.
-  const navWithDropdowns: NavWithChildren[] = NAV_ITEMS.map((item) => {
+  const navWithDropdowns: NavWithChildren[] = navItemsFor({
+    socialEnabled: content.tonight.enabled,
+  }).map((item) => {
     if (item.id === 'dance-styles') {
       return {
         ...item,

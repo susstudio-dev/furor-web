@@ -3,7 +3,7 @@ import type { SiteContent } from '@/lib/content-schema';
 import { buildWhatsAppHref } from '@/lib/enquiry';
 import { BrandMark } from './BrandMark';
 import { FacebookIcon, InstagramIcon, WhatsAppIcon, YouTubeIcon } from './SocialIcons';
-import { NAV_ITEMS, navLabel } from '@/lib/nav';
+import { navItemsFor, navLabel } from '@/lib/nav';
 import { label } from '@/lib/labels';
 
 // `flush` drops the breathing room above the footer. On the public pages that
@@ -110,7 +110,7 @@ export function Footer({ content, flush = false }: { content: SiteContent; flush
               {/* Same seven destinations, same order, one source of truth with
                   the header. `home` is deliberately excluded — the brand mark
                   above already links there. */}
-              {NAV_ITEMS.filter(
+              {navItemsFor({ socialEnabled: content.tonight.enabled }).filter(
                 (i) => i.id !== 'home' && (i.id !== 'blog' || content.stories.length > 0),
               ).map((i) => (
                 <li key={i.id}>

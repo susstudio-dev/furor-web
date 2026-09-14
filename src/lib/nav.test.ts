@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { LabelsSchema, type Labels } from './content-schema';
-import { NAV_ITEMS, navLabel } from './nav';
+import { NAV_ITEMS, navItemsFor, navLabel } from './nav';
 
 const labels = (over: Partial<Labels> = {}): Labels => LabelsSchema.parse(over);
 
@@ -11,13 +11,14 @@ const byId = (id: string) => {
 };
 
 describe('NAV_ITEMS', () => {
-  it('ships the eight primary destinations Header and Footer share', () => {
+  it('ships the nine primary destinations Header and Footer share', () => {
     expect(NAV_ITEMS.map((i) => i.id)).toEqual([
       'home',
       'about',
       'dance-styles',
       'instructors',
       'batches',
+      'la-rumba',
       'blog',
       'faqs',
       'contact',
@@ -61,5 +62,27 @@ describe('navLabel', () => {
     // The branch key is the id, and the id did not move.
     expect(NAV_ITEMS.filter((i) => i.id === 'dance-styles')).toHaveLength(1);
     expect(NAV_ITEMS.filter((i) => navLabel(i, renamed) === 'Dance Styles')).toHaveLength(0);
+  });
+});
+
+describe('navItemsFor', () => {
+  it('offers La Rumba while the social is running', () => {
+    expect(navItemsFor({ socialEnabled: true }).map((i) => i.id)).toContain('la-rumba');
+  });
+
+  // /la-rumba returns notFound() when the social is switched off, so a menu
+  // item pointing at it would be a link to a 404 — worse than no link at all.
+  it('drops La Rumba when the social is switched off', () => {
+    expect(navItemsFor({ socialEnabled: false }).map((i) => i.id)).not.toContain('la-rumba');
+  });
+
+  it('changes nothing else either way', () => {
+    const on = navItemsFor({ socialEnabled: true }).map((i) => i.id);
+    const off = navItemsFor({ socialEnabled: false }).map((i) => i.id);
+    expect(on.filter((id) => id !== 'la-rumba')).toEqual(off);
+  });
+
+  it('resolves a label for the new destination', () => {
+    expect(navLabel(byId('la-rumba'), labels())).toBe('La Rumba');
   });
 });

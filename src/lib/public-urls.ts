@@ -13,6 +13,7 @@ const STATIC_PATHS = [
   '/stories',
   '/dance-styles',
   '/batches',
+  '/la-rumba',
   '/privacy',
   '/terms',
   '/sitemap.xml',

@@ -1176,6 +1176,7 @@ export const LabelsSchema = z
     navDanceStyles: z.string().default(L.navDanceStyles),
     navInstructors: z.string().default(L.navInstructors),
     navBatches: z.string().default(L.navBatches),
+    navLaRumba: z.string().default(L.navLaRumba),
     navBlog: z.string().default(L.navBlog),
     navFaqs: z.string().default(L.navFaqs),
     navContact: z.string().default(L.navContact),

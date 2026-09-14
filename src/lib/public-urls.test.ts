@@ -12,7 +12,7 @@ const doc = () =>
 describe('publicPathsFor', () => {
   it('includes every static public route', () => {
     const paths = publicPathsFor(doc());
-    for (const p of ['/', '/about', '/batches', '/contact', '/faqs', '/instructors', '/sitemap.xml']) {
+    for (const p of ['/', '/about', '/batches', '/contact', '/faqs', '/instructors', '/la-rumba', '/sitemap.xml']) {
       expect(paths).toContain(p);
     }
   });

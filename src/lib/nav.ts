@@ -15,6 +15,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { id: 'dance-styles', href: '/dance-styles' },
   { id: 'instructors', href: '/instructors' },
   { id: 'batches', href: '/batches' },
+  { id: 'la-rumba', href: '/la-rumba' },
   { id: 'blog', href: '/stories' },
   { id: 'faqs', href: '/faqs' },
   { id: 'contact', href: '/contact' },
@@ -29,6 +30,7 @@ const NAV_LABEL_KEY: Record<string, LabelKey> = {
   'dance-styles': 'navDanceStyles',
   instructors: 'navInstructors',
   batches: 'navBatches',
+  'la-rumba': 'navLaRumba',
   blog: 'navBlog',
   faqs: 'navFaqs',
   contact: 'navContact',
@@ -36,4 +38,16 @@ const NAV_LABEL_KEY: Record<string, LabelKey> = {
 
 export function navLabel(item: NavItem, labels: Labels): string {
   return label(labels, NAV_LABEL_KEY[item.id]);
+}
+
+/**
+ * The nav, minus destinations that are currently switched off.
+ *
+ * /la-rumba returns notFound() when `tonight.enabled` is false, so its menu
+ * entry has to vanish with it — a nav item pointing at a 404 is worse than no
+ * nav item. Header and Footer both read this instead of NAV_ITEMS directly, so
+ * the desktop menu, the mobile menu and the footer cannot drift apart.
+ */
+export function navItemsFor(opts: { socialEnabled: boolean }): NavItem[] {
+  return NAV_ITEMS.filter((item) => item.id !== 'la-rumba' || opts.socialEnabled);
 }
