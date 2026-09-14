@@ -413,6 +413,13 @@ export function HomePageEditor({ initial }: { initial: SiteContent }) {
             <Field label="First-class link" hint="The current first-class price is appended automatically.">
               <input value={h.rumba.classLink} onChange={(e) => patchRumba({ classLink: e.target.value })} className="input" />
             </Field>
+            <Field label="Link to the La Rumba page" hint="Blank hides the link.">
+              <input
+                value={h.rumba.pageLink}
+                onChange={(e) => patchRumba({ pageLink: e.target.value })}
+                className="input"
+              />
+            </Field>
           </div>
         </Section>
 

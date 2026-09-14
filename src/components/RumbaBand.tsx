@@ -26,7 +26,8 @@ export function RumbaBand({
   const students = content.site.stats.studentsThisWeek;
 
   return (
-    <section className="container-x py-12 sm:py-16">
+    <section className="rumba-night py-16 sm:py-24">
+      <div className="container-x">
       <Reveal>
         <div className="flex items-center gap-3">
           <p className="display text-sm uppercase tracking-widest text-ember-400">{r.eyebrow}</p>
@@ -40,7 +41,7 @@ export function RumbaBand({
         </p>
       </Reveal>
       {r.photos.length > 0 ? (
-        <Reveal stagger className="mt-8 grid gap-3 sm:gap-4 grid-cols-2 md:grid-cols-3">
+        <Reveal stagger className="mt-10 grid gap-3 sm:gap-4 grid-cols-2 md:grid-cols-3">
           {r.photos.slice(0, 3).map((p, i) => (
             <div
               key={`${p.src}-${i}`}
@@ -90,7 +91,16 @@ export function RumbaBand({
           {r.classLink}
           {trialFrom != null ? ` · ${formatInr(trialFrom)}` : ''}
         </Link>
+        {r.pageLink ? (
+          <Link
+            href="/la-rumba"
+            className="inline-flex min-h-[44px] items-center py-2 text-sm font-semibold text-ember-400 underline decoration-ember-400/40 underline-offset-4 transition hover:text-ember-300"
+          >
+            {r.pageLink} →
+          </Link>
+        ) : null}
       </Reveal>
+      </div>
     </section>
   );
 }

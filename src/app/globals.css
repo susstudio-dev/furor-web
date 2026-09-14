@@ -133,6 +133,49 @@
   .container-x {
     @apply mx-auto max-w-screen-2xl px-5 sm:px-6 lg:px-10;
   }
+  /* The band's own night.
+
+     Its photographs are of a dark room, and the light theme's cream ground
+     flattens them into thumbnails. This section therefore stays dark in BOTH
+     themes.
+
+     CAREFUL — the colour tokens are ROLE-based and invert with the theme:
+     --c-ink-950 is a near-white (247 243 236) on light and near-black
+     (11 7 9) on dark, and --c-cream is the exact opposite. So a naive
+     `background: rgb(var(--c-ink-950))` here renders CREAM in light mode —
+     the opposite of the intent.
+
+     Redeclaring the dark values on this element is what makes it work: every
+     descendant utility (text-cream/70, border-cream/10, text-ember-400,
+     bg-ink-900/40) resolves against these instead of the page's, so the whole
+     subtree is simply "in dark mode" without touching a single child class.
+     Values copied verbatim from html[data-theme='dark']. */
+  .rumba-night {
+    color-scheme: dark;
+    --c-ink-950: 11 7 9;
+    --c-ink-900: 21 12 16;
+    --c-ink-800: 29 16 21;
+    --c-ink-700: 40 22 29;
+    --c-ink-500: 74 34 48;
+    --c-ember-300: 250 140 140;
+    --c-ember-400: 240 60 60;
+    --c-ember-500: 224 16 16;
+    --c-ember-600: 200 0 0;
+    --c-ember-700: 160 0 16;
+    --c-gold-400: 80 128 232;
+    --c-gold-500: 40 88 200;
+    --c-cream: 246 239 231;
+    --art-bg-a: #1d1015;
+    --art-bg-b: #0b0709;
+    --art-accent: #e01010;
+    --art-accent-2: #a00010;
+    --art-gold: #2858c8;
+    --art-fg: #f6efe7;
+    background:
+      radial-gradient(120% 100% at 50% 0%, rgb(var(--c-ember-600) / 0.18), transparent 60%),
+      rgb(var(--c-ink-950));
+    color: rgb(var(--c-cream));
+  }
   .pill {
     /* nowrap: a pill that breaks onto two lines ("FILLING / FAST") stops
        reading as a status chip at all — the sibling text wraps instead. */
