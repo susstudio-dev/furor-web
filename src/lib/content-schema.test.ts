@@ -456,6 +456,60 @@ describe('pages.laRumba', () => {
   it('uses the typographic apostrophe throughout', () => {
     expect(JSON.stringify(lr())).not.toMatch(/[a-z]'[a-z]/i);
   });
+
+  // Empty ON PURPOSE. resolveSlides() falls back to heroPhoto, so a document
+  // that has never been edited renders — and is served — exactly as before.
+  // A non-empty default here would silently opt every existing page into the
+  // slider on first parse.
+  it('ships no hero slides by default', () => {
+    expect(lr().heroSlides).toEqual([]);
+  });
+
+  // heroPhoto is retired as an editable field but must never be removed:
+  // stored bytes shadow defaults forever, so a document saved before the
+  // slider still carries it and would fail to parse without it.
+  it('keeps heroPhoto so a pre-slider document still parses', () => {
+    expect(lr().heroPhoto.src).toBe('/photos/DSC_0095.jpg');
+    expect(lr().heroPhoto.alt).toBeTruthy();
+  });
+
+  it('parses a stored document that predates the slider', () => {
+    const doc = JSON.parse(JSON.stringify(seed));
+    if (doc.pages?.laRumba) delete doc.pages.laRumba.heroSlides;
+    expect(() => SiteContentSchema.parse(doc)).not.toThrow();
+  });
+
+  it('accepts both slide kinds and discriminates them', () => {
+    const doc = JSON.parse(JSON.stringify(seed));
+    doc.pages = doc.pages ?? {};
+    doc.pages.laRumba = {
+      ...(doc.pages.laRumba ?? {}),
+      heroSlides: [
+        { kind: 'image', src: '/photos/DSC_0095.jpg', alt: 'A packed floor' },
+        {
+          kind: 'video',
+          posterSrc: '/photos/DSC09776.jpg',
+          posterAlt: 'Two dancers laughing',
+          webmUrl: 'https://cdn.example.com/rumba.webm',
+          mp4Url: 'https://cdn.example.com/rumba.mp4',
+        },
+      ],
+    };
+    const slides = SiteContentSchema.parse(doc).pages.laRumba.heroSlides;
+    expect(slides).toHaveLength(2);
+    expect(slides[0].kind).toBe('image');
+    expect(slides[1].kind).toBe('video');
+  });
+
+  it('rejects a slide with an unknown kind rather than storing it', () => {
+    const doc = JSON.parse(JSON.stringify(seed));
+    doc.pages = doc.pages ?? {};
+    doc.pages.laRumba = {
+      ...(doc.pages.laRumba ?? {}),
+      heroSlides: [{ kind: 'audio', src: '/x.mp3' }],
+    };
+    expect(() => SiteContentSchema.parse(doc)).toThrow();
+  });
 });
 
 describe('pages.home.rumba.pageLink', () => {
