@@ -7,6 +7,7 @@ import { SaveBar } from '@/components/admin/SaveBar';
 import { Field, MultiToggle, EditorStyles } from '@/components/admin/fields';
 import { ImageGalleryEditor } from '@/components/admin/ImageUploader';
 import { saveSiteContent } from '@/lib/admin-save';
+import { planStudioDeletion } from '@/lib/studio-delete';
 
 function slugify(s: string) {
   return s
@@ -71,8 +72,33 @@ export function StudiosEditor({ initial }: { initial: SiteContent }) {
     setDirty(true);
   }
   function remove(idx: number) {
-    if (!confirm(`Delete studio "${c.studios[idx].name}"?`)) return;
-    setC((prev) => ({ ...prev, studios: prev.studios.filter((_, i) => i !== idx) }));
+    const studio = c.studios[idx];
+    const plan = planStudioDeletion(c, studio.id);
+
+    // A batch must have a branch, so a studio with batches on it cannot be
+    // deleted here — and saying so now beats the save failing later with a
+    // validation error naming batches this screen cannot show.
+    if (!plan.ok) {
+      const nl = '\n';
+      const list = plan.blockers.slice(0, 5).map((b) => `• ${b.label}`).join(nl);
+      const more =
+        plan.blockers.length > 5 ? `${nl}… and ${plan.blockers.length - 5} more` : '';
+      alert(
+        `"${studio.name}" still runs ${plan.blockers.length} ` +
+          `${plan.blockers.length === 1 ? 'batch' : 'batches'}:${nl}${nl}` +
+          `${list}${more}${nl}${nl}` +
+          'Move them to another studio (or delete them) in Batches first.',
+      );
+      return;
+    }
+
+    const also = plan.instructorsTouched
+      ? ` It will also be removed from ${plan.instructorsTouched} ` +
+        `${plan.instructorsTouched === 1 ? 'instructor' : 'instructors'}.`
+      : '';
+    if (!confirm(`Delete studio "${studio.name}"?${also}`)) return;
+    setC(plan.next);
+    if (openId === studio.id) setOpenId(null);
     setDirty(true);
   }
 

@@ -7,8 +7,10 @@
  *
  * ─────────────────────────────────────────────────────────────────────────
  * STATE:
- *   • Total fixed at ₹40,000 (no tax — susstudios is not GST-registered, so
- *     no GSTIN and no GST line; the 9 line items below sum to ₹40,000).
+ *   • Engagement total ₹60,000 (no tax — susstudios is not GST-registered, so
+ *     no GSTIN and no GST line; the 9 line items below sum to ₹60,000).
+ *   • ₹30,000 already received against SUS-INV-2026-0045 — recorded as a
+ *     negative adjustment, so the printed total IS the balance due (₹30,000).
  *   • Payment details: State Bank of India a/c (Aakash Raj) — filled in below.
  *   • Issuer email: contactus.suss@gmail.com. Phone omitted (add one to show it).
  *   • status = 'issued'.
@@ -18,10 +20,10 @@
 import type { InvoiceData } from '../types/invoice';
 
 export const furorInvoice: InvoiceData = {
-  invoiceNumber: 'SUS-INV-2026-0045',
-  issueDate: '2026-06-01',
-  dueDate: '2026-06-16', // net-15
-  // contractRef: 'SOW-2026-001', // optional — add your engagement/SOW ref if you have one
+  invoiceNumber: 'SUS-INV-2026-0046',
+  issueDate: '2026-09-14',
+  dueDate: '2026-09-29', // net-15
+  contractRef: 'Supersedes SUS-INV-2026-0045',
   status: 'issued',
 
   // Issuer (susstudios). No GSTIN — not registered under GST.
@@ -57,7 +59,7 @@ export const furorInvoice: InvoiceData = {
         'Brand-aligned visual design; typography & colour system; dark/light theme toggle; mobile-first responsive layouts across all breakpoints; motion design (parallax, kinetic strip, cinematic headline, scroll reveals).',
       quantity: 1,
       unit: 'scope',
-      rate: 6000,
+      rate: 9000,
     },
     {
       description: 'Public website — 13 pages',
@@ -65,7 +67,7 @@ export const furorInvoice: InvoiceData = {
         'Home, About, Dance Styles (index + per-style template), Batches, Instructors, Stories (index + per-story template), Contact, FAQs, Privacy, Terms, and post-payment Welcome pages.',
       quantity: 1,
       unit: 'site',
-      rate: 9000,
+      rate: 13500,
     },
     {
       description: 'Custom admin CMS — 23 editor screens',
@@ -73,7 +75,7 @@ export const furorInvoice: InvoiceData = {
         'No-code editors for hero, site & socials, page copy (8 pages), dance styles, studios, batches, instructors, testimonials and stories; single-source JSON content model with a raw-JSON power editor.',
       quantity: 1,
       unit: 'module',
-      rate: 9000,
+      rate: 13500,
     },
     {
       description: 'Authentication, roles & access control',
@@ -81,7 +83,7 @@ export const furorInvoice: InvoiceData = {
         'Secure admin login (bcrypt password hashing + JWT sessions via jose); middleware protecting every /admin route; owner vs editor roles; sign-out.',
       quantity: 1,
       unit: 'module',
-      rate: 3000,
+      rate: 4500,
     },
     {
       description: 'Content versioning, audit log & rollback',
@@ -89,7 +91,7 @@ export const furorInvoice: InvoiceData = {
         'Every save is snapshotted with one-click restore to any previous version; full audit trail recording who changed what and when.',
       quantity: 1,
       unit: 'module',
-      rate: 3000,
+      rate: 4500,
     },
     {
       description: 'Media uploads & image optimisation',
@@ -97,7 +99,7 @@ export const furorInvoice: InvoiceData = {
         'Drag-and-drop image uploads to Vercel Blob storage; automatic AVIF/WebP optimisation; remote-image handling and CDN delivery.',
       quantity: 1,
       unit: 'module',
-      rate: 2000,
+      rate: 3000,
     },
     {
       description: 'SEO & structured data',
@@ -105,7 +107,7 @@ export const furorInvoice: InvoiceData = {
         'Dynamic sitemap.xml and robots.txt; auto-generated OpenGraph share images; JSON-LD LocalBusiness schema; per-page titles, descriptions & metadata.',
       quantity: 1,
       unit: 'setup',
-      rate: 3000,
+      rate: 4500,
     },
     {
       description: 'Interactive features & lead capture',
@@ -113,7 +115,7 @@ export const furorInvoice: InvoiceData = {
         'Style Finder quiz, live counter, enquiry CTAs, WhatsApp click-to-chat, quick-enroll, floating "talk to us", and post-payment welcome flows.',
       quantity: 1,
       unit: 'package',
-      rate: 3000,
+      rate: 4500,
     },
     {
       description: 'Build, deployment & handover',
@@ -121,7 +123,16 @@ export const furorInvoice: InvoiceData = {
         'Production build configuration; Vercel + static-export (GitHub Pages) deployment; environment/secrets wiring; content seeding and handover documentation.',
       quantity: 1,
       unit: 'setup',
-      rate: 2000,
+      rate: 3000,
+    },
+  ],
+
+  // Part-payment already received against the original invoice. Negative
+  // adjustment, so the total below resolves to the outstanding balance.
+  adjustments: [
+    {
+      label: 'Less: payment received (INV-2026-0045)',
+      amount: -30000,
     },
   ],
 
@@ -136,6 +147,7 @@ export const furorInvoice: InvoiceData = {
   },
 
   notes: [
+    'Engagement value ₹60,000. ₹30,000 received with thanks against invoice SUS-INV-2026-0045; this invoice covers the outstanding balance of ₹30,000.',
     'Please mention the invoice number in your payment reference.',
     'For any billing queries, contact contactus.suss@gmail.com within 7 days of receipt.',
   ],
