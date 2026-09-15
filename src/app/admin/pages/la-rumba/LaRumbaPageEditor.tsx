@@ -5,7 +5,7 @@ import type { SiteContent, Pages } from '@/lib/content-schema';
 import { SaveBar } from '@/components/admin/SaveBar';
 import { Field, EditorStyles } from '@/components/admin/fields';
 import { PageIntroFields } from '@/components/admin/PageIntroFields';
-import { ImageGalleryEditor } from '@/components/admin/ImageUploader';
+import { ImageGalleryEditor, ImageUploader } from '@/components/admin/ImageUploader';
 import { SeoFields } from '@/components/admin/SeoFields';
 import { saveSiteContent } from '@/lib/admin-save';
 import { useAutosave } from '@/lib/autosave';
@@ -70,21 +70,138 @@ export function LaRumbaPageEditor({ initial }: { initial: SiteContent }) {
 
         <Section title="Header">
           <PageIntroFields value={p.intro} onChange={(v) => patch({ intro: v })} />
-          <Field label="Hero photo" hint="The full-width photo behind the page title.">
-            <ImageGalleryEditor
-              label="Hero photo"
-              values={p.heroPhoto.src ? [p.heroPhoto.src] : []}
-              onChange={(srcs) =>
-                patch({ heroPhoto: { ...p.heroPhoto, src: srcs[0] ?? '' } })
-              }
-            />
-          </Field>
-          <Field label="Hero photo description" hint="Read aloud by screen readers.">
-            <input
-              value={p.heroPhoto.alt}
-              onChange={(e) => patch({ heroPhoto: { ...p.heroPhoto, alt: e.target.value } })}
-              className="input"
-            />
+          <Field
+            label="Hero slides"
+            hint="The full-width media behind the page title. One slide shows a single still photo, exactly as before. Add a second and they cross-fade."
+          >
+            <div className="grid gap-4">
+              {p.heroSlides.map((s, i) => {
+                const patchSlide = (next: typeof s) => {
+                  const slides = p.heroSlides.slice();
+                  slides[i] = next;
+                  patch({ heroSlides: slides });
+                };
+                const move = (to: number) => {
+                  if (to < 0 || to >= p.heroSlides.length) return;
+                  const slides = p.heroSlides.slice();
+                  const [moved] = slides.splice(i, 1);
+                  slides.splice(to, 0, moved);
+                  patch({ heroSlides: slides });
+                };
+                return (
+                  <div key={i} className="rounded-2xl border border-cream/10 p-4">
+                    <div className="mb-3 flex items-center justify-between gap-2">
+                      <p className="display text-sm uppercase tracking-widest text-cream/60">
+                        Slide {i + 1} · {s.kind === 'image' ? 'Photo' : 'Video'}
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <button type="button" className="btn-ghost" onClick={() => move(i - 1)}>
+                          ↑
+                        </button>
+                        <button type="button" className="btn-ghost" onClick={() => move(i + 1)}>
+                          ↓
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-ghost text-ember-400"
+                          onClick={() =>
+                            patch({ heroSlides: p.heroSlides.filter((_, j) => j !== i) })
+                          }
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+
+                    {s.kind === 'image' ? (
+                      <div className="grid gap-3">
+                        <ImageUploader
+                          label="Photo"
+                          aspect="wide"
+                          value={s.src}
+                          onChange={(src) => patchSlide({ ...s, src })}
+                        />
+                        <Field label="Description" hint="Read aloud by screen readers.">
+                          <input
+                            value={s.alt}
+                            onChange={(e) => patchSlide({ ...s, alt: e.target.value })}
+                            className="input"
+                          />
+                        </Field>
+                      </div>
+                    ) : (
+                      <div className="grid gap-3">
+                        <ImageUploader
+                          label="Poster image"
+                          aspect="wide"
+                          value={s.posterSrc}
+                          onChange={(posterSrc) => patchSlide({ ...s, posterSrc })}
+                        />
+                        <Field label="Poster description" hint="Read aloud by screen readers.">
+                          <input
+                            value={s.posterAlt}
+                            onChange={(e) => patchSlide({ ...s, posterAlt: e.target.value })}
+                            className="input"
+                          />
+                        </Field>
+                        <Field
+                          label="Video URLs"
+                          hint="Uploading video here isn’t supported yet — paste links to files you host elsewhere. Give both formats if you can: the browser picks whichever it can play, preferring WebM. MP4 alone works everywhere."
+                        >
+                          <div className="grid gap-2">
+                            <input
+                              value={s.webmUrl}
+                              placeholder="https://… .webm"
+                              onChange={(e) => patchSlide({ ...s, webmUrl: e.target.value })}
+                              className="input"
+                            />
+                            <input
+                              value={s.mp4Url}
+                              placeholder="https://… .mp4"
+                              onChange={(e) => patchSlide({ ...s, mp4Url: e.target.value })}
+                              className="input"
+                            />
+                          </div>
+                        </Field>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  className="btn-ghost"
+                  onClick={() =>
+                    patch({ heroSlides: [...p.heroSlides, { kind: 'image', src: '', alt: '' }] })
+                  }
+                >
+                  + Add photo slide
+                </button>
+                <button
+                  type="button"
+                  className="btn-ghost"
+                  onClick={() =>
+                    patch({
+                      heroSlides: [
+                        ...p.heroSlides,
+                        { kind: 'video', posterSrc: '', posterAlt: '', webmUrl: '', mp4Url: '' },
+                      ],
+                    })
+                  }
+                >
+                  + Add video slide
+                </button>
+              </div>
+
+              {p.heroSlides.length === 0 ? (
+                <p className="text-sm text-cream/60">
+                  No slides yet — the page is showing the single hero photo it always has. Add one
+                  to take over, or leave this empty to keep it.
+                </p>
+              ) : null}
+            </div>
           </Field>
           <Field label="Hero button" hint="The main ask at the top of the page.">
             <input
