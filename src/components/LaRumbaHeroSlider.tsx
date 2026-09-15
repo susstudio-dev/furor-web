@@ -86,6 +86,8 @@ export function LaRumbaHeroSlider({ slides }: { slides: Slide[] }) {
   // every later video to the image timer.
   useEffect(() => {
     setVideoFailed(false);
+    const v = videoRef.current;
+    if (v) v.currentTime = 0;
   }, [index]);
 
   // Drive the active clip explicitly. The `autoplay` attribute alone would
@@ -98,6 +100,12 @@ export function LaRumbaHeroSlider({ slides }: { slides: Slide[] }) {
     } else {
       v.pause();
     }
+    // Cleanup captures THIS element, so when `index` moves on — after React has
+    // already pointed videoRef at the new slide — the clip we actually started
+    // is the one we stop. Without this the outgoing video plays on, invisible.
+    return () => {
+      v.pause();
+    };
   }, [index, canAuto]);
 
   function goTo(i: number) {
@@ -139,7 +147,12 @@ export function LaRumbaHeroSlider({ slides }: { slides: Slide[] }) {
               poster={s.posterSrc || undefined}
               aria-label={s.posterAlt || undefined}
               className="h-full w-full object-cover"
-              onEnded={() => setIndex((c) => advanceIndex(c, slides.length))}
+              onEnded={() => {
+                // Only the visible slide may advance the slider. A clip that is
+                // no longer current must not move the page under the visitor.
+                if (i !== index) return;
+                setIndex((c) => advanceIndex(c, slides.length));
+              }}
               onError={() => setVideoFailed(true)}
             >
               {s.webmUrl ? <source src={s.webmUrl} type="video/webm" /> : null}
