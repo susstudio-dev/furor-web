@@ -100,12 +100,19 @@ export function Header({ content }: { content: SiteContent }) {
           <BrandMark size={52} />
         </Link>
         <nav
-          className="hidden lg:flex flex-1 items-center justify-center gap-1"
+          className="hidden lg:flex flex-1 items-center justify-center gap-0.5"
           aria-label={label(content.labels, 'ariaPrimaryNav')}
         >
           {navWithDropdowns.map((item) => (
             <div key={item.id} className="group relative">
-              <Link href={item.href} className="btn-ghost">
+              {/* px-3, not btn-ghost's px-4, at every desktop width. Nine
+                  items plus the logo and the icon cluster are a tight fit: at
+                  px-4 the row needs 843px against 821px at 1280, so it wrapped
+                  — "Batches" onto two lines, "Contact" clipped, the document
+                  scrolling sideways. px-3 buys 72px and clears it. Restoring
+                  px-4 at xl undid the saving exactly where it was still
+                  needed, which is why this carries no breakpoint. */}
+              <Link href={item.href} className="btn-ghost px-3">
                 {navLabel(item, content.labels)}
                 {item.children ? <Caret /> : null}
               </Link>
@@ -127,18 +134,22 @@ export function Header({ content }: { content: SiteContent }) {
             </div>
           ))}
           {customNavItems.map((c) => (
-            <Link key={c.href} href={c.href} className="btn-ghost">
+            <Link key={c.href} href={c.href} className="btn-ghost px-3">
               {c.label}
             </Link>
           ))}
         </nav>
-        {/* Mobile budget, measured at 375px against 335px of container-x
-            content width: BrandMark 156 + gap-3 12 + Instagram 44 + gap-2 8 +
-            burger 44 = 264. Three 44px social targets would need 412 and turn
-            the primary surface into a horizontally scrolling page (spec §6.1).
-            Desktop has the room, so it keeps all three inline. */}
+        {/* Measured budgets, not taste. At 375px: BrandMark 156 + gap-3 12 +
+            Instagram 44 + gap-2 8 + burger 44 = 264 against 335px of
+            container-x content. Three 44px targets would need 412 and turn the
+            primary surface into a horizontally scrolling page (spec §6.1).
+            The same sum fails again at 1024-1279 once the nav reached nine
+            items: content 929 = BrandMark 156 + nav 755 + cluster 235 is 217
+            over. Two of the three icons are what gives, because the footer
+            carries all three anyway and the nav does not. All three return at
+            xl, where the row measures 770 against 821 of space. */}
         <div className="ml-auto lg:ml-0 flex shrink-0 items-center gap-2 sm:gap-3">
-          <div className="hidden lg:flex items-center gap-1">
+          <div className="hidden xl:flex items-center gap-1">
             {socials.map((s) => (
               <a
                 key={s.id}
@@ -168,7 +179,7 @@ export function Header({ content }: { content: SiteContent }) {
               aria-label={label(content.labels, 'ariaSocialInstagram')}
               target="_blank"
               rel="noopener noreferrer"
-              className={`lg:hidden ${iconClass}`}
+              className={`xl:hidden ${iconClass}`}
             >
               <InstagramIcon />
             </a>

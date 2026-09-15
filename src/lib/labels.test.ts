@@ -44,8 +44,8 @@ describe('LabelsSchema', () => {
   it('carries the nav item set that Header and Footer both render', () => {
     const l = labels();
     expect(l.navHome).toBe('Home');
-    expect(l.navDanceStyles).toBe('Dance Styles');
-    expect(l.navBatches).toBe('Batches & Pricing');
+    expect(l.navDanceStyles).toBe('Styles');
+    expect(l.navBatches).toBe('Batches');
     expect(l.navBlog).toBe('Stories');
     expect(l.navExplore).toBe('Explore');
   });

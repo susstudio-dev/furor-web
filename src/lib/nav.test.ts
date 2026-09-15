@@ -38,8 +38,8 @@ describe('NAV_ITEMS', () => {
 
 describe('navLabel', () => {
   it('renders the shipped copy by default', () => {
-    expect(navLabel(byId('dance-styles'), labels())).toBe('Dance Styles');
-    expect(navLabel(byId('batches'), labels())).toBe('Batches & Pricing');
+    expect(navLabel(byId('dance-styles'), labels())).toBe('Styles');
+    expect(navLabel(byId('batches'), labels())).toBe('Batches');
     expect(navLabel(byId('blog'), labels())).toBe('Stories');
   });
 
@@ -61,7 +61,7 @@ describe('navLabel', () => {
     expect(navLabel(byId('dance-styles'), renamed)).toBe('Our Dances');
     // The branch key is the id, and the id did not move.
     expect(NAV_ITEMS.filter((i) => i.id === 'dance-styles')).toHaveLength(1);
-    expect(NAV_ITEMS.filter((i) => navLabel(i, renamed) === 'Dance Styles')).toHaveLength(0);
+    expect(NAV_ITEMS.filter((i) => navLabel(i, renamed) === 'Styles')).toHaveLength(0);
   });
 });
 

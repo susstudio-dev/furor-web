@@ -55,9 +55,15 @@ export const LABEL_DEFAULT_LITERALS = {
   // — Navigation —
   navHome: 'Home',
   navAbout: 'About',
-  navDanceStyles: 'Dance Styles',
+  // Nav chrome is deliberately shorter than the page titles these routes
+  // carry. At 1024px the nine-item nav demanded 968px against 823px of
+  // space: 'Batches & Pricing' wrapped to three lines, 'Contact' was cut
+  // off and the document scrolled sideways on every page. The <title> and
+  // meta description in page-meta.ts stay long, because search results have
+  // room that a header does not.
+  navDanceStyles: 'Styles',
   navInstructors: 'Instructors',
-  navBatches: 'Batches & Pricing',
+  navBatches: 'Batches',
   navLaRumba: 'La Rumba',
   navBlog: 'Stories',
   navFaqs: 'FAQs',
