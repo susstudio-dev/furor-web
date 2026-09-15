@@ -304,8 +304,13 @@ describe('advanceIndex', () => {
 });
 
 describe('SLIDE_HOLD_MS', () => {
-  it('is a sane hold, long enough to read a frame', () => {
-    expect(SLIDE_HOLD_MS).toBe(5000);
+  // A range, not an exact pin: the requirement is "long enough to take in a
+  // photograph, short enough not to feel stuck", and pinning the literal would
+  // only assert that a constant equals itself. These bounds are what would
+  // actually be wrong.
+  it('holds long enough to read a frame and not so long it feels stuck', () => {
+    expect(SLIDE_HOLD_MS).toBeGreaterThanOrEqual(3000);
+    expect(SLIDE_HOLD_MS).toBeLessThanOrEqual(10000);
   });
 });
 ```
@@ -674,7 +679,7 @@ with:
 - [ ] **Step 3: Verify the suite and types still pass**
 
 Run: `NODE_ENV=test npx vitest run`
-Expected: 764 passing, 52 files — unchanged from Task 2, since this task adds no tests.
+Expected: **765** passing, 52 files. That is 764 + 1 even though this task writes no test: `client-bundle.test.ts:237` runs `it.each` over every discovered public `'use client'` root, so adding `LaRumbaHeroSlider.tsx` adds a case. If the count did NOT go up, the component was not discovered as a public client root and the zod guard is not actually covering it — investigate rather than shrug.
 Run: `npx tsc --noEmit` — must be clean.
 `client-bundle.test.ts` must stay green; if it fails, the component has picked up a value import of the schema.
 
@@ -850,7 +855,7 @@ Add `ImageUploader` to the existing import from `@/components/admin/ImageUploade
 - [ ] **Step 2: Verify types and suite**
 
 Run: `npx tsc --noEmit` — clean. The discriminated union means TypeScript will reject a `patchSlide` that mixes fields across kinds; if it complains, the narrowing is wrong, not the types.
-Run: `NODE_ENV=test npx vitest run` — 764 passing, unchanged.
+Run: `NODE_ENV=test npx vitest run` — 765 passing, unchanged from Task 3 (the admin editor is an existing client component and adds no new public client root).
 
 - [ ] **Step 3: Verify in the admin**
 
@@ -874,7 +879,7 @@ git commit -m "feat: the owner can build the La Rumba hero slide list"
 - [ ] The hero stays dark in BOTH themes (the scrim must remain inside `.rumba-night`).
 - [ ] No horizontal scrollbar at 390px.
 - [ ] `client-bundle.test.ts` green — no zod in the public bundle.
-- [ ] `NODE_ENV=test npx vitest run` → 764 passing; `npx tsc --noEmit` clean.
+- [ ] `NODE_ENV=test npx vitest run` → 765 passing; `npx tsc --noEmit` clean.
 
 ## Out of Scope
 
