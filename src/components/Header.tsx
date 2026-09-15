@@ -100,7 +100,7 @@ export function Header({ content }: { content: SiteContent }) {
           <BrandMark size={52} />
         </Link>
         <nav
-          className="hidden lg:flex flex-1 items-center justify-center gap-0.5"
+          className="hidden xl:flex flex-1 items-center justify-center gap-0.5"
           aria-label={label(content.labels, 'ariaPrimaryNav')}
         >
           {navWithDropdowns.map((item) => (
@@ -143,12 +143,16 @@ export function Header({ content }: { content: SiteContent }) {
             Instagram 44 + gap-2 8 + burger 44 = 264 against 335px of
             container-x content. Three 44px targets would need 412 and turn the
             primary surface into a horizontally scrolling page (spec §6.1).
-            The same sum fails again at 1024-1279 once the nav reached nine
-            items: content 929 = BrandMark 156 + nav 755 + cluster 235 is 217
-            over. Two of the three icons are what gives, because the footer
-            carries all three anyway and the nav does not. All three return at
-            xl, where the row measures 770 against 821 of space. */}
-        <div className="ml-auto lg:ml-0 flex shrink-0 items-center gap-2 sm:gap-3">
+            Instagram alone survives because it is the traffic source.
+
+            Everything up here now switches at xl rather than lg, for the same
+            kind of reason: nine nav items need 755px, and at 1024 the row had
+            929 to fit BrandMark 156 + nav 755 + cluster 139 = 1050. Trimming
+            labels, padding and gaps recovered 200px and still left it 121
+            over — the band simply cannot hold a nine-item nav, so below xl it
+            gets the burger instead. Keep every breakpoint in this header on
+            xl: a mismatch means a width with neither a nav nor a menu. */}
+        <div className="ml-auto xl:ml-0 flex shrink-0 items-center gap-2 sm:gap-3">
           <div className="hidden xl:flex items-center gap-1">
             {socials.map((s) => (
               <a
@@ -163,11 +167,11 @@ export function Header({ content }: { content: SiteContent }) {
               </a>
             ))}
           </div>
-          {/* Wrapped rather than given `hidden lg:inline-flex` directly: the
+          {/* Wrapped rather than given `hidden xl:inline-flex` directly: the
               toggle's own class string already sets inline-flex, and which of
               two display utilities wins would depend on Tailwind's internal
               ordering. A wrapper makes it unambiguous. */}
-          <span className="hidden lg:inline-flex">
+          <span className="hidden xl:inline-flex">
             <ThemeToggle />
           </span>
           {/* Instagram alone below lg. It is the traffic source, and the one
@@ -189,7 +193,7 @@ export function Header({ content }: { content: SiteContent }) {
               touch minimum, and it is one of only two controls up here. */}
           <button
             type="button"
-            className="lg:hidden btn-ghost h-11 w-11 p-0"
+            className="xl:hidden btn-ghost h-11 w-11 p-0"
             aria-label={label(content.labels, 'ariaToggleMenu')}
             aria-expanded={open}
             onClick={() => setOpen((v) => !v)}
@@ -200,7 +204,7 @@ export function Header({ content }: { content: SiteContent }) {
         </div>
       </div>
       {open ? (
-        <div className="lg:hidden border-t border-cream/10 bg-ink-950/95 backdrop-blur">
+        <div className="xl:hidden border-t border-cream/10 bg-ink-950/95 backdrop-blur">
           <div className="container-x py-4 space-y-1">
             {navWithDropdowns.map((item) => (
               <div key={item.id} className="border-b border-cream/5 last:border-0">
