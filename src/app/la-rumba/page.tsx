@@ -6,10 +6,12 @@ import { trialFromInr } from '@/lib/book-label';
 import { tonightEventLd } from '@/lib/tonight-event';
 import { todayIso } from '@/lib/format';
 import { resolveVoices, socialFactsLine } from '@/lib/la-rumba-page';
+import { needsSlider, resolveSlides } from '@/lib/hero-slides';
 import { EnquiryCTA } from '@/components/EnquiryCTA';
 import { JsonLd } from '@/components/JsonLd';
 import { Img } from '@/components/Img';
 import { Reveal } from '@/components/Reveal';
+import { LaRumbaHeroSlider } from '@/components/LaRumbaHeroSlider';
 
 export async function generateMetadata() {
   const c = await getPublicContent();
@@ -54,6 +56,11 @@ export default async function LaRumbaPage() {
   const voices = resolveVoices(content.testimonials, p.voices.testimonialIds);
   const trialFrom = trialFromInr(visibleBatches(content));
   const eventLd = tonightEventLd(content, todayIso());
+  // An untouched document resolves to the single photo it always showed, and
+  // needsSlider() is false for it — so that page ships no slider JS at all.
+  const slides = resolveSlides(p);
+  const slider = needsSlider(slides);
+  const firstImage = slides[0]?.kind === 'image' ? slides[0] : null;
 
   return (
     <>
@@ -62,14 +69,21 @@ export default async function LaRumbaPage() {
       {/* 1 — Hero. The name at wordmark scale over one real photograph. */}
       <section className="rumba-night relative isolate overflow-hidden">
         <div className="absolute inset-0 -z-10">
-          <Img
-            src={p.heroPhoto.src}
-            alt={p.heroPhoto.alt}
-            seed="la-rumba-hero"
-            fill
-            priority
-            className="object-cover"
-          />
+          {slider ? (
+            <LaRumbaHeroSlider slides={slides} />
+          ) : firstImage ? (
+            <Img
+              src={firstImage.src}
+              alt={firstImage.alt}
+              seed="la-rumba-hero"
+              fill
+              priority
+              className="object-cover"
+            />
+          ) : null}
+          {/* The scrim sits INSIDE .rumba-night, so bg-ink-950 resolves to the
+              locally redeclared dark value in both themes. Moving it out would
+              lay 70% near-white over the photo on the light theme. */}
           <div className="absolute inset-0 bg-ink-950/70" />
         </div>
         <div className="container-x py-24 sm:py-32 lg:py-40">
