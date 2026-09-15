@@ -43,7 +43,16 @@ export function LaRumbaPageEditor({ initial }: { initial: SiteContent }) {
           savedAt={autosave.stash.savedAt}
           matchesVersion={autosave.stashMatchesVersion}
           onRestore={() => {
-            const laRumba = autosave.stash!.value;
+            const restored = autosave.stash!.value;
+            // A stash written before this deploy predates `heroSlides`
+            // (and, defensively, `heroPhoto`) — restoring it wholesale would
+            // throw on p.heroSlides.map() and white-screen this page. Default
+            // any missing keys rather than trust the stash's shape.
+            const laRumba: LaRumbaPage = {
+              ...restored,
+              heroSlides: restored.heroSlides ?? [],
+              heroPhoto: (restored as { heroPhoto?: LaRumbaPage['heroPhoto'] }).heroPhoto ?? c.pages.laRumba.heroPhoto,
+            };
             setC((prev) => ({ ...prev, pages: { ...prev.pages, laRumba } }));
             setDirty(true);
             autosave.clear();

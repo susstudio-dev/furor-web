@@ -114,7 +114,13 @@ export function LaRumbaHeroSlider({ slides }: { slides: Slide[] }) {
   }
 
   return (
-    <div ref={rootRef} className="absolute inset-0" aria-roledescription="carousel" aria-label="La Rumba photographs">
+    <div
+      ref={rootRef}
+      className="absolute inset-0"
+      role="group"
+      aria-roledescription="carousel"
+      aria-label="La Rumba photos and clips"
+    >
       {slides.map((s, i) => (
         <div
           key={i}
@@ -141,8 +147,12 @@ export function LaRumbaHeroSlider({ slides }: { slides: Slide[] }) {
               ref={i === index ? videoRef : undefined}
               muted
               playsInline
-              // No `loop`: a looping clip never fires `ended`, so the slider
-              // would stop on the first video forever.
+              // `loop` only when this is the ONLY slide: with nothing to
+              // advance to, `ended` would never fire again and the clip
+              // would freeze on its last frame. With two or more slides,
+              // `loop` stays off — a looping clip never fires `ended`, so
+              // the slider would stop on the first video forever.
+              loop={slides.length === 1}
               preload={i === index ? 'auto' : 'none'}
               poster={s.posterSrc || undefined}
               aria-label={s.posterAlt || undefined}
@@ -153,7 +163,12 @@ export function LaRumbaHeroSlider({ slides }: { slides: Slide[] }) {
                 if (i !== index) return;
                 setIndex((c) => advanceIndex(c, slides.length));
               }}
-              onError={() => setVideoFailed(true)}
+              onError={() => {
+                // Only the visible slide's failure may demote it. A dead URL
+                // on an off-screen slide must not poison the one playing now.
+                if (i !== index) return;
+                setVideoFailed(true);
+              }}
             >
               {s.webmUrl ? <source src={s.webmUrl} type="video/webm" /> : null}
               {s.mp4Url ? <source src={s.mp4Url} type="video/mp4" /> : null}

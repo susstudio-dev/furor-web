@@ -86,7 +86,12 @@ export default async function LaRumbaPage() {
               lay 70% near-white over the photo on the light theme. */}
           <div className="absolute inset-0 bg-ink-950/70" />
         </div>
-        <div className="container-x py-24 sm:py-32 lg:py-40">
+        {/* pointer-events-none so this in-flow block (the section's only
+            in-flow child, covering the whole section box) does not steal
+            clicks from the slider's dots, which sit at a positive z-index
+            inside the -z-10 media wrapper above. Anything inside that must
+            stay clickable — the CTA below — opts back in explicitly. */}
+        <div className="container-x py-24 sm:py-32 lg:py-40 pointer-events-none">
           {p.intro.eyebrow ? (
             <p className="display text-sm uppercase tracking-widest text-ember-400">
               {p.intro.eyebrow}
@@ -103,7 +108,7 @@ export default async function LaRumbaPage() {
           {p.intro.lead ? (
             <p className="mt-4 max-w-2xl text-lg text-cream/80">{p.intro.lead}</p>
           ) : null}
-          <div className="mt-8">
+          <div className="mt-8 pointer-events-auto">
             <EnquiryCTA
               whatsappNumber={content.site.whatsappNumber}
               ctx={{ source: 'la_rumba_hero', customNote: p.weekly.ctaContext }}
