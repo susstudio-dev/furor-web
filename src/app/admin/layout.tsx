@@ -35,6 +35,7 @@ const NAV: NavItem[] = [
   { label: '  Instructors page', href: '/admin/pages/instructors' },
   { label: '  Dance Styles index', href: '/admin/pages/dance-styles' },
   { label: '  Batches index', href: '/admin/pages/batches' },
+  { label: '  La Rumba page', href: '/admin/pages/la-rumba' },
   { label: '  Stories index', href: '/admin/pages/stories' },
   { label: '  Privacy', href: '/admin/pages/privacy' },
   { label: '  Terms', href: '/admin/pages/terms' },
