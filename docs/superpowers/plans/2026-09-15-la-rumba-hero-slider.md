@@ -21,7 +21,7 @@ Every task's requirements implicitly include this section.
 - **Facts render from `content.tonight`.** Unchanged by this plan — do not move or duplicate the facts line.
 - **Blank hides the element** — the convention throughout this content document.
 - **Running the tests:** this shell exports `NODE_ENV=production`, which makes 2 unrelated `preview-token` tests throw. Always run `NODE_ENV=test npx vitest run`. Typecheck with `npx tsc --noEmit`. `next lint` is NOT configured (it prompts interactively) — never use it as a gate.
-- **Baseline:** 744 tests passing across 52 files before this plan starts. Flag it if you see different.
+- **Baseline:** 748 tests passing across 53 files before this plan starts. (An earlier draft of this plan said 744/52; that was measured before commit 051e81c added studio-delete and its tests. 748/53 is correct.) Flag it if you see different.
 - **This is a slow HDD.** A cold `next dev` boot is ~3 minutes and a first route compile ~60s. Budget for it; do not assume a hang.
 
 ## File Structure
@@ -175,7 +175,7 @@ In `src/lib/content-schema.ts`, inside the `laRumba` object, REPLACE the existin
 - [ ] **Step 4: Run the tests to verify they pass**
 
 Run: `NODE_ENV=test npx vitest run src/lib/content-schema.test.ts`
-Expected: PASS. Then the whole suite: `NODE_ENV=test npx vitest run` (expect 749 passing — 744 baseline + 5 new) and `npx tsc --noEmit` clean.
+Expected: PASS. Then the whole suite: `NODE_ENV=test npx vitest run` (expect 753 passing — 748 baseline + 5 new) and `npx tsc --noEmit` clean.
 
 - [ ] **Step 5: Commit**
 
@@ -304,8 +304,13 @@ describe('advanceIndex', () => {
 });
 
 describe('SLIDE_HOLD_MS', () => {
-  it('is a sane hold, long enough to read a frame', () => {
-    expect(SLIDE_HOLD_MS).toBe(5000);
+  // A range, not an exact pin: the requirement is "long enough to take in a
+  // photograph, short enough not to feel stuck", and pinning the literal would
+  // only assert that a constant equals itself. These bounds are what would
+  // actually be wrong.
+  it('holds long enough to read a frame and not so long it feels stuck', () => {
+    expect(SLIDE_HOLD_MS).toBeGreaterThanOrEqual(3000);
+    expect(SLIDE_HOLD_MS).toBeLessThanOrEqual(10000);
   });
 });
 ```
@@ -407,7 +412,7 @@ export function advanceIndex(current: number, total: number): number {
 - [ ] **Step 4: Run the tests to verify they pass**
 
 Run: `NODE_ENV=test npx vitest run src/lib/hero-slides.test.ts`
-Expected: PASS (15 tests). Then `NODE_ENV=test npx vitest run` (expect 764 — 744 baseline + 5 from Task 1 + 15 here) and `npx tsc --noEmit` clean.
+Expected: PASS (15 tests). Then `NODE_ENV=test npx vitest run` (expect 768 — 748 baseline + 5 from Task 1 + 15 here) and `npx tsc --noEmit` clean.
 
 - [ ] **Step 5: Commit**
 
@@ -674,7 +679,7 @@ with:
 - [ ] **Step 3: Verify the suite and types still pass**
 
 Run: `NODE_ENV=test npx vitest run`
-Expected: 764 passing, 52 files — unchanged from Task 2, since this task adds no tests.
+Expected: **769** passing, 54 files. That is 768 + 1 even though this task writes no test: `client-bundle.test.ts:237` runs `it.each` over every discovered public `'use client'` root, so adding `LaRumbaHeroSlider.tsx` adds a case. If the count did NOT go up, the component was not discovered as a public client root and the zod guard is not actually covering it — investigate rather than shrug.
 Run: `npx tsc --noEmit` — must be clean.
 `client-bundle.test.ts` must stay green; if it fails, the component has picked up a value import of the schema.
 
@@ -850,7 +855,7 @@ Add `ImageUploader` to the existing import from `@/components/admin/ImageUploade
 - [ ] **Step 2: Verify types and suite**
 
 Run: `npx tsc --noEmit` — clean. The discriminated union means TypeScript will reject a `patchSlide` that mixes fields across kinds; if it complains, the narrowing is wrong, not the types.
-Run: `NODE_ENV=test npx vitest run` — 764 passing, unchanged.
+Run: `NODE_ENV=test npx vitest run` — 769 passing, unchanged from Task 3 (the admin editor is an existing client component and adds no new public client root).
 
 - [ ] **Step 3: Verify in the admin**
 
@@ -874,7 +879,7 @@ git commit -m "feat: the owner can build the La Rumba hero slide list"
 - [ ] The hero stays dark in BOTH themes (the scrim must remain inside `.rumba-night`).
 - [ ] No horizontal scrollbar at 390px.
 - [ ] `client-bundle.test.ts` green — no zod in the public bundle.
-- [ ] `NODE_ENV=test npx vitest run` → 764 passing; `npx tsc --noEmit` clean.
+- [ ] `NODE_ENV=test npx vitest run` → 769 passing; `npx tsc --noEmit` clean.
 
 ## Out of Scope
 

@@ -816,12 +816,50 @@ const PagesSchema = z
           headline: 'La Rumba',
           lead: 'Our Latin social night in Hyderabad — every level on one floor, beginners very much included. Come to dance, or come to watch.',
         }),
+        /** RETIRED as an editable field on 2026-09-15, superseded by
+         *  `heroSlides` — but never removed. Stored bytes shadow defaults
+         *  forever: a document saved before the slider carries this key, and
+         *  deleting the field would fail to parse it. `resolveSlides()` still
+         *  falls back to this value, which is precisely what lets the slider
+         *  ship with no migration, no backfill and no deploy ordering.
+         *  Same treatment as `pages.home.nextBatches`. Not editable in admin. */
         heroPhoto: z
           .object({ src: z.string(), alt: z.string() })
           .default({
             src: '/photos/DSC_0095.jpg',
             alt: 'A packed floor at La Rumba, mid-song',
           }),
+        /** The hero's cross-fading slides.
+         *
+         *  Defaults to EMPTY on purpose. `resolveSlides()` treats an empty
+         *  list as "fall back to heroPhoto", so an untouched document renders
+         *  the single static photo it always did — and the route does not
+         *  mount the slider for it at all. A non-empty default here would opt
+         *  every existing page into the slider the moment this parsed.
+         *
+         *  A video slide carries pasted URLs because the Worker cannot
+         *  transcode video (the 10ms free-plan CPU cap that image-downscale.ts
+         *  exists to work around) and the uploads route cannot serve it yet.
+         *  The upload pipeline is a separate spec; it will FILL these fields
+         *  rather than change their shape. */
+        heroSlides: z
+          .array(
+            z.discriminatedUnion('kind', [
+              z.object({
+                kind: z.literal('image'),
+                src: z.string().default(''),
+                alt: z.string().default(''),
+              }),
+              z.object({
+                kind: z.literal('video'),
+                posterSrc: z.string().default(''),
+                posterAlt: z.string().default(''),
+                webmUrl: z.string().default(''),
+                mp4Url: z.string().default(''),
+              }),
+            ]),
+          )
+          .default([]),
         /** The hero's ask. Deliberately distinct from `weekly.ctaLabel`: the
          *  hero asks for a commitment ("say you're coming"), the weekly block
          *  asks for information ("what's on this Saturday?"). They share a
