@@ -47,17 +47,6 @@ Other useful flags:
 
 Pulling teammate content changes is automatic: `git pull`, then on next request the seed values fill anything missing from your local `data/site-content.json` via the deep-merge in `getContent()`. If you want a hard reset to match the seed exactly, delete `data/site-content.json` and let the dev server reseed.
 
-## Admin
-
-- Login: http://localhost:3000/admin/login
-- Owner credentials come from `ADMIN_OWNER_EMAIL` / `ADMIN_OWNER_INITIAL_PASSWORD` (or `ADMIN_OWNER_PASSWORD_HASH`) in `.env.local` — change the env var to change them. Everyone else is invited from `/admin/users`: the invite generates a one-time temporary password, and the person picks their own on first sign-in.
-- Editor sections in the sidebar:
-  - **Site & socials** — title, tagline, WhatsApp/Instagram, footer, socials, notice banner, "Tonight" tile, Why Furor
-  - **Hero** — headline, sub, poster image, video URLs
-  - **Page copy** — per-page editors for Home, About, FAQs, Contact, Instructors, and the Dance Styles / Batches / Stories index headlines
-  - **Content** — Dance styles (with FAQs + level outcomes), Studios, Batches, Instructors, Testimonials, Stories
-  - **System** — Raw JSON editor, Versions (30 most recent saves with one-click restore), Users, Audit log
-- Every save snapshots a version, audit-logs the actor, and calls `revalidatePath('/', 'layout')` so changes appear on the public site immediately.
 
 ## Content model
 
