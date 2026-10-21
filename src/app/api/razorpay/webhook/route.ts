@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import crypto from 'node:crypto';
 import { readJSON, writeJSON } from '@/lib/storage';
+import { PAYMENT_EVENTS_KEY, PAYMENT_EVENTS_CAP, type PaymentEvent } from '@/lib/payment-events';
 
 // Razorpay webhook receiver. Razorpay POSTs an event here for EVERY payment
 // outcome — including `payment.failed` — server-to-server, so it does not
@@ -19,19 +20,8 @@ import { readJSON, writeJSON } from '@/lib/storage';
 
 export const runtime = 'nodejs';
 
-const EVENTS_KEY = 'payment-events.json';
-const CAP = 1000; // keep the most recent N events
-
-interface PaymentEvent {
-  ts: string;
-  event: string;
-  status: string;
-  paymentId: string | null;
-  amount: number | null; // in paise, as Razorpay sends it
-  email: string | null;
-  contact: string | null;
-  errorDescription: string | null;
-}
+const EVENTS_KEY = PAYMENT_EVENTS_KEY;
+const CAP = PAYMENT_EVENTS_CAP; // keep the most recent N events
 
 // Constant-time compare so we never leak signature bytes via timing.
 function safeEqualHex(a: string, b: string): boolean {
@@ -93,6 +83,21 @@ export async function POST(req: Request) {
     email: (e.email as string) ?? null,
     contact: (e.contact as string) ?? null,
     errorDescription: (e.error_description as string) ?? null,
+    method: (e.method as string) ?? null,
+    bank: (e.bank as string) ?? null,
+    wallet: (e.wallet as string) ?? null,
+    cardNetwork: ((e.card as Record<string, unknown> | undefined)?.network as string) ?? null,
+    errorCode: (e.error_code as string) ?? null,
+    errorReason: (e.error_reason as string) ?? null,
+    errorSource: (e.error_source as string) ?? null,
+    errorStep: (e.error_step as string) ?? null,
+    orderId: (e.order_id as string) ?? null,
+    fee: typeof e.fee === 'number' ? e.fee : null,
+    // Razorpay sends `notes: []` when empty and an object when populated.
+    notes:
+      e.notes && typeof e.notes === 'object' && !Array.isArray(e.notes)
+        ? (e.notes as Record<string, string>)
+        : null,
   };
 
   // Persist best-effort. We always 200 after a valid signature so Razorpay

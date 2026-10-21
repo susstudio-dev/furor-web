@@ -71,7 +71,7 @@ export default async function HomePage() {
             <Link
               key={s.slug}
               href={`/dance-styles/${s.slug}`}
-              className="group relative overflow-hidden rounded-3xl border border-cream/10 bg-ink-900/40"
+              className="group card relative overflow-hidden rounded-3xl"
             >
               <div className="relative aspect-[4/5]">
                 <Img
@@ -127,7 +127,7 @@ export default async function HomePage() {
             return (
               <div
                 key={s.slug}
-                className="rounded-2xl border border-cream/10 bg-ink-900/40 p-5"
+                className="card p-5"
               >
                 <p className="display text-xl font-bold">
                   {combined ? batchStyleLabel(content, b!.styleSlugs) : s.name}
@@ -194,7 +194,7 @@ export default async function HomePage() {
           </Reveal>
           <Reveal stagger step={120} className="mt-12 grid gap-8 md:grid-cols-3">
             {content.whyFuror.points.map((p, i) => (
-              <div key={i} className="rounded-2xl border border-cream/10 bg-ink-900/30 p-6">
+              <div key={i} className="card p-6">
                 <p className="display text-2xl font-bold text-ember-400">0{i + 1}</p>
                 <p className="mt-3 display text-xl font-semibold">{p.title}</p>
                 <p className="mt-2 text-cream/70">{p.body}</p>
@@ -214,7 +214,7 @@ export default async function HomePage() {
           </Reveal>
           <Reveal stagger step={130} className="mt-12 grid gap-6 md:grid-cols-3">
             {h.howItWorks.steps.map((s, i, arr) => (
-              <div key={i} className="relative rounded-2xl border border-cream/10 bg-ink-900/30 p-6">
+              <div key={i} className="card p-6">
                 <p className="display text-2xl font-bold text-ember-400">
                   {String(i + 1).padStart(2, '0')}
                 </p>
@@ -291,7 +291,7 @@ export default async function HomePage() {
               return (
                 <div key={s.id}>
                   <Reveal from="up" delay={80} className="grid gap-6 md:grid-cols-2 items-stretch">
-                    <div className="rounded-3xl border border-cream/10 bg-ink-900/40 p-8 sm:p-10 flex flex-col">
+                    <div className="card rounded-3xl p-8 sm:p-10 flex flex-col">
                       <p className="display text-2xl sm:text-3xl font-bold">{s.name}</p>
                       <p className="mt-1 text-xs uppercase tracking-widest text-ember-400/80">
                         {content.site.title}
@@ -329,7 +329,7 @@ export default async function HomePage() {
                         <a href={`tel:${tel}`} className="btn-secondary">Call {s.telephone}</a>
                       </div>
                     </div>
-                    <div className="relative overflow-hidden rounded-3xl border border-cream/10 bg-ink-900/40 min-h-[360px]">
+                    <div className="card relative overflow-hidden rounded-3xl min-h-[360px]">
                       <iframe
                         src={mapEmbed}
                         title={`Map to ${s.name}`}

@@ -16,3 +16,7 @@ public/uploads/
 .vercel
 next-env.d.ts
 *.tsbuildinfo
+.agents/skills/design-taste-frontend/SKILL.md
+.agents/skills/redesign-existing-projects/SKILL.md
+.claude/skills/design-taste-frontend/SKILL.md
+.claude/skills/redesign-existing-projects/SKILL.md
