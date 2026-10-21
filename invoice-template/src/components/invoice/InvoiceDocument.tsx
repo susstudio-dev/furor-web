@@ -21,8 +21,9 @@
 import React from 'react';
 import { fileURLToPath } from 'node:url';
 import nodePath from 'node:path';
+import { readFileSync } from 'node:fs';
 import {
-  Document, Page, Text, View, StyleSheet, Font,
+  Document, Page, Text, View, StyleSheet, Font, Image,
 } from '@react-pdf/renderer';
 import type { InvoiceData, InvoiceLineItem } from '../../types/invoice';
 import {
@@ -41,6 +42,20 @@ const FONT_DIR = nodePath.join(
   nodePath.dirname(fileURLToPath(import.meta.url)),
   '../../../fonts',
 );
+// The signal-green sliced-sphere mark from the SUS_STUDIO brand kit. It is
+// designed for dark ground, which is exactly what the header bar is.
+// Read as a buffer: @react-pdf resolves a bare string src as a URL, which a
+// Windows drive path is not.
+const LOGO_MARK = {
+  data: readFileSync(
+    nodePath.join(
+      nodePath.dirname(fileURLToPath(import.meta.url)),
+      '../../../assets/logo-mark-green.png',
+    ),
+  ),
+  format: 'png' as const,
+};
+
 Font.register({
   family: 'Inter',
   fonts: [
@@ -52,21 +67,27 @@ Font.register({
 });
 
 // ---- Brand palette ----
+// Lifted from the SUS_STUDIO design system (src/index.css): near-black ink,
+// signal green, deep-green surfaces. `navy` keeps its key name so every style
+// below still resolves — the value is now the brand ink.
 const COLORS = {
-  navy: '#0B2545',
-  accent: '#C9A227',
+  navy: '#050505',        // --ink
+  surface: '#004522',     // --surface (deep green)
+  green: '#69f542',       // --gold (signal green)
+  greenDeep: '#45c422',   // --gold-deep — legible on white
+  accent: '#69f542',      // --gold
   text: '#1F2937',
   muted: '#6B7280',
   border: '#E5E7EB',
-  lightBg: '#F4F6FA',
-  success: '#15803D',
-  successBg: '#F0FDF4',
+  lightBg: '#F3F8F4',     // faint green-tinted panel
+  success: '#0a5c2c',    // --surface-2 — the brand green that stays legible on white
+  successBg: '#EAFBEF',
   warning: '#D97706',
   warningBg: '#FFFBEB',
   danger: '#DC2626',
   dangerBg: '#FEF2F2',
-  info: '#0284C7',
-  infoBg: '#F0F9FF',
+  info: '#0a5c2c',
+  infoBg: '#EAFBEF',
   white: '#FFFFFF',
 };
 
@@ -88,6 +109,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
+  },
+  brandLockup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  brandMark: {
+    width: 26,
+    height: 21,
+    marginRight: 9,
   },
   brandName: {
     color: COLORS.white,
@@ -179,7 +209,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     padding: 12,
     borderLeftWidth: 3,
-    borderLeftColor: COLORS.navy,
+    borderLeftColor: COLORS.green,
   },
   partyLabel: {
     fontSize: 7.5,
@@ -270,18 +300,26 @@ const styles = StyleSheet.create({
   totalsLabel: {
     fontSize: 9,
     color: COLORS.muted,
+    // Long labels (e.g. "Less: payment received (ref. ...)") must wrap rather
+    // than run underneath the amount on the right.
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 0,
+    paddingRight: 8,
   },
   totalsValue: {
     fontSize: 9.5,
     color: COLORS.text,
     fontWeight: 500,
+    flexShrink: 0,
+    textAlign: 'right',
   },
   totalsGrandRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingVertical: 10,
     paddingHorizontal: 10,
-    backgroundColor: COLORS.navy,
+    backgroundColor: COLORS.surface,
     marginTop: 2,
   },
   totalsGrandLabel: {
@@ -443,7 +481,10 @@ export const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({ data }) => {
         {/* ============ HEADER ============ */}
         <View style={styles.headerBar}>
           <View>
-            <Text style={styles.brandName}>{data.from.name}</Text>
+            <View style={styles.brandLockup}>
+              <Image style={styles.brandMark} src={LOGO_MARK} />
+              <Text style={styles.brandName}>{data.from.name}</Text>
+            </View>
             <Text style={styles.brandTagline}>
               A bespoke software consultancy delivering enterprise-grade digital products.
             </Text>

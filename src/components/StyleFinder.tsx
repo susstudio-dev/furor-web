@@ -3,8 +3,11 @@
 import { useMemo, useState } from 'react';
 import type { Batch, SiteContent, Studio } from '@/lib/content-schema';
 import { visibleBatches } from '@/lib/content-helpers';
-import { formatBatchDate, formatInr } from '@/lib/format';
+import { formatBatchDate, formatInr, todayIso } from '@/lib/format';
 import { EnquiryCTA } from './EnquiryCTA';
+import { label } from '@/lib/labels';
+import { BookTrialLink } from './BookTrialLink';
+import { bookLabel, bookPriceInr, offersTrial } from '@/lib/book-label';
 
 // Beginners have exactly two tracks, split by when they run:
 //   • Weekend mornings → Latin (Salsa + Bachata)
@@ -46,17 +49,30 @@ const TRACKS: Track[] = [
   },
 ];
 
-// Always returns a Foundation batch (or undefined) for the track. Prefers a
-// weekend batch in the track's time-of-day, then any weekend Foundation batch,
-// then any Foundation batch of that style. Never returns Intermediate/Advanced.
-function findFoundationBatch(content: SiteContent, track: Track): Batch | undefined {
-  const pool = visibleBatches(content).filter(
-    (b) => b.level === 'Foundation' && b.styleSlugs.some((s) => track.styleSlugs.includes(s)),
-  );
+// Applies the weekend/time-of-day preference within one pool of Foundation
+// batches: a weekend batch in the track's time-of-day, then any weekend
+// Foundation batch, then any Foundation batch of that style.
+function pickPreferred(pool: Batch[], track: Track): Batch | undefined {
   const isWeekend = (b: Batch) => b.daysOfWeek.some((d) => d === 'Sat' || d === 'Sun');
   const matchesTod = (b: Batch) => (track.tod === 'AM' ? /am/i.test(b.time) : /pm/i.test(b.time));
   const weekend = pool.filter(isWeekend);
   return weekend.find(matchesTod) ?? weekend[0] ?? pool.find(matchesTod) ?? pool[0];
+}
+
+// Always returns a Foundation batch (or undefined) for the track. Never
+// returns Intermediate/Advanced.
+function findFoundationBatch(content: SiteContent, track: Track): Batch | undefined {
+  const pool = visibleBatches(content).filter(
+    (b) => b.level === 'Foundation' && b.styleSlugs.some((s) => track.styleSlugs.includes(s)),
+  );
+  const today = todayIso();
+  // A batch that already started (but is still inside its join-grace window)
+  // is the option hardest to join — a beginner should be pointed at it only
+  // when nothing upcoming exists for this track. Apply the same
+  // weekend/time-of-day preference within each group.
+  const notStarted = pool.filter((b) => b.startDate >= today);
+  const started = pool.filter((b) => b.startDate < today);
+  return pickPreferred(notStarted, track) ?? pickPreferred(started, track);
 }
 
 export function StyleFinder({ content }: { content: SiteContent }) {
@@ -71,27 +87,29 @@ export function StyleFinder({ content }: { content: SiteContent }) {
     : undefined;
 
   const reset = () => setTrack(null);
+  const f = content.pages.home.styleFinder;
+  // The board's own labeled price templates, reused here rather than
+  // restated — see the price block below.
+  const board = content.pages.home.board;
+  const today = todayIso();
 
   return (
     <section id="style-finder" className="container-x py-12 sm:py-16 scroll-mt-24">
       <div className="rounded-3xl border border-cream/10 bg-ink-900/60 p-6 sm:p-10 backdrop-blur">
         <div className="flex items-center justify-between">
-          <p className="display text-sm uppercase tracking-widest text-ember-400">Style Finder</p>
+          <p className="display text-sm uppercase tracking-widest text-ember-400">{f.eyebrow}</p>
           {track ? (
             <button onClick={reset} className="btn-ghost text-xs">
-              Reset
+              {f.resetLabel}
             </button>
           ) : null}
         </div>
-        <h2 className="mt-2 display text-3xl font-bold sm:text-4xl">Two beginner tracks. Find yours.</h2>
-        <p className="mt-2 text-cream/70 max-w-xl">
-          Both are built for first-timers — no experience, no partner needed. Pick the time that
-          suits you and we’ll point you to the next beginner batch.
-        </p>
+        <h2 className="mt-2 display text-3xl font-bold sm:text-4xl">{f.headline}</h2>
+        <p className="mt-2 text-cream/70 max-w-xl">{f.lead}</p>
 
         {!track ? (
           <div className="mt-8 grid gap-4">
-            <p className="display text-xl">When can you make it?</p>
+            <p className="display text-xl">{f.question}</p>
             <div className="grid gap-3 sm:grid-cols-2">
               {TRACKS.map((t) => (
                 <button
@@ -106,61 +124,107 @@ export function StyleFinder({ content }: { content: SiteContent }) {
             </div>
           </div>
         ) : (
-          <div className="mt-8 rounded-2xl border border-ember-500/30 bg-ember-500/5 p-6">
-            <p className="display text-sm uppercase tracking-widest text-ember-400">We recommend</p>
+          // The one genuinely interactive moment on the page deserves to land
+          // rather than snap. Reuses the existing disclosure language rather
+          // than inventing a new one.
+          <div className="animate-fade-up mt-8 rounded-2xl border border-ember-500/30 bg-ember-500/5 p-6">
+            <p className="display text-sm uppercase tracking-widest text-ember-400">{f.recommendEyebrow}</p>
             <h3 className="mt-1 display text-3xl font-bold">{track.name}</h3>
             <p className="mt-2 text-cream/80">{track.tagline}</p>
             {recommendedBatch && branch ? (
               <div className="mt-5 rounded-xl border border-cream/10 bg-ink-950/40 p-4">
-                <p className="text-cream/60 text-xs uppercase tracking-widest">Next beginner batch</p>
+                <p className="text-cream/60 text-xs uppercase tracking-widest">{f.nextBatchLabel}</p>
                 <p className="mt-1 text-cream font-semibold">
                   {recommendedBatch.level} · {branch.name} · {recommendedBatch.daysOfWeek.join('–')}{' '}
                   {recommendedBatch.time}
                 </p>
                 <p className="text-cream/70 text-sm">
-                  Starts {formatBatchDate(recommendedBatch.startDate)} ·{' '}
-                  {formatInr(recommendedBatch.priceInr)}
+                  {(recommendedBatch.startDate < today ? f.startedTemplate : f.startsTemplate).replace(
+                    '{date}',
+                    formatBatchDate(recommendedBatch.startDate),
+                  )}
                 </p>
+                {/* The board's labeled price flip, reused rather than restated,
+                    so this card never shows an unlabeled full-program figure
+                    directly above a differently-priced booking button — the
+                    same defect Task 14 fixed on /batches. */}
+                {offersTrial(recommendedBatch) ? (
+                  <>
+                    <p className="mt-2 text-cream font-semibold">
+                      {board.trialPrice.replace(
+                        '{price}',
+                        formatInr(recommendedBatch.trialInr as number),
+                      )}
+                    </p>
+                    <p className="text-cream/60 text-xs">
+                      {board.fullProgram.replace('{price}', formatInr(recommendedBatch.priceInr))}
+                    </p>
+                  </>
+                ) : (
+                  <p className="mt-2 text-cream font-semibold">
+                    {board.fullProgramOnly.replace('{price}', formatInr(recommendedBatch.priceInr))}
+                  </p>
+                )}
               </div>
             ) : (
               <p className="mt-4 text-cream/70">
-                No upcoming {track.name} beginner batch listed yet — chat with us and we’ll tell you
-                when the next one starts.
+                {label(content.labels, 'emptyNoFinderBatch').replace('{track}', track.name)}
               </p>
             )}
-            <div className="mt-5 flex flex-wrap gap-3">
-              <EnquiryCTA
-                whatsappNumber={content.site.whatsappNumber}
-                instagramHandle={content.site.instagramHandle}
-                ctx={{
-                  source: 'style_finder',
-                  style: { slug: track.ctaSlug, name: track.name },
-                  branch: branch ? { slug: branch.slug, name: branch.name } : undefined,
-                  styleFinderRecommendation: {
-                    styleName: track.name,
-                    level: 'Foundation',
-                    branchName: branch?.name,
-                  },
-                }}
-                variant="primary"
-                label="Chat on WhatsApp"
-              />
-              <EnquiryCTA
-                whatsappNumber={content.site.whatsappNumber}
-                instagramHandle={content.site.instagramHandle}
-                ctx={{
-                  source: 'style_finder',
-                  style: { slug: track.ctaSlug, name: track.name },
-                  styleFinderRecommendation: {
-                    styleName: track.name,
-                    level: 'Foundation',
-                    branchName: branch?.name,
-                  },
-                }}
-                channel="instagram"
-                variant="secondary"
-                label="DM on Instagram"
-              />
+            <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-3">
+              {recommendedBatch && branch && recommendedBatch.razorpayLink && recommendedBatch.seatsLeft !== 0 ? (
+                <>
+                  {/* The board's grammar at the finder's moment of maximum
+                      intent: pay is primary with the price on the button,
+                      WhatsApp demotes to the chat-first link. */}
+                  <BookTrialLink
+                    href={recommendedBatch.razorpayLink}
+                    batch={recommendedBatch}
+                    styleSlug={track.ctaSlug}
+                    branchSlug={recommendedBatch.branchSlug}
+                    source="style_finder"
+                    className="inline-flex min-h-[44px] items-center gap-2 rounded-full bg-ember-600 px-5 py-2.5 text-sm font-semibold text-on-ember transition hover:bg-ember-700"
+                  >
+                    {bookLabel(recommendedBatch, content.labels)} ·{' '}
+                    {formatInr(bookPriceInr(recommendedBatch))}
+                  </BookTrialLink>
+                  <EnquiryCTA
+                    whatsappNumber={content.site.whatsappNumber}
+                    ctx={{
+                      source: 'style_finder',
+                      style: { slug: track.ctaSlug, name: track.name },
+                      branch: { slug: branch.slug, name: branch.name },
+                      batch: recommendedBatch,
+                    }}
+                    variant="link"
+                    labels={content.labels}
+                    templates={content.site.whatsappTemplates}
+                    label={label(content.labels, 'ctaChatFirst')}
+                  />
+                </>
+              ) : (
+                <EnquiryCTA
+                  whatsappNumber={content.site.whatsappNumber}
+                  ctx={{
+                    source: 'style_finder',
+                    style: { slug: track.ctaSlug, name: track.name },
+                    branch: branch ? { slug: branch.slug, name: branch.name } : undefined,
+                    styleFinderRecommendation: {
+                      styleName: track.name,
+                      level: 'Foundation',
+                      branchName: branch?.name,
+                    },
+                  }}
+                  variant="primary"
+                  labels={content.labels}
+                  templates={content.site.whatsappTemplates}
+                  label={
+                    recommendedBatch?.seatsLeft === 0
+                      ? label(content.labels, 'ctaSeatsFullWhatsapp')
+                      : undefined
+                  }
+                />
+              )}
             </div>
           </div>
         )}

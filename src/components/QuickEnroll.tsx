@@ -1,130 +1,285 @@
 import Link from 'next/link';
-import type { SiteContent } from '@/lib/content-schema';
+import type { Batch, SiteContent } from '@/lib/content-schema';
 import { visibleBatches, formatBatchDate, formatInr, batchStyleLabel } from '@/lib/content';
+import { compareByLevel } from '@/lib/batch-order';
+import { BookTrialLink } from './BookTrialLink';
 import { EnquiryCTA } from './EnquiryCTA';
-import { Reveal } from './Reveal';
-import { RhythmSignature } from './RhythmSignature';
+import { label } from '@/lib/labels';
+import { bookLabel, bookPriceInr, offersTrial, statusLabel } from '@/lib/book-label';
+import { cardNote } from '@/lib/board-card-copy';
+import { todayIso } from '@/lib/format';
 
-// The fast lane, styled like the lineup board outside a club: it overlaps
-// the hero so its glowing top edge peeks above the fold and pulls you in.
-// Each batch is an entry pass — one tap to a pre-filled WhatsApp sign-up.
-// No account, no form, no payment wall: the studio's real enrolment path,
-// front and centre.
+// The booking board — the conversion surface, styled like the lineup board
+// outside a club, overlapping the hero so its lit edge peeks above the fold.
+//
+// The board sells the trial as the product: level-first ordering puts
+// Foundation in front of the never-danced visitor (a date-sorted board could
+// open with an Advanced card), the first Foundation batch sits under a literal
+// spotlight, the trial price leads every card that HAS one with the program
+// price as quiet context, and the count-in strip answers the four documented
+// beginner fears at the exact point of decision — resolving, like every dance,
+// on the 1. A batch with no trial (batch.trialInr === null) leads with the
+// program fee instead; the board never invents a trial to fill the slot.
 
-export function QuickEnroll({ content }: { content: SiteContent }) {
-  const batches = visibleBatches(content).slice(0, 4);
+/** Up to 3 soonest Foundation batches + 1 soonest higher-level batch, so the
+ *  board reads as one obvious beginner lane plus a door for dancers who know
+ *  their level. Falls back to a straight level-first slice on sparse data. */
+function pickBoard(content: SiteContent): Batch[] {
+  const sorted = [...visibleBatches(content)].sort(compareByLevel);
+  const foundation = sorted.filter((b) => b.level === 'Foundation');
+  const higher = sorted.filter((b) => b.level !== 'Foundation');
+  if (foundation.length >= 3 && higher.length >= 1) {
+    return [...foundation.slice(0, 3), higher[0]];
+  }
+  return sorted.slice(0, 4);
+}
+
+// Items 5-7 are backed by live site copy (FAQ / hero) — the truth constraint on
+// this codebase is absolute, so none of these lines ship unverified. Item 8 used
+// to promise the trial fee back; the owner corrected that on 2026-08-08 — the
+// paid trial is NON-REFUNDABLE, so the risk-reversal is now the size of the
+// commitment (one class, no package), never money back.
+function countIn(
+  board: SiteContent['pages']['home']['board'],
+  trialPrice: string | null,
+): { count: string; title: string; body: string }[] {
+  return board.countIn.map((item) =>
+    item.body.includes('{price}')
+      ? {
+          ...item,
+          body: trialPrice ? item.body.replace('{price}', trialPrice) : board.countInFallbackBody,
+        }
+      : item,
+  );
+}
+
+export function QuickEnroll({
+  content,
+  trialFrom,
+}: {
+  content: SiteContent;
+  /** Cheapest trial across ALL visible batches — computed once in the page so
+   *  the hero, the sticky bar and this board can never print two different
+   *  trial prices on one screen. */
+  trialFrom: number | null;
+}) {
+  const batches = pickBoard(content);
+  const board = content.pages.home.board;
+  const today = todayIso();
   const branchOf = (slug: string) => content.studios.find((s) => s.slug === slug);
+  // Real proof at the point of decision — rendered from the content document
+  // so the admin stays the source of truth; nothing renders if it's removed.
+  const proof =
+    content.testimonials.find((t) => t.id === 'test-003') ?? content.testimonials[0] ?? null;
+  const proofStyle = proof
+    ? content.danceStyles.find((s) => s.slug === proof.styleSlug)?.name
+    : null;
 
   return (
+    // The negative margin pulls the card up over the hero's reserved bottom
+    // padding so the lit edge and "Booking open" badge sit inside the FIRST
+    // viewport. The hero's pb-36/44/48 exists precisely to absorb this.
     <section
       id="start-this-week"
-      className="container-x relative z-20 mt-6 scroll-mt-24 pb-10 sm:mt-10 sm:pb-14"
+      className="container-x relative z-20 -mt-24 scroll-mt-24 pb-10 sm:-mt-32 lg:-mt-36 sm:pb-14"
     >
-      <Reveal className="quick-enroll relative overflow-hidden rounded-[28px] border border-cream/12 bg-ink-900/80 shadow-2xl shadow-ember-700/10 backdrop-blur-2xl">
-        {/* Glowing marquee top edge — this is what peeks over the fold. */}
-        <div className="h-1.5 w-full bg-gradient-to-r from-ember-600 via-gold-500 to-ember-600" />
+      {/* Deliberately NOT a <Reveal>: the conversion card must never wait on an
+          entrance. The glass look is faked on an opaque fill — see .quick-enroll
+          in globals.css. */}
+      <div className="quick-enroll relative overflow-hidden rounded-[28px] border border-cream/12">
+        {/* The lit top border — a luminance ramp within ember; the soft glow
+            underneath makes it read as light on glass, not a printed rule. */}
+        <div aria-hidden className="relative h-[3px] w-full">
+          <div className="absolute inset-0 [background:linear-gradient(to_right,transparent,rgb(var(--c-ember-600)/0.9)_28%,rgb(var(--c-ember-400))_50%,rgb(var(--c-ember-600)/0.9)_72%,transparent)]" />
+          <div className="absolute inset-x-[14%] inset-y-0 bg-ember-500/50 blur-[6px]" />
+        </div>
 
         <div className="p-6 sm:p-8">
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              {/* Live "booking open" indicator */}
-              <span className="inline-flex items-center gap-2 rounded-full border border-ember-500/30 bg-ember-500/10 px-3 py-1">
-                <span className="beat-dot inline-block h-2 w-2 rounded-full bg-ember-500" />
-                <span className="display text-[11px] font-bold uppercase tracking-[0.25em] text-ember-400">
-                  Booking open
-                </span>
+            <span className="inline-flex items-center gap-2 rounded-full bg-ember-600 px-3 py-1.5 shadow-sm shadow-ember-700/30">
+              <span className="relative flex h-2 w-2">
+                <span className="beat-ring absolute inset-0 rounded-full bg-on-ember/60" />
+                <span className="relative inline-block h-2 w-2 rounded-full bg-on-ember" />
               </span>
-              <RhythmSignature
-                style={batches[0]?.styleSlugs[0] ?? 'salsa'}
-                loop
-                width={90}
-                className="hidden text-ember-500/60 sm:inline-block"
-              />
-            </div>
-            <p className="text-sm text-cream/55">
-              Reserve your seat in ~30s · secure checkout via Razorpay
-            </p>
+              <span className="display text-[11px] font-bold uppercase tracking-[0.25em] text-on-ember">
+                {label(content.labels, 'badgeBookingOpen')}
+              </span>
+            </span>
+            {/* Batch-agnostic on purpose: not every booking link is a Razorpay
+                checkout, so the header makes no per-provider claim. */}
+            <p className="text-sm text-cream/70">{board.speed}</p>
           </div>
 
           <h2 className="mt-4 display text-3xl font-extrabold tracking-tight sm:text-4xl">
-            Start dancing <span className="accent">this week.</span>
+            {board.headline} <span className="accent">{board.headlineAccent}</span>
           </h2>
-          <p className="mt-1 text-cream/65">
-            Pick a batch below — one tap and you&apos;re on the floor.
+          <p className="mt-1 text-cream/65 max-w-2xl">
+            {trialFrom != null
+              ? board.leadWithPrice.replace('{price}', formatInr(trialFrom))
+              : board.leadNoPrice}
           </p>
 
           {batches.length > 0 ? (
             <>
               <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {batches.map((b) => {
+                {batches.map((b, i) => {
                   const branch = branchOf(b.branchSlug);
                   const sName = batchStyleLabel(content, b.styleSlugs);
                   const filling = b.status === 'Filling Fast';
+                  const foundation = b.level === 'Foundation';
+                  // The spotlight: the board's first Foundation card gets its
+                  // own lit edge and a pool of stage light — the eye lands on
+                  // the beginner's default the way a follow spot lands on a
+                  // dancer.
+                  const spotlit = i === 0 && foundation;
+                  const book = bookLabel(b, content.labels);
+                  // What this card says about who it's for. Keyed on the
+                  // level, so the spotlight sets the volume — never whether
+                  // the card gets a line at all. See board-card-copy.ts.
+                  const note = cardNote(b, spotlit, board);
                   return (
                     <div
                       key={b.id}
-                      className="enroll-ticket group relative flex flex-col rounded-2xl border border-cream/12 bg-gradient-to-b from-ink-800/80 to-ink-900/60 p-5 transition duration-300 hover:-translate-y-1 hover:border-ember-500/60 hover:shadow-xl hover:shadow-ember-700/15"
+                      className={`enroll-ticket group relative flex flex-col overflow-hidden rounded-2xl border p-5 transition duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-ember-700/15 ${
+                        spotlit
+                          ? 'border-ember-500/50 bg-gradient-to-b from-ink-800/80 to-ink-900/60'
+                          : 'border-cream/12 bg-gradient-to-b from-ink-800/80 to-ink-900/60 hover:border-ember-500/60'
+                      }`}
                     >
-                      {/* Perforated pass edge */}
-                      <span
-                        aria-hidden
-                        className="pointer-events-none absolute left-0 top-1/2 h-full w-[2px] -translate-y-1/2 [background:repeating-linear-gradient(to_bottom,rgb(var(--c-cream)/0.25)_0_5px,transparent_5px_11px)]"
-                      />
-                      <div className="flex items-start justify-between gap-2">
+                      {spotlit ? (
+                        <>
+                          <div aria-hidden className="absolute inset-x-0 top-0 h-[2px]">
+                            <div className="absolute inset-0 [background:linear-gradient(to_right,transparent,rgb(var(--c-ember-600)/0.9)_25%,rgb(var(--c-ember-400))_50%,rgb(var(--c-ember-600)/0.9)_75%,transparent)]" />
+                          </div>
+                          <div aria-hidden className="spot-beam pointer-events-none absolute inset-0" />
+                        </>
+                      ) : null}
+
+                      <div className="relative flex items-start justify-between gap-2">
                         <div>
                           <p className="display text-xl font-bold leading-tight">{sName}</p>
-                          <p className="mt-0.5 text-xs uppercase tracking-wider text-cream/55">
-                            {b.level}
-                          </p>
+                          {spotlit ? (
+                            <p className="mt-0.5 text-xs font-semibold uppercase tracking-wider text-ember-400">
+                              {label(content.labels, 'badgeFoundationStartHere')}
+                            </p>
+                          ) : (
+                            <p className="mt-0.5 text-xs uppercase tracking-wider text-cream/70">
+                              {b.level}
+                            </p>
+                          )}
                         </div>
                         <span
                           className={`pill ${
-                            filling
-                              ? 'bg-ember-500/20 text-ember-400'
-                              : 'bg-gold-500/15 text-gold-400'
+                            filling ? 'bg-ember-500/20 text-ember-400' : 'bg-gold-500/15 text-gold-400'
                           }`}
                         >
-                          {b.status}
+                          {statusLabel(b.status, content.labels)}
                         </span>
                       </div>
-                      <div className="mt-4 space-y-1 text-sm">
+
+                      {note ? (
+                        <p
+                          className={`relative mt-2 ${
+                            note.tone === 'loud'
+                              ? 'text-sm text-cream/80'
+                              : 'text-xs text-cream/55'
+                          }`}
+                        >
+                          {note.text}
+                        </p>
+                      ) : null}
+
+                      <div className="relative mt-4 space-y-1 text-sm">
                         <p className="text-cream">{b.daysOfWeek.join('–')} · {b.time}</p>
                         <p className="text-cream/60">{branch?.name ?? b.branchSlug}</p>
                         <p className="text-cream/60">
-                          {formatBatchDate(b.startDate)} ·{' '}
-                          <span className="text-cream/80">{formatInr(b.priceInr)}</span>
+                          {(b.startDate < today ? board.startedTemplate : board.startsTemplate).replace(
+                            '{date}',
+                            formatBatchDate(b.startDate),
+                          )}
                         </p>
                       </div>
+
+                      {/* The price flip: where a trial exists it IS the
+                          product, so its price carries the weight and the
+                          program price is context. Where there is no trial the
+                          program fee is the ask, and the trial line is dropped
+                          rather than printed as a ₹0 or an invented deposit. */}
+                      <div className="relative mt-3">
+                        {offersTrial(b) ? (
+                          <>
+                            <p className="text-cream font-semibold">
+                              {board.trialPrice.replace('{price}', formatInr(b.trialInr as number))}
+                            </p>
+                            <p className="text-xs text-cream/60">
+                              {board.fullProgram.replace('{price}', formatInr(b.priceInr))}
+                            </p>
+                          </>
+                        ) : (
+                          <p className="text-cream font-semibold">
+                            {board.fullProgramOnly.replace('{price}', formatInr(b.priceInr))}
+                          </p>
+                        )}
+                      </div>
+
                       {typeof b.seatsLeft === 'number' ? (
-                        <p className="mt-3 text-xs font-semibold text-ember-400">
-                          ● {b.seatsLeft} seat{b.seatsLeft === 1 ? '' : 's'} left
+                        <p className="relative mt-3 text-xs font-semibold text-ember-400">
+                          {(b.seatsLeft === 1 ? board.seatsLeftOne : board.seatsLeftMany).replace(
+                            '{n}',
+                            String(b.seatsLeft),
+                          )}
                         </p>
                       ) : (
                         <span className="mt-3 block h-[1px]" />
                       )}
-                      <div className="mt-auto pt-4">
-                        {b.razorpayLink ? (
-                          <a
-                            href={b.razorpayLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-ember-500 px-4 py-2 text-sm font-semibold text-cream transition hover:bg-ember-600 magnetic"
-                          >
-                            Reserve my seat · {formatInr(b.reservationInr)}
-                          </a>
+
+                      <div className="relative mt-auto pt-4">
+                        {b.razorpayLink && b.seatsLeft !== 0 ? (
+                          <>
+                            <BookTrialLink
+                              href={b.razorpayLink}
+                              batch={b}
+                              styleSlug={b.styleSlugs[0]}
+                              branchSlug={b.branchSlug}
+                              source="quick_enroll"
+                              className="magnetic inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-full bg-ember-600 px-4 py-2 text-sm font-semibold text-on-ember transition hover:bg-ember-700"
+                            >
+                              {book} · {formatInr(bookPriceInr(b))}
+                            </BookTrialLink>
+                            <div className="mt-1 text-center">
+                              <EnquiryCTA
+                                whatsappNumber={content.site.whatsappNumber}
+                                ctx={{
+                                  source: 'quick_enroll',
+                                  style: { slug: b.styleSlugs[0], name: sName },
+                                  branch: branch ? { slug: branch.slug, name: branch.name } : undefined,
+                                  batch: b,
+                                }}
+                                variant="link"
+                                labels={content.labels}
+                                templates={content.site.whatsappTemplates}
+                                label={label(content.labels, 'ctaChatFirst')}
+                                className="!min-h-[36px] text-xs"
+                              />
+                            </div>
+                          </>
                         ) : (
                           <EnquiryCTA
                             whatsappNumber={content.site.whatsappNumber}
                             ctx={{
                               source: 'batch_row',
                               style: { slug: b.styleSlugs[0], name: sName },
-                              branch: branch
-                                ? { slug: branch.slug, name: branch.name }
-                                : undefined,
+                              branch: branch ? { slug: branch.slug, name: branch.name } : undefined,
                               batch: b,
                             }}
                             variant="batch-row"
-                            label="Reserve my seat →"
+                            labels={content.labels}
+                            templates={content.site.whatsappTemplates}
+                            label={
+                              b.seatsLeft === 0
+                                ? label(content.labels, 'ctaSeatsFullWhatsapp')
+                                : label(content.labels, 'ctaBookOnWhatsapp').replace('{book}', book)
+                            }
                             className="w-full justify-center magnetic"
                           />
                         )}
@@ -133,44 +288,95 @@ export function QuickEnroll({ content }: { content: SiteContent }) {
                   );
                 })}
               </div>
-              <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-cream/10 pt-5">
+
+              {/* The count-in, resolved: the hero counts 5-6-7-8 — here the four
+                  documented first-class fears take the same four counts, and
+                  the resolve lands where every dance does. */}
+              <div className="mt-8 border-t border-cream/10 pt-6">
+                <div className="grid gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-4">
+                  {countIn(board, trialFrom != null ? formatInr(trialFrom) : null).map((item) => (
+                    <div key={item.count} className="relative pl-9">
+                      <span
+                        aria-hidden
+                        className="display absolute left-0 top-0 text-3xl font-extrabold leading-none text-ember-500/35"
+                      >
+                        {item.count}
+                      </span>
+                      <p className="display font-semibold leading-tight">{item.title}</p>
+                      <p className="mt-1 text-sm leading-snug text-cream/65">{item.body}</p>
+                    </div>
+                  ))}
+                </div>
+                <p className="display mt-5 text-right text-sm font-semibold tracking-tight text-ember-400">
+                  {board.resolveLine}
+                </p>
+              </div>
+
+              {proof ? (
+                <figure className="mt-5 border-t border-cream/10 pt-5">
+                  <blockquote className="text-sm italic text-cream/80">
+                    &ldquo;{proof.text}&rdquo;
+                  </blockquote>
+                  <figcaption className="mt-1 text-xs text-cream/55">
+                    — {proof.studentName}
+                    {proofStyle ? board.proofSuffix.replace('{style}', proofStyle) : ''}
+                  </figcaption>
+                </figure>
+              ) : null}
+
+              <div className="mt-6 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-t border-cream/10 pt-5">
                 <Link
                   href="#style-finder"
-                  className="group inline-flex items-center gap-2 text-sm text-cream/75 transition hover:text-cream"
+                  className="group inline-flex min-h-[44px] items-center gap-2 py-2 text-sm text-cream/75 transition hover:text-cream"
                 >
                   <span className="grid h-7 w-7 place-items-center rounded-full border border-cream/20 text-ember-400 transition group-hover:border-ember-500/60">
                     ?
                   </span>
-                  Not sure which? Take the 30-second style finder →
+                  {board.styleFinderLink}
                 </Link>
-                <Link href="/batches" className="btn-secondary magnetic">
-                  See all batches &amp; prices
-                </Link>
+                <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+                  {/* The experienced-dancer lane: featuring Foundation never
+                      costs the secondary audience a single tap. */}
+                  {/* Plain /batches, no ?level= — the batches page reads no
+                      search params, so the query filtered nothing and only
+                      minted a second, parameterised URL that canonicalises
+                      back here. Same trap as trial.ctaHref. */}
+                  <Link
+                    href="/batches"
+                    className="inline-flex min-h-[44px] items-center py-2 text-sm text-cream/75 transition hover:text-cream"
+                  >
+                    {board.advancedLink}
+                  </Link>
+                  <Link href="/batches" className="btn-secondary magnetic">
+                    {board.allBatchesLink}
+                  </Link>
+                </div>
               </div>
             </>
           ) : (
             <div className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-cream/12 bg-ink-800/60 p-6">
               <div>
-                <p className="display text-lg font-bold">New batches drop every week.</p>
+                <p className="display text-lg font-bold">{label(content.labels, 'emptyNewBatchesTitle')}</p>
                 <p className="mt-1 text-sm text-cream/65">
-                  Tell us your style — we&apos;ll hold you a seat in the next one.
+                  {label(content.labels, 'emptyNewBatchesBody')}
                 </p>
               </div>
               <EnquiryCTA
                 whatsappNumber={content.site.whatsappNumber}
                 ctx={{
                   source: 'primary',
-                  customNote:
-                    'Hi! I want to join a dance batch — please let me know the next start dates.',
+                  customNote: board.emptyNote,
                 }}
                 variant="primary"
-                label="Grab a seat on WhatsApp"
+                labels={content.labels}
+                templates={content.site.whatsappTemplates}
+                label={label(content.labels, 'ctaGrabSeatWhatsapp')}
                 className="magnetic"
               />
             </div>
           )}
         </div>
-      </Reveal>
+      </div>
     </section>
   );
 }

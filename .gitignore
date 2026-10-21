@@ -1,5 +1,6 @@
 node_modules
 .next
+.next-dev
 out
 .env
 .env.local
@@ -10,6 +11,8 @@ data/versions/
 data/users.json
 data/audit.log
 data/audit.json
+data/audit-auth.json
+data/payment-events.json
 public/uploads/
 *.log
 .DS_Store
@@ -20,3 +23,16 @@ next-env.d.ts
 .agents/skills/redesign-existing-projects/SKILL.md
 .claude/skills/design-taste-frontend/SKILL.md
 .claude/skills/redesign-existing-projects/SKILL.md
+
+# Cloudflare / OpenNext
+.open-next/
+.wrangler/
+.dev.vars
+cloudflare-env.d.ts
+
+# Local tooling artifacts
+.playwright-mcp/
+furor-home.png
+
+# CAS sidecars for versioned documents (dev/filesystem backend only)
+data/.meta/

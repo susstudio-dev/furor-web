@@ -1,13 +1,20 @@
-import { getContent } from '@/lib/content';
+import { getPublicContent } from '@/lib/content';
 import { LegalDoc } from '@/components/LegalDoc';
+import { resolvePageMeta } from '@/lib/page-meta';
 
 export async function generateMetadata() {
-  const c = await getContent();
+  const c = await getPublicContent();
+  const meta = resolvePageMeta('terms', {
+    seoTitle: c.pages.terms.seoTitle,
+    seoDescription: c.pages.terms.seoDescription,
+    brand: c.site.title,
+    derivedTitle: c.pages.terms.intro.headline,
+    derivedDescription: c.pages.terms.intro.lead,
+  });
   return {
-    title: c.pages.terms.intro.headline || 'Terms & Services',
-    description:
-      c.pages.terms.intro.lead ||
-      'Terms of service for Furor Dance Hyderabad — classes, payments, conduct and refunds.',
+    title: meta.title,
+    description: meta.description,
+    alternates: { canonical: '/terms' },
   };
 }
 
@@ -15,7 +22,7 @@ export async function generateMetadata() {
 export const dynamic = 'force-dynamic';
 
 export default async function TermsPage() {
-  const c = await getContent();
+  const c = await getPublicContent();
   const t = c.pages.terms;
   return <LegalDoc intro={t.intro} lastUpdated={t.lastUpdated} sections={t.sections} />;
 }

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { requireSubject } from '@/lib/guard';
 
 const PAGES = [
   { href: '/admin/pages/home', label: 'Home', desc: '"What we teach", "How it works", closing CTA, "Visit us"' },
@@ -8,6 +9,7 @@ const PAGES = [
   { href: '/admin/pages/instructors', label: 'Instructors page', desc: 'Page intro, testimonials header, closing CTA' },
   { href: '/admin/pages/dance-styles', label: 'Dance Styles index', desc: 'Headline at top of /dance-styles' },
   { href: '/admin/pages/batches', label: 'Batches index', desc: 'Headline at top of /batches' },
+  { href: '/admin/pages/la-rumba', label: 'La Rumba', desc: 'The social page at /la-rumba — intro, reassurance, gallery, voices, CTAs' },
   { href: '/admin/pages/stories', label: 'Stories (Blog) index', desc: 'Headline at top of /stories' },
   { href: '/admin/pages/privacy', label: 'Privacy Policy', desc: 'Headline, last-updated date and section list at /privacy' },
   { href: '/admin/pages/terms', label: 'Terms & Services', desc: 'Headline, last-updated date and section list at /terms' },
@@ -15,7 +17,8 @@ const PAGES = [
   { href: '/admin/pages/custom', label: 'Custom pages', desc: 'Create / edit your own pages at /p/<slug>' },
 ];
 
-export default function PagesIndex() {
+export default async function PagesIndex() {
+  await requireSubject();
   return (
     <div className="p-6 sm:p-10 max-w-5xl">
       <p className="display text-sm uppercase tracking-widest text-ember-400">Pages</p>

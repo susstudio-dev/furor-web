@@ -10,8 +10,8 @@ import { PAYMENT_EVENTS_KEY, PAYMENT_EVENTS_CAP, type PaymentEvent } from '@/lib
 //
 // Setup (Razorpay Dashboard → Settings → Webhooks → Add New Webhook):
 //   • URL    : https://www.dancehyderabad.com/api/razorpay/webhook
-//   • Secret : a strong random string you choose — also set it in Vercel as
-//              RAZORPAY_WEBHOOK_SECRET (Production + Preview).
+//   • Secret : a strong random string you choose — also set it on the Worker
+//              with `wrangler secret put RAZORPAY_WEBHOOK_SECRET`.
 //   • Events : payment.captured + payment.failed (required). refund.* and
 //              payment_link.* are optional — handled here too if you tick them.
 //

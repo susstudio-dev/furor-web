@@ -1,9 +1,13 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import type { Batch } from '@/lib/content-schema';
-import { getContent } from '@/lib/content';
-import { visibleBatches } from '@/lib/content-helpers';
-import { formatBatchDate } from '@/lib/format';
+import { getPublicContent } from '@/lib/content';
+import { PAGE_SEO_DEFAULTS } from '@/lib/page-meta';
+import { formatBatchDate, todayIso } from '@/lib/format';
+import { resolveWelcomeState } from '@/lib/welcome-confirm';
+import { resolveWelcomeBatch } from '@/lib/welcome-tracks';
+import { clockLabel, istToUtcStamp, minusMinutes, parseTimeRange } from '@/lib/welcome-time';
+import { contactRows } from '@/lib/welcome-contact';
 import { WelcomeView, type BatchBundle } from './WelcomeView';
 
 // Post-payment landing page, one per track. Set the matching URL as the
@@ -16,6 +20,16 @@ import { WelcomeView, type BatchBundle } from './WelcomeView';
 //   /welcome/latin?d=2026-07-12   (the batch's start date — easiest to set)
 //   /welcome/latin?b=batch-007    (the batch id)
 // With no param we fall back to the next upcoming batch for the track.
+//
+// Confirmation: Payment PAGES (pages.razorpay.com) redirect with NO query
+// params on success, so a bare visit here IS the success case. The failure
+// layout appears for any razorpay_payment_link_status other than
+// paid/partially_paid (Payment LINKS append the status; unknown values are
+// deliberately unconfirmed so a status we don't recognise never reads as
+// money received). Preview the failure state with
+// ?razorpay_payment_link_status=cancelled. The decision is made SERVER-side
+// from searchParams so a cancelled payment never flashes the confirmation
+// hero and needs no JavaScript to show the right state.
 // noindex — this is a post-registration confirmation, not a public/SEO page.
 
 // Tracks are admin-managed (added/edited in /admin/pages/welcome → Blob), so the
@@ -31,11 +45,11 @@ export async function generateMetadata({
   params: Promise<{ track: string }>;
 }): Promise<Metadata> {
   const { track } = await params;
-  const content = await getContent();
+  const content = await getPublicContent();
   const cfg = content.welcome.tracks.find((t) => t.key === track);
   return {
-    title: 'You’re in — Furor Hyderabad',
-    description: cfg?.metaDesc || 'Your intake details and next steps.',
+    title: content.welcome.seoTitle.trim() || PAGE_SEO_DEFAULTS.welcome.title,
+    description: cfg?.metaDesc || PAGE_SEO_DEFAULTS.welcome.description,
     robots: { index: false, follow: false },
   };
 }
@@ -64,50 +78,6 @@ function formatPhoneDisplay(digits: string): string {
   return `+${digits}`;
 }
 
-interface Clock { h: number; m: number; }
-
-function to24(h: number, mer: string): number {
-  if (mer === 'PM' && h !== 12) return h + 12;
-  if (mer === 'AM' && h === 12) return 0;
-  return h;
-}
-
-// Handles both "9:30–10:30 AM" (batch format, single trailing meridiem) and
-// "9:30 AM – 10:30 AM" (config format, two meridiems).
-function parseTimeRange(time: string): { start: Clock; end: Clock } | null {
-  const m = time.match(
-    /^\s*(\d{1,2}):(\d{2})\s*(AM|PM)?\s*[–—-]\s*(\d{1,2}):(\d{2})\s*(AM|PM)\s*$/i,
-  );
-  if (!m) return null;
-  const endMer = m[6].toUpperCase();
-  const startMer = (m[3] ?? m[6]).toUpperCase();
-  return {
-    start: { h: to24(parseInt(m[1], 10), startMer), m: parseInt(m[2], 10) },
-    end: { h: to24(parseInt(m[4], 10), endMer), m: parseInt(m[5], 10) },
-  };
-}
-
-function clockLabel({ h, m }: Clock): string {
-  const mer = h < 12 ? 'AM' : 'PM';
-  const hh = h % 12 === 0 ? 12 : h % 12;
-  return `${hh}:${String(m).padStart(2, '0')} ${mer}`;
-}
-
-function minusMinutes({ h, m }: Clock, mins: number): Clock {
-  const total = (((h * 60 + m - mins) % 1440) + 1440) % 1440;
-  return { h: Math.floor(total / 60), m: total % 60 };
-}
-
-// IST wall-clock → UTC iCal stamp (YYYYMMDDTHHMMSSZ). Computed via Date.UTC so
-// it is independent of the build/server timezone.
-function istToUtcStamp(dateIso: string, clock: Clock): string {
-  const [y, mo, d] = dateIso.split('-').map(Number);
-  const utcMs = Date.UTC(y, mo - 1, d, clock.h, clock.m) - (5 * 60 + 30) * 60 * 1000;
-  const dt = new Date(utcMs);
-  const p = (n: number) => String(n).padStart(2, '0');
-  return `${dt.getUTCFullYear()}${p(dt.getUTCMonth() + 1)}${p(dt.getUTCDate())}T${p(dt.getUTCHours())}${p(dt.getUTCMinutes())}00Z`;
-}
-
 function icsEscape(text: string): string {
   return text
     .replace(/\\/g, '\\\\')
@@ -116,29 +86,60 @@ function icsEscape(text: string): string {
     .replace(/\n/g, '\\n');
 }
 
-export default async function WelcomePage({ params }: { params: Promise<{ track: string }> }) {
+export default async function WelcomePage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ track: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const { track } = await params;
-  const content = await getContent();
+  const sp = await searchParams;
+  const query = new URLSearchParams();
+  for (const [k, v] of Object.entries(sp)) {
+    const value = Array.isArray(v) ? v[0] : v;
+    if (typeof value === 'string') query.set(k, value);
+  }
+  // Decided here, on the server, so a cancelled payment never paints the
+  // confirmation hero first — and a no-JS visitor still sees the right state.
+  const paymentState = resolveWelcomeState(query);
+  const content = await getPublicContent();
   const cfg = content.welcome.tracks.find((t) => t.key === track);
   if (!cfg) notFound();
 
   const wa = content.site.whatsappNumber;
 
-  // Candidate batches for this track. The redirect can pin one via ?d=/?b=;
-  // otherwise we show the next upcoming one (prefer weekend in the right
-  // time-of-day). Either way the date/time/venue come from live content.
-  const pool = visibleBatches(content).filter(
-    (b) => b.level === 'Foundation' && b.styleSlugs.some((s) => cfg.styleSlugs.includes(s)),
-  );
-  const matchesTod = (b: Batch) => (cfg.weekendTod === 'AM' ? /am/i.test(b.time) : /pm/i.test(b.time));
-  const isWeekend = (b: Batch) => b.daysOfWeek.some((d) => d === 'Sat' || d === 'Sun');
-  const next = pool.filter(isWeekend).find(matchesTod) ?? pool.find(isWeekend) ?? pool[0];
+  // Which batch this visit is about, decided HERE on the server.
+  //
+  // It used to be decided twice: the server picked a default blind, then a
+  // client useEffect tried to re-pin from ?b=/?d= against an already
+  // level-filtered list. So the initial HTML always showed the default batch,
+  // a no-JS visitor never got past it, and a ?b= naming a batch outside the
+  // track's pool matched nothing and silently kept a stranger's date, venue
+  // and calendar file. See resolveWelcomeBatch.
+  //
+  // The pool is the FULL content.batches, not visibleBatches: a confirmation
+  // page is a receipt and has to keep resolving for a batch that has already
+  // started.
+  const { batch: next, pinMissed } = resolveWelcomeBatch({
+    batchId: query.get('b'),
+    dateIso: query.get('d'),
+    batches: content.batches,
+    track: cfg,
+    today: todayIso(),
+  });
 
   // Everything the page shows for a given batch, precomputed server-side. We
   // build one bundle per candidate batch + a default, and the client picks the
   // right one from the ?d=/?b= param (so this stays static-export safe).
-  const buildBundle = (batch: Batch | undefined): BatchBundle => {
-    const studio = content.studios.find((s) => s.slug === batch?.branchSlug) ?? content.studios[0];
+  const buildBundle = (batch: Batch | null): BatchBundle => {
+    // No `?? content.studios[0]` fallback. When no batch resolves there is no
+    // venue to name, and substituting whichever studio happens to sit first in
+    // the array sent paying customers to the wrong address — since the studios
+    // reorder that fallback was Jubilee Hills, wrong for every PUP batch. The
+    // consumers below already handle `undefined`; an absent address is far
+    // better than a confidently wrong one.
+    const studio = content.studios.find((s) => s.slug === batch?.branchSlug);
     const venue = studio?.address ?? '';
     const mapUrl = studio
       ? `https://www.google.com/maps/search/?api=1&query=${studio.geo.lat},${studio.geo.lng}`
@@ -146,7 +147,16 @@ export default async function WelcomePage({ params }: { params: Promise<{ track:
     const range = batch ? parseTimeRange(batch.time) : null;
     const whenDays = batch ? formatDays(batch.daysOfWeek) : cfg.whenDays;
     const whenTime = batch ? batch.time : cfg.whenTime;
-    const arriveBy = range ? clockLabel(minusMinutes(range.start, 15)) : cfg.arriveBy;
+    // Derived from the batch's own start time, or — only when there is no
+    // batch at all — the track's manual string. NOT `range ? … : cfg.arriveBy`:
+    // that mixed sources, so a batch whose `time` failed to parse showed its
+    // own real class time beside a DIFFERENT batch's arrival time. When the
+    // time is unreadable the line is dropped instead of filled from elsewhere.
+    const arriveBy = batch
+      ? range
+        ? clockLabel(minusMinutes(range.start, 15))
+        : ''
+      : cfg.arriveBy;
     const intakeDate = batch ? formatBatchDate(batch.startDate) : null;
 
     let gcalUrl: string | null = null;
@@ -203,11 +213,20 @@ export default async function WelcomePage({ params }: { params: Promise<{ track:
       mapUrl,
       gcalUrl,
       icsHref,
+      // Derived from this batch's own studio, so switching bundles switches
+      // the whole contact block together — venue, map, phone — instead of
+      // leaving a stale address beside a new date.
+      contact: contactRows({ studio, site: content.site }),
+      welcomeNote: batch?.welcomeNote ?? '',
     };
   };
 
-  const defaultBundle = buildBundle(next);
-  const options = pool.map(buildBundle);
+  // One bundle, resolved. There is no longer a client-side option list to
+  // choose from: when `pinMissed` is set, `next` is null and this deliberately
+  // builds the empty bundle — no venue, no date, no calendar links — so the
+  // page says "we'll confirm the details" instead of confidently printing a
+  // different batch's address. A recoverable gap beats a wrong building.
+  const bundle = buildBundle(next);
 
   // One-tap "save contact" (vCard).
   const vcard = [
@@ -225,11 +244,25 @@ export default async function WelcomePage({ params }: { params: Promise<{ track:
       track={track}
       trackLabel={cfg.trackLabel}
       copy={content.welcome}
+      labels={content.labels}
       waNumber={wa}
       waDisplay={formatPhoneDisplay(wa)}
       vcardHref={vcardHref}
-      defaultBundle={defaultBundle}
-      options={options}
+      bundle={bundle}
+      pinMissed={pinMissed}
+      paymentState={paymentState}
+      tonight={
+        content.tonight.enabled &&
+        content.tonight.headline &&
+        content.tonight.when &&
+        content.tonight.venueName
+          ? {
+              headline: content.tonight.headline,
+              when: content.tonight.when,
+              venueName: content.tonight.venueName,
+            }
+          : null
+      }
     />
   );
 }

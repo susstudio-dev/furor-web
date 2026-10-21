@@ -1,16 +1,32 @@
 import Link from 'next/link';
-import { getContent } from '@/lib/content';
+import { getPublicContent } from '@/lib/content';
 import { EnquiryCTA } from '@/components/EnquiryCTA';
 import { JsonLd } from '@/components/JsonLd';
 import { PhotoCarousel } from '@/components/PhotoCarousel';
+import { resolvePageMeta } from '@/lib/page-meta';
 
-export const metadata = { title: 'About' };
+export async function generateMetadata() {
+  const c = await getPublicContent();
+  const meta = resolvePageMeta('about', {
+    seoTitle: c.pages.about.seoTitle,
+    seoDescription: c.pages.about.seoDescription,
+    brand: c.site.title,
+    // introParagraphs[0] is a 322-character paragraph — more than double what a
+    // SERP renders. fitDescription trims it on a word boundary.
+    derivedDescription: c.pages.about.introParagraphs[0] ?? '',
+  });
+  return {
+    title: meta.title,
+    description: meta.description,
+    alternates: { canonical: '/about' },
+  };
+}
 
 // Render per request so admin edits show immediately (export build strips this).
 export const dynamic = 'force-dynamic';
 
 export default async function AboutPage() {
-  const content = await getContent();
+  const content = await getPublicContent();
   const a = content.pages.about;
   const personLd = content.instructors.map((i) => ({
     '@context': 'https://schema.org',
@@ -142,7 +158,8 @@ export default async function AboutPage() {
                 whatsappNumber={content.site.whatsappNumber}
                 ctx={{ source: 'primary' }}
                 variant="primary"
-                label="Chat on WhatsApp"
+                labels={content.labels}
+                templates={content.site.whatsappTemplates}
               />
               <EnquiryCTA
                 whatsappNumber={content.site.whatsappNumber}
@@ -150,7 +167,8 @@ export default async function AboutPage() {
                 ctx={{ source: 'primary' }}
                 channel="instagram"
                 variant="secondary"
-                label="DM on Instagram"
+                labels={content.labels}
+                templates={content.site.whatsappTemplates}
               />
             </div>
           </div>

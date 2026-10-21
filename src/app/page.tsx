@@ -1,198 +1,196 @@
 import Link from 'next/link';
-import { getContent, nextBatchPerStyle, formatBatchDate, formatInr, batchStyleLabel } from '@/lib/content';
+import { getPublicContent, visibleBatches, formatInr } from '@/lib/content';
+import { resolvePageMeta } from '@/lib/page-meta';
+import { heroPoster } from '@/lib/image-variants';
+
+export async function generateMetadata() {
+  const c = await getPublicContent();
+  const styleNames = c.danceStyles
+    .slice()
+    .sort((a, b) => a.displayOrder - b.displayOrder)
+    .map((s) => s.name);
+  const classes =
+    styleNames.length > 1
+      ? `${styleNames.slice(0, -1).join(', ')} & ${styleNames[styleNames.length - 1]}`
+      : styleNames[0] || 'Dance';
+  // Two lead styles, not all three. "Furor — Dance Hyderabad | Salsa, Bachata
+  // & West Coast Swing Classes" ran to 71 characters — a SERP shows ~60, so the
+  // city was being cut off, which is the one word this page most needs to rank
+  // for. West Coast Swing has its own page and stays in the description.
+  const lead = styleNames.slice(0, 2).join(' & ') || 'Dance';
+  const meta = resolvePageMeta('home', {
+    seoTitle: c.pages.home.seoTitle,
+    seoDescription: c.pages.home.seoDescription,
+    brand: c.site.title,
+    derivedTitle: `${lead} Classes in Hyderabad`,
+    // Decoupled from hero.subHeadline (spec §6.3). SEO copy should stop
+    // dictating what a first-time visitor reads, and the sub-headline is being
+    // trimmed to ~130 characters — a meta description is not what it is for.
+    derivedDescription: c.site.tagline,
+    supportDescription: `${classes} classes in Jubilee Hills, Hyderabad.`,
+  });
+  return {
+    title: meta.title,
+    description: meta.description,
+    alternates: { canonical: '/' },
+  };
+}
+import { JsonLd } from '@/components/JsonLd';
+import { tonightEventLd } from '@/lib/tonight-event';
+import { todayIso } from '@/lib/format';
 import { Hero } from '@/components/Hero';
-import { KineticStrip } from '@/components/KineticStrip';
-import { TrialBanner } from '@/components/TrialBanner';
 import { StyleFinder } from '@/components/StyleFinder';
 import { EnquiryCTA } from '@/components/EnquiryCTA';
-import { TonightTile } from '@/components/TonightTile';
+import { label } from '@/lib/labels';
+import { trialFromInr } from '@/lib/book-label';
 import { RhythmSignature } from '@/components/RhythmSignature';
 import { Img } from '@/components/Img';
 import { Accentuate } from '@/components/Accentuate';
 import { Reveal } from '@/components/Reveal';
-import { Parallax } from '@/components/Parallax';
 import { QuickEnroll } from '@/components/QuickEnroll';
-import { BatchActions } from '@/components/BatchActions';
+import { StickyTrialBar } from '@/components/StickyTrialBar';
+import { RumbaBand } from '@/components/RumbaBand';
 
 // Render per request so admin edits show immediately and no stale/blip HTML is
 // cached. The GitHub Pages export workflow strips this line (static export
 // forbids dynamic rendering).
 export const dynamic = 'force-dynamic';
 
+// The two hero preload <link>s below need a single-URL `href` — the HTML
+// spec's fallback for a browser that ignores imagesrcset/imagesizes.
+// `poster.landscape.jpg` is a srcset string (one or more width-tagged URLs);
+// this pulls the first URL out of it. `poster.portrait.jpgSrc` already is a
+// bare URL, so it needs no help.
+function firstUrl(srcSet: string): string {
+  return srcSet.split(',')[0].trim().split(' ')[0];
+}
+
 export default async function HomePage() {
-  const content = await getContent();
+  const content = await getPublicContent();
   const sortedStyles = content.danceStyles.slice().sort((a, b) => a.displayOrder - b.displayOrder);
   const sortedStudios = content.studios.slice().sort((a, b) => a.displayOrder - b.displayOrder);
-  const nextPerStyle = nextBatchPerStyle(content);
+  // todayIso() is passed in rather than read inside the builder so the node is
+  // deterministic and the IST business date is the one that decides which
+  // Saturday is "next".
+  const eventLd = tonightEventLd(content, todayIso());
   const h = content.pages.home;
+  // Only batches that actually run a trial set the "from ₹X" — this used to
+  // minimise `reservationInr` across every visible batch, a field that
+  // defaulted to 500 whether or not a trial existed.
+  const trialFrom = trialFromInr(visibleBatches(content));
+  // The sticky bar anchors to the booking board, not to a batch's checkout, so
+  // it stays the beginner-facing CTA regardless of any one batch's level.
+  const trialLabel = `${label(content.labels, 'ctaBookFoundation')}${
+    trialFrom != null ? ` · ${formatInr(trialFrom)}` : ''
+  }`;
+  // Resolved here, not inside Hero: Hero is a client component, and
+  // importing the variant manifest there would ship it in the client bundle
+  // for no reason. Computed once so the preload <link>s below and the prop
+  // passed to <Hero> agree on the exact same files.
+  const poster = heroPoster(content.hero.posterImage);
 
   return (
     <>
-      <Hero content={content} />
+      {poster ? (
+        <>
+          {/* Hand-written resource preloads for the hero's LCP image,
+              rendered here (a Server Component) rather than inside Hero
+              ('use client'). React only hoists a JSX <link> into <head>
+              when it carries a real string `href` — react-dom's SSR
+              renderer checks `typeof props.href === 'string'` before
+              treating a <link> as a hoistable Resource. An earlier version
+              of this tag carried only `imageSrcSet` and no `href`, so it
+              rendered inert in <body>, after the <picture> it was meant to
+              preload. `type`/`media` on each tag match its corresponding
+              <source> in Hero's <picture> exactly, so a browser that will
+              end up choosing WebP/JPEG simply ignores an AVIF preload it
+              can't decode rather than fetching a wasted file. */}
+          <link
+            rel="preload"
+            as="image"
+            type="image/avif"
+            media="(max-width: 639px)"
+            href={poster.portrait.jpgSrc}
+            imageSrcSet={poster.portrait.avif}
+            imageSizes="100vw"
+            fetchPriority="high"
+          />
+          <link
+            rel="preload"
+            as="image"
+            type="image/avif"
+            media="(min-width: 640px)"
+            href={firstUrl(poster.landscape.jpg)}
+            imageSrcSet={poster.landscape.avif}
+            imageSizes="100vw"
+            fetchPriority="high"
+          />
+        </>
+      ) : null}
+      <Hero content={content} poster={poster} />
 
       {/* Fast lane: join a real batch before the brochure even starts. */}
-      <QuickEnroll content={content} />
+      <QuickEnroll content={content} trialFrom={trialFrom} />
 
-      <KineticStrip styles={sortedStyles} />
+      {/* The After-Band wrapper: everything below the board shares a container
+          whose LAST child is the mobile sticky trial bar — sticky clamping
+          makes the bar appear only after the visitor scrolls past the board,
+          with zero JS. See StickyTrialBar. */}
+      <div className="relative">
 
-      <TrialBanner content={content} />
+      {/* Emitted only when the social's venue, weekday and start time are all
+          filled in — see tonight-event.ts. A node without location and
+          startDate cannot earn an Event rich result, so we ship none rather
+          than assert something we don't know. */}
+      {eventLd ? <JsonLd data={eventLd} /> : null}
 
-      {/* What we teach */}
-      <section className="container-x py-12 sm:py-16 relative overflow-hidden">
-        {/* Parallax depth: a giant faint count drifts behind the grid as you
-            scroll — the room has layers, not a flat page. */}
-        <Parallax
-          speed={0.32}
-          className="pointer-events-none absolute -right-10 -top-6 -z-10 hidden select-none sm:block"
-        >
-          <span className="display block text-[16rem] font-extrabold leading-none text-cream/[0.035]">
-            8
-          </span>
-        </Parallax>
+      {/* What we teach — one compact row, not a six-card gallery. The owner
+          cut the grid (2026-08-23) to keep the home page on batches; the full
+          gallery lives at /dance-styles and these pills keep that path one
+          tap away. The La Rumba tile that sat here now floats over the hero
+          (TonightFloat), and the KineticStrip marquee + weekend TrialBanner
+          ribbon are gone outright — decoration and duplication respectively. */}
+      <section className="container-x py-10 sm:py-12">
         <Reveal>
-          <div className="flex items-end justify-between gap-6 flex-wrap">
-            <div>
-              <div className="flex items-center gap-3">
-                <p className="display text-sm uppercase tracking-widest text-ember-400">{h.whatWeTeach.eyebrow}</p>
-                <RhythmSignature style="salsa" loop width={84} className="text-ember-500/70" />
-              </div>
-              <h2 className="mt-2 display text-3xl font-bold sm:text-5xl max-w-xl">
-                <Accentuate text={h.whatWeTeach.headline} />
-              </h2>
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-4">
+            <div className="flex items-center gap-3">
+              <p className="display text-sm uppercase tracking-widest text-ember-400">{h.whatWeTeach.eyebrow}</p>
+              <RhythmSignature style="salsa" loop width={84} className="text-ember-500/70" />
             </div>
-            <Link href="/dance-styles" className="btn-secondary magnetic">
-              All styles
-            </Link>
+            <div className="flex flex-wrap items-center gap-2">
+              {sortedStyles.map((s) => (
+                <Link
+                  key={s.slug}
+                  href={`/dance-styles/${s.slug}`}
+                  className="rounded-full border border-cream/15 bg-ink-900/40 px-4 py-2 text-sm font-semibold text-cream/85 transition hover:border-ember-500/50 hover:text-cream"
+                >
+                  {s.name}
+                </Link>
+              ))}
+              <Link href="/dance-styles" className="px-2 py-2 text-sm text-ember-400 hover:text-ember-300 transition">
+                {label(content.labels, 'ctaAllStyles')} →
+              </Link>
+            </div>
           </div>
         </Reveal>
-        <Parallax speed={0.05} className="mt-10">
-          <Reveal stagger step={110} className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {sortedStyles.map((s) => (
-            <Link
-              key={s.slug}
-              href={`/dance-styles/${s.slug}`}
-              className="group card relative overflow-hidden rounded-3xl"
-            >
-              <div className="relative aspect-[4/5]">
-                <Img
-                  src={s.heroImage}
-                  alt={s.name}
-                  seed={`style-${s.slug}`}
-                  label={s.name}
-                  fill
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                  className="object-cover object-[center_30%] transition duration-700 group-hover:scale-[1.04]"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-ink-950 via-ink-950/30 to-transparent" />
-              </div>
-              <div className="absolute inset-x-0 bottom-0 p-6">
-                <div className="flex items-center justify-between">
-                  <p className="display text-3xl font-bold text-cream">{s.name}</p>
-                  <RhythmSignature style={s.slug} width={120} className="opacity-0 group-hover:opacity-100 transition-opacity" />
-                </div>
-                <p className="mt-1 text-sm text-cream/70">{s.tagline}</p>
-                <p className="mt-4 inline-flex items-center text-ember-400 text-sm">
-                  Explore →
-                </p>
-              </div>
-            </Link>
-          ))}
-          </Reveal>
-        </Parallax>
       </section>
 
-      {/* Next batches strip */}
-      <section className="container-x py-12">
-        <Reveal>
-          <div className="flex items-end justify-between gap-6 flex-wrap">
-            <div>
-              <div className="flex items-center gap-3">
-                <p className="display text-sm uppercase tracking-widest text-ember-400">{h.nextBatches.eyebrow}</p>
-                <RhythmSignature style="bachata" loop width={84} className="text-ember-500/70" />
-              </div>
-              <h2 className="mt-2 display text-3xl font-bold sm:text-4xl">
-                {h.nextBatches.headline}
-              </h2>
-            </div>
-            <Link href="/batches" className="btn-secondary magnetic">
-              See all batches
-            </Link>
-          </div>
-        </Reveal>
-        <Reveal stagger step={80} className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {sortedStyles.map((s) => {
-            const b = nextPerStyle.get(s.slug);
-            const branch = b ? content.studios.find((st) => st.slug === b.branchSlug) : undefined;
-            const combined = b && b.styleSlugs.length > 1;
-            return (
-              <div
-                key={s.slug}
-                className="card p-5"
-              >
-                <p className="display text-xl font-bold">
-                  {combined ? batchStyleLabel(content, b!.styleSlugs) : s.name}
-                </p>
-                {b && branch ? (
-                  <>
-                    <p className="mt-2 text-sm text-cream/70">
-                      {b.level} · {branch.name}
-                      {combined ? ' · taught together' : ''}
-                    </p>
-                    <p className="mt-1 text-cream">{b.daysOfWeek.join('–')} · {b.time}</p>
-                    <p className="text-sm text-cream/60 mt-1">
-                      Starts {formatBatchDate(b.startDate)} · {formatInr(b.priceInr)}
-                    </p>
-                    {typeof b.seatsLeft === 'number' ? (
-                      <p className="pill mt-3 bg-gold-500/15 text-gold-400">
-                        {b.seatsLeft} seats left
-                      </p>
-                    ) : null}
-                    <div className="mt-4">
-                      <BatchActions
-                        batch={b}
-                        style={{ slug: s.slug, name: s.name }}
-                        branch={{ slug: branch.slug, name: branch.name }}
-                        whatsappNumber={content.site.whatsappNumber}
-                      />
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <p className="mt-2 text-cream/60">
-                      Next {s.name} batch coming soon.
-                    </p>
-                    <div className="mt-4">
-                      <EnquiryCTA
-                        whatsappNumber={content.site.whatsappNumber}
-                        ctx={{
-                          source: 'batch_row',
-                          style: { slug: s.slug, name: s.name },
-                        }}
-                        variant="batch-row"
-                        label="Notify me on WhatsApp"
-                      />
-                    </div>
-                  </>
-                )}
-              </div>
-            );
-          })}
-        </Reveal>
-      </section>
+      {/* The social is the product: proof band with the zero-fear door. */}
+      <RumbaBand content={content} trialFrom={trialFrom} />
 
       {/* Why Furor */}
       {content.whyFuror.points.length > 0 ? (
         <section className="container-x py-12 sm:py-16">
           <Reveal>
             <div className="flex items-center gap-3">
-              <p className="display text-sm uppercase tracking-widest text-ember-400">Why Furor</p>
+              <p className="display text-sm uppercase tracking-widest text-ember-400">{h.whyFurorEyebrow}</p>
               <RhythmSignature style="west-coast-swing" loop width={84} className="text-ember-500/70" />
             </div>
             <h2 className="mt-2 display text-3xl font-bold sm:text-5xl max-w-2xl">
               {content.whyFuror.headline}
             </h2>
           </Reveal>
-          <Reveal stagger step={120} className="mt-12 grid gap-8 md:grid-cols-3">
+          <Reveal stagger className="mt-12 grid gap-8 md:grid-cols-3">
             {content.whyFuror.points.map((p, i) => (
               <div key={i} className="card p-6">
                 <p className="display text-2xl font-bold text-ember-400">0{i + 1}</p>
@@ -212,7 +210,7 @@ export default async function HomePage() {
               {h.howItWorks.headline}
             </h2>
           </Reveal>
-          <Reveal stagger step={130} className="mt-12 grid gap-6 md:grid-cols-3">
+          <Reveal stagger className="mt-12 grid gap-6 md:grid-cols-3">
             {h.howItWorks.steps.map((s, i, arr) => (
               <div key={i} className="card p-6">
                 <p className="display text-2xl font-bold text-ember-400">
@@ -232,24 +230,30 @@ export default async function HomePage() {
       {/* Style finder */}
       <StyleFinder content={content} />
 
-      <TonightTile content={content} />
-
       {/* Closing CTA */}
       <section className="container-x py-14 sm:py-20">
-        <Reveal className="on-accent rounded-3xl bg-gradient-to-br from-ember-700 via-ember-600 to-ember-500 p-10 sm:p-16 text-ink-950">
+        <Reveal className="on-accent accent-panel rounded-3xl p-10 sm:p-16">
           <h2 className="display text-4xl font-extrabold sm:text-6xl tracking-tight max-w-3xl">
             <Accentuate text={h.closingCta.headline} />
           </h2>
           {h.closingCta.body ? (
-            <p className="mt-3 text-ink-950/80 max-w-xl text-lg">{h.closingCta.body}</p>
+            <p className="mt-3 text-on-ember max-w-xl text-lg">{h.closingCta.body}</p>
           ) : null}
           <div className="mt-8 flex flex-wrap gap-3">
+            <a
+              href="#start-this-week"
+              className="btn-primary !bg-ink-950 !text-cream hover:!bg-ink-800 magnetic"
+            >
+              {trialLabel}
+            </a>
             <EnquiryCTA
               whatsappNumber={content.site.whatsappNumber}
               ctx={{ source: 'primary' }}
-              variant="primary"
-              label="Chat on WhatsApp"
-              className="!bg-ink-950 !text-cream hover:!bg-ink-800 magnetic"
+              variant="secondary"
+              labels={content.labels}
+              templates={content.site.whatsappTemplates}
+              label={label(content.labels, 'ctaChatOnWhatsapp')}
+              className="!border-on-ember/45 !text-on-ember hover:!border-on-ember magnetic"
             />
             <EnquiryCTA
               whatsappNumber={content.site.whatsappNumber}
@@ -257,8 +261,9 @@ export default async function HomePage() {
               ctx={{ source: 'primary' }}
               channel="instagram"
               variant="secondary"
-              label="DM on Instagram"
-              className="!border-ink-950/40 !text-ink-950 hover:!border-ink-950 magnetic"
+              labels={content.labels}
+              templates={content.site.whatsappTemplates}
+              className="!border-on-ember/45 !text-on-ember hover:!border-on-ember magnetic"
             />
           </div>
         </Reveal>
@@ -290,30 +295,30 @@ export default async function HomePage() {
               const tel = s.telephone.replace(/\s/g, '');
               return (
                 <div key={s.id}>
-                  <Reveal from="up" delay={80} className="grid gap-6 md:grid-cols-2 items-stretch">
-                    <div className="card rounded-3xl p-8 sm:p-10 flex flex-col">
-                      <p className="display text-2xl sm:text-3xl font-bold">{s.name}</p>
+                  <Reveal className="grid gap-6 md:grid-cols-2 items-stretch">
+                    <div className="rounded-3xl border border-cream/10 bg-ink-900/40 p-8 sm:p-10 flex flex-col">
+                      <h3 className="display text-2xl sm:text-3xl font-bold">{s.name}</h3>
                       <p className="mt-1 text-xs uppercase tracking-widest text-ember-400/80">
                         {content.site.title}
                       </p>
                       <div className="mt-6 space-y-4 text-cream/85">
                         <div>
-                          <p className="text-xs uppercase tracking-widest text-cream/50">Address</p>
+                          <p className="text-xs uppercase tracking-widest text-cream/70">{h.visitUs.addressLabel}</p>
                           <p className="mt-1 leading-relaxed">{s.address}</p>
                         </div>
                         <div>
-                          <p className="text-xs uppercase tracking-widest text-cream/50">Hours</p>
+                          <p className="text-xs uppercase tracking-widest text-cream/70">{h.visitUs.hoursLabel}</p>
                           <p className="mt-1">{s.hours}</p>
                         </div>
                         {s.parkingNotes ? (
                           <div>
-                            <p className="text-xs uppercase tracking-widest text-cream/50">Parking</p>
+                            <p className="text-xs uppercase tracking-widest text-cream/70">{h.visitUs.parkingLabel}</p>
                             <p className="mt-1 text-cream/80">{s.parkingNotes}</p>
                           </div>
                         ) : null}
                         {styleNames.length > 0 ? (
                           <div>
-                            <p className="text-xs uppercase tracking-widest text-cream/50">What we teach here</p>
+                            <p className="text-xs uppercase tracking-widest text-cream/70">{h.visitUs.teachHereLabel}</p>
                             <div className="mt-2 flex flex-wrap gap-2">
                               {styleNames.map((n) => (
                                 <span key={n} className="pill bg-cream/5 text-cream/80">{n}</span>
@@ -324,15 +329,15 @@ export default async function HomePage() {
                       </div>
                       <div className="mt-auto pt-6 flex flex-wrap gap-3">
                         <a href={directions} target="_blank" rel="noopener noreferrer" className="btn-primary">
-                          Get directions
+                          {label(content.labels, 'ctaGetDirections')}
                         </a>
-                        <a href={`tel:${tel}`} className="btn-secondary">Call {s.telephone}</a>
+                        <a href={`tel:${tel}`} className="btn-secondary">{h.visitUs.callTemplate.replace('{phone}', s.telephone)}</a>
                       </div>
                     </div>
                     <div className="card relative overflow-hidden rounded-3xl min-h-[360px]">
                       <iframe
                         src={mapEmbed}
-                        title={`Map to ${s.name}`}
+                        title={h.visitUs.mapTitle.replace('{studio}', s.name)}
                         loading="lazy"
                         referrerPolicy="no-referrer-when-downgrade"
                         className="absolute inset-0 h-full w-full"
@@ -341,7 +346,7 @@ export default async function HomePage() {
                     </div>
                   </Reveal>
                   {s.photos.length > 0 ? (
-                    <Reveal stagger step={90} className="mt-6 grid gap-3 sm:gap-4 grid-cols-2 md:grid-cols-3">
+                    <Reveal stagger className="mt-6 grid gap-3 sm:gap-4 grid-cols-2 md:grid-cols-3">
                       {s.photos.slice(0, 3).map((p, i) => (
                         <div
                           key={`${p}-${i}`}
@@ -351,10 +356,9 @@ export default async function HomePage() {
                         >
                           <Img
                             src={p}
-                            alt={`Inside ${s.name}`}
+                            alt={h.visitUs.photoAlt.replace('{studio}', s.name)}
                             seed={`${s.slug}-${i}`}
                             fill
-                            sizes="(max-width: 768px) 100vw, 33vw"
                             className="object-cover transition duration-700 hover:scale-[1.04]"
                           />
                         </div>
@@ -367,6 +371,14 @@ export default async function HomePage() {
           </div>
         </section>
       ) : null}
+
+      <StickyTrialBar
+        whatsappNumber={content.site.whatsappNumber}
+        label={trialLabel}
+        labels={content.labels}
+        templates={content.site.whatsappTemplates}
+      />
+      </div>
     </>
   );
 }

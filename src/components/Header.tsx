@@ -5,17 +5,18 @@ import { useEffect, useState } from 'react';
 import type { SiteContent } from '@/lib/content-schema';
 import { BrandMark } from './BrandMark';
 import { ThemeToggle } from './ThemeToggle';
+import { FacebookIcon, InstagramIcon, YouTubeIcon } from './SocialIcons';
+import { navItemsFor, navLabel, type NavItem } from '@/lib/nav';
+import { label } from '@/lib/labels';
 
-const NAV: { label: string; href: string; children?: { label: string; href: string }[] }[] = [
-  { label: 'Home', href: '/' },
-  { label: 'About', href: '/about' },
-  { label: 'Dance Styles', href: '/dance-styles' },
-  { label: 'Instructors', href: '/instructors' },
-  { label: 'Batches & Pricing', href: '/batches' },
-  { label: 'Blog', href: '/stories' },
-  { label: 'FAQs', href: '/faqs' },
-  { label: 'Contact', href: '/contact' },
-];
+type NavWithChildren = NavItem & { children?: { label: string; href: string }[] };
+
+interface SocialLink {
+  id: string;
+  href: string;
+  label: string;
+  icon: React.ReactNode;
+}
 
 export function Header({ content }: { content: SiteContent }) {
   const [open, setOpen] = useState(false);
@@ -28,8 +29,13 @@ export function Header({ content }: { content: SiteContent }) {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  const navWithDropdowns = NAV.map((item) => {
-    if (item.label === 'Dance Styles') {
+  // The branch keys on the STABLE ID, not the rendered text. `item.label ===
+  // 'Dance Styles'` was one rename in /admin/labels away from emptying this
+  // dropdown with no error anywhere.
+  const navWithDropdowns: NavWithChildren[] = navItemsFor({
+    socialEnabled: content.tonight.enabled,
+  }).map((item) => {
+    if (item.id === 'dance-styles') {
       return {
         ...item,
         children: content.danceStyles
@@ -50,6 +56,39 @@ export function Header({ content }: { content: SiteContent }) {
     .sort((a, b) => a.displayOrder - b.displayOrder)
     .map((p) => ({ label: p.navLabel || p.title, href: `/p/${p.slug}` }));
 
+  // Each icon renders only when its URL is set — the stored YouTube URL is
+  // unverified (spec decision #6), and an icon that 404s is worse than one
+  // that is absent. Accessible names come from `labels`, never from a literal:
+  // "every user-visible string editable" includes the ones only a screen
+  // reader hears.
+  const socials: SocialLink[] = [];
+  if (content.site.socials.instagram) {
+    socials.push({
+      id: 'instagram',
+      href: content.site.socials.instagram,
+      label: label(content.labels, 'ariaSocialInstagram'),
+      icon: <InstagramIcon />,
+    });
+  }
+  if (content.site.socials.facebook) {
+    socials.push({
+      id: 'facebook',
+      href: content.site.socials.facebook,
+      label: label(content.labels, 'ariaSocialFacebook'),
+      icon: <FacebookIcon />,
+    });
+  }
+  if (content.site.socials.youtube) {
+    socials.push({
+      id: 'youtube',
+      href: content.site.socials.youtube,
+      label: label(content.labels, 'ariaSocialYoutube'),
+      icon: <YouTubeIcon />,
+    });
+  }
+  const iconClass =
+    'inline-flex h-11 w-11 items-center justify-center rounded-full text-cream/80 transition hover:bg-cream/5 hover:text-cream';
+
   return (
     <header
       className={`sticky top-0 z-40 transition-colors ${
@@ -57,17 +96,24 @@ export function Header({ content }: { content: SiteContent }) {
       }`}
     >
       <div className="container-x flex h-16 items-center gap-3">
-        <Link href="/" aria-label="Furor — Dance Hyderabad home" className="shrink-0">
+        <Link href="/" aria-label={label(content.labels, 'ariaHome')} className="shrink-0">
           <BrandMark size={52} />
         </Link>
         <nav
-          className="hidden lg:flex flex-1 items-center justify-center gap-1"
-          aria-label="Primary"
+          className="hidden xl:flex flex-1 items-center justify-center gap-0.5"
+          aria-label={label(content.labels, 'ariaPrimaryNav')}
         >
           {navWithDropdowns.map((item) => (
-            <div key={item.label} className="group relative">
-              <Link href={item.href} className="btn-ghost">
-                {item.label}
+            <div key={item.id} className="group relative">
+              {/* px-3, not btn-ghost's px-4, at every desktop width. Nine
+                  items plus the logo and the icon cluster are a tight fit: at
+                  px-4 the row needs 843px against 821px at 1280, so it wrapped
+                  — "Batches" onto two lines, "Contact" clipped, the document
+                  scrolling sideways. px-3 buys 72px and clears it. Restoring
+                  px-4 at xl undid the saving exactly where it was still
+                  needed, which is why this carries no breakpoint. */}
+              <Link href={item.href} className="btn-ghost px-3">
+                {navLabel(item, content.labels)}
                 {item.children ? <Caret /> : null}
               </Link>
               {item.children ? (
@@ -88,36 +134,86 @@ export function Header({ content }: { content: SiteContent }) {
             </div>
           ))}
           {customNavItems.map((c) => (
-            <Link key={c.href} href={c.href} className="btn-ghost">
+            <Link key={c.href} href={c.href} className="btn-ghost px-3">
               {c.label}
             </Link>
           ))}
         </nav>
-        <div className="ml-auto lg:ml-0 flex shrink-0 items-center gap-2 sm:gap-3">
-          <ThemeToggle />
+        {/* Measured budgets, not taste. At 375px: BrandMark 156 + gap-3 12 +
+            Instagram 44 + gap-2 8 + burger 44 = 264 against 335px of
+            container-x content. Three 44px targets would need 412 and turn the
+            primary surface into a horizontally scrolling page (spec §6.1).
+            Instagram alone survives because it is the traffic source.
+
+            Everything up here now switches at xl rather than lg, for the same
+            kind of reason: nine nav items need 755px, and at 1024 the row had
+            929 to fit BrandMark 156 + nav 755 + cluster 139 = 1050. Trimming
+            labels, padding and gaps recovered 200px and still left it 121
+            over — the band simply cannot hold a nine-item nav, so below xl it
+            gets the burger instead. Keep every breakpoint in this header on
+            xl: a mismatch means a width with neither a nav nor a menu. */}
+        <div className="ml-auto xl:ml-0 flex shrink-0 items-center gap-2 sm:gap-3">
+          <div className="hidden xl:flex items-center gap-1">
+            {socials.map((s) => (
+              <a
+                key={s.id}
+                href={s.href}
+                aria-label={s.label}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={iconClass}
+              >
+                {s.icon}
+              </a>
+            ))}
+          </div>
+          {/* Wrapped rather than given `hidden xl:inline-flex` directly: the
+              toggle's own class string already sets inline-flex, and which of
+              two display utilities wins would depend on Tailwind's internal
+              ordering. A wrapper makes it unambiguous. */}
+          <span className="hidden xl:inline-flex">
+            <ThemeToggle />
+          </span>
+          {/* Instagram alone below lg. It is the traffic source, and the one
+              link a visitor who arrived from a Reel uses to check the school is
+              real before paying. */}
+          {content.site.socials.instagram ? (
+            <a
+              href={content.site.socials.instagram}
+              aria-label={label(content.labels, 'ariaSocialInstagram')}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`xl:hidden ${iconClass}`}
+            >
+              <InstagramIcon />
+            </a>
+          ) : null}
+          {/* h-11 w-11 p-0: `p-0` is a utility and beats .btn-ghost's @apply'd
+              px-4 py-2 (components layer). The burger was 38px — under the 44px
+              touch minimum, and it is one of only two controls up here. */}
           <button
             type="button"
-            className="lg:hidden btn-ghost p-2"
-            aria-label="Toggle menu"
+            className="xl:hidden btn-ghost h-11 w-11 p-0"
+            aria-label={label(content.labels, 'ariaToggleMenu')}
             aria-expanded={open}
             onClick={() => setOpen((v) => !v)}
           >
-            <span className="sr-only">Menu</span>
+            <span className="sr-only">{label(content.labels, 'ariaMenu')}</span>
             <Burger open={open} />
           </button>
         </div>
       </div>
       {open ? (
-        <div className="lg:hidden border-t border-cream/10 bg-ink-950/95 backdrop-blur">
+        <div className="xl:hidden border-t border-cream/10 bg-ink-950/95 backdrop-blur">
           <div className="container-x py-4 space-y-1">
             {navWithDropdowns.map((item) => (
-              <div key={item.label} className="border-b border-cream/5 last:border-0">
+              <div key={item.id} className="border-b border-cream/5 last:border-0">
                 <Link
                   href={item.href}
                   onClick={() => setOpen(false)}
                   className="block py-3 text-base font-medium text-cream"
                 >
-                  {item.label}
+                  {navLabel(item, content.labels)}
                 </Link>
                 {item.children ? (
                   <div className="pb-3 pl-4 space-y-1">
@@ -146,6 +242,39 @@ export function Header({ content }: { content: SiteContent }) {
                 </Link>
               </div>
             ))}
+            {/* 3 x 44 + 2 x 12 = 156px inside a 335px drawer — 179px spare.
+                ThemeToggle lives here rather than in the bar because
+                layout.tsx already runs a pre-paint script honouring
+                prefers-color-scheme, so a system-mode visitor is served
+                correctly without ever opening this.
+                Rendered unconditionally, not gated on socials.length: the
+                theme toggle must stay reachable even when no social URL is
+                set, and an empty flex row costs nothing. */}
+            <div className="flex items-center gap-3 border-t border-cream/10 pt-4">
+              {socials.map((s) => (
+                <a
+                  key={s.id}
+                  href={s.href}
+                  aria-label={s.label}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setOpen(false)}
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-cream/15 text-cream/80 transition hover:border-ember-500/60 hover:text-cream"
+                >
+                  {s.icon}
+                </a>
+              ))}
+              {/* !h-11 !px-4: ThemeToggle's own h-9 is a mouse-target sized
+                  for the desktop bar. This is the touch-primary drawer this
+                  task moved it into, with 179px of spare room in the row —
+                  the same "don't shrink targets" principle that kept the
+                  header to one icon applies here too. `!` beats h-9 despite
+                  identical specificity, since Tailwind's compiled important
+                  utilities always win regardless of generation order. */}
+              <span className="ml-auto">
+                <ThemeToggle className="!h-11 !px-4" />
+              </span>
+            </div>
           </div>
         </div>
       ) : null}

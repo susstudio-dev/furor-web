@@ -1,10 +1,13 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import type { Batch } from '@/lib/content-schema';
-import { formatBatchDate, formatInr } from '@/lib/format';
+import type { Batch, BatchesPage, WhatsappTemplates } from '@/lib/content-schema';
+import { formatBatchDate, formatInr, todayIso } from '@/lib/format';
+import { compareByLevel } from '@/lib/batch-order';
 import { EnquiryCTA } from './EnquiryCTA';
 import { BatchActions } from './BatchActions';
+import { label, type Labels } from '@/lib/labels';
+import { offersTrial, statusLabel } from '@/lib/book-label';
 
 export interface BatchRow {
   batch: Batch;
@@ -21,6 +24,11 @@ interface Props {
   studios: { slug: string; name: string }[];
   whatsappNumber: string;
   instagramHandle: string;
+  /** pages.batches.browser — this screen's own copy. Separate from `labels`,
+   *  which carries only the strings that recur across many screens. */
+  copy: BatchesPage['browser'];
+  labels: Labels;
+  templates: WhatsappTemplates;
 }
 
 // ── derived attributes ──────────────────────────────────────────────────────
@@ -75,8 +83,18 @@ const STARTING_ORDER = ['This month', 'Next 30 days', 'Later'];
 const TOD_ORDER = ['Morning', 'Afternoon', 'Evening'];
 const LEVEL_ORDER = ['Foundation', 'Intermediate', 'Advanced'];
 
-export function BatchesBrowser({ rows, styles, studios, whatsappNumber, instagramHandle }: Props) {
+export function BatchesBrowser({
+  rows,
+  styles,
+  studios,
+  whatsappNumber,
+  instagramHandle,
+  labels,
+  templates,
+  copy,
+}: Props) {
   const [now] = useState(() => new Date());
+  const today = todayIso();
   const multiBranch = studios.length > 1;
 
   const enriched: Enriched[] = useMemo(
@@ -109,7 +127,12 @@ export function BatchesBrowser({ rows, styles, studios, whatsappNumber, instagra
     price: new Set(),
     status: new Set(),
   });
-  const [sort, setSort] = useState<'soon' | 'late' | 'priceLow' | 'priceHigh'>('soon');
+  // Level-first is the default on purpose: the primary visitor has never
+  // danced, and a date-sorted list can put an Advanced batch at the top.
+  // Price sorting was dropped — with a handful of batches at two price
+  // points it was two extra decisions that answered nothing; the price
+  // FILTER below still exists.
+  const [sort, setSort] = useState<'level' | 'soon' | 'late'>('level');
   // Detailed facets are collapsed by default on mobile so the batch list isn't
   // pushed off-screen by a wall of pills. Always expanded on lg+ (room for it).
   const [showFilters, setShowFilters] = useState(false);
@@ -126,7 +149,8 @@ export function BatchesBrowser({ rows, styles, studios, whatsappNumber, instagra
       return next;
     });
     const s = q.get('sort');
-    if (s === 'soon' || s === 'late' || s === 'priceLow' || s === 'priceHigh') setSort(s);
+    // Old bookmarked ?sort=priceLow/priceHigh URLs fall back to the default.
+    if (s === 'level' || s === 'soon' || s === 'late') setSort(s);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -135,7 +159,7 @@ export function BatchesBrowser({ rows, styles, studios, whatsappNumber, instagra
     (Object.keys(sel) as FacetKey[]).forEach((k) => {
       if (sel[k].size) q.set(k, [...sel[k]].join(','));
     });
-    if (sort !== 'soon') q.set('sort', sort);
+    if (sort !== 'level') q.set('sort', sort);
     const qs = q.toString();
     const url = qs ? `?${qs}` : window.location.pathname;
     window.history.replaceState(null, '', url);
@@ -164,8 +188,7 @@ export function BatchesBrowser({ rows, styles, studios, whatsappNumber, instagra
   const filtered = useMemo(() => {
     const out = enriched.filter((e) => passesExcept(e, null));
     out.sort((a, b) => {
-      if (sort === 'priceLow') return a.priceN - b.priceN;
-      if (sort === 'priceHigh') return b.priceN - a.priceN;
+      if (sort === 'level') return compareByLevel(a.row.batch, b.row.batch);
       const cmp = a.row.batch.startDate.localeCompare(b.row.batch.startDate);
       return sort === 'late' ? -cmp : cmp;
     });
@@ -207,7 +230,9 @@ export function BatchesBrowser({ rows, styles, studios, whatsappNumber, instagra
 
   const activeChips: { k: FacetKey; v: string; label: string }[] = [];
   (Object.keys(sel) as FacetKey[]).forEach((k) =>
-    sel[k].forEach((v) => activeChips.push({ k, v, label: labelFor(k, v, styles, studios) })),
+    sel[k].forEach((v) =>
+      activeChips.push({ k, v, label: labelFor(k, v, styles, studios, labels, copy) }),
+    ),
   );
   const anyActive = activeChips.length > 0;
 
@@ -226,23 +251,29 @@ export function BatchesBrowser({ rows, styles, studios, whatsappNumber, instagra
   );
 
   const groups: { key: FacetKey; label: string; options: { v: string; label: string }[] }[] = [
-    { key: 'style', label: 'Dance', options: styles.filter((s) => enriched.some((e) => e.styleSlugs.includes(s.slug))).map((s) => ({ v: s.slug, label: s.name })) },
-    { key: 'level', label: 'Level', options: present(LEVEL_ORDER, (e) => e.level).map((v) => ({ v, label: v })) },
-    ...(multiBranch ? [{ key: 'branch' as FacetKey, label: 'Studio', options: studios.filter((s) => enriched.some((e) => e.branch === s.slug)).map((s) => ({ v: s.slug, label: s.name })) }] : []),
-    { key: 'tod', label: 'Time of day', options: present(TOD_ORDER, (e) => e.tod).map((v) => ({ v, label: v })) },
-    { key: 'days', label: 'Days', options: present(['Weekend', 'Weekday'], (e) => e.days).map((v) => ({ v, label: v === 'Weekend' ? 'Weekends' : 'Weekdays' })) },
-    { key: 'starting', label: 'Starting', options: present(STARTING_ORDER, (e) => e.starting).map((v) => ({ v, label: v })) },
-    { key: 'price', label: 'Price', options: priceVals.map((v) => ({ v, label: formatInr(Number(v)) })) },
-    { key: 'status', label: 'Availability', options: present(['Filling Fast', 'Open'], (e) => e.status).map((v) => ({ v, label: v === 'Filling Fast' ? 'Filling fast' : 'Open' })) },
+    { key: 'style', label: copy.facetStyle, options: styles.filter((s) => enriched.some((e) => e.styleSlugs.includes(s.slug))).map((s) => ({ v: s.slug, label: s.name })) },
+    { key: 'level', label: copy.facetLevel, options: present(LEVEL_ORDER, (e) => e.level).map((v) => ({ v, label: v })) },
+    ...(multiBranch ? [{ key: 'branch' as FacetKey, label: copy.facetBranch, options: studios.filter((s) => enriched.some((e) => e.branch === s.slug)).map((s) => ({ v: s.slug, label: s.name })) }] : []),
+    { key: 'tod', label: copy.facetTod, options: present(TOD_ORDER, (e) => e.tod).map((v) => ({ v, label: todLabel(v, copy) })) },
+    { key: 'days', label: copy.facetDays, options: present(['Weekend', 'Weekday'], (e) => e.days).map((v) => ({ v, label: dayKindLabel(v, copy) })) },
+    { key: 'starting', label: copy.facetStarting, options: present(STARTING_ORDER, (e) => e.starting).map((v) => ({ v, label: startingLabel(v, copy) })) },
+    { key: 'price', label: copy.facetPrice, options: priceVals.map((v) => ({ v, label: formatInr(Number(v)) })) },
+    { key: 'status', label: copy.facetStatus, options: present(['Filling Fast', 'Open'], (e) => e.status).map((v) => ({ v, label: statusLabel(v, labels) })) },
   ];
 
-  const presets: { label: string; p: Partial<Record<FacetKey, string[]>> }[] = [
-    { label: '🔰 Beginner-friendly', p: { level: ['Foundation'] } },
-    { label: '🗓️ Weekend classes', p: { days: ['Weekend'] } },
-    { label: '🌙 Evening classes', p: { tod: ['Evening'] } },
-    { label: '⚡ Starting soon', p: { starting: ['This month', 'Next 30 days'] } },
-    { label: '🔥 Filling fast', p: { status: ['Filling Fast'] } },
+  const presets: { id: string; label: string; p: Partial<Record<FacetKey, string[]>> }[] = [
+    { id: 'beginner', label: copy.presetBeginner, p: { level: ['Foundation'] } },
+    { id: 'weekend', label: copy.presetWeekend, p: { days: ['Weekend'] } },
+    { id: 'evening', label: copy.presetEvening, p: { tod: ['Evening'] } },
+    { id: 'soon', label: copy.presetStartingSoon, p: { starting: ['This month', 'Next 30 days'] } },
+    { id: 'filling', label: copy.presetFillingFast, p: { status: ['Filling Fast'] } },
   ];
+
+  // Split rather than interpolate: the count is bold and the rest is not, so
+  // the template has to be cut at {n}. A template without {n} degrades to
+  // "<count><whole template with {total} filled>", which is ugly but never
+  // blank and never throws.
+  const [resultBefore, resultAfter = ''] = copy.resultCount.split('{n}');
 
   return (
     <>
@@ -251,11 +282,11 @@ export function BatchesBrowser({ rows, styles, studios, whatsappNumber, instagra
           {/* Quick picks — wrap so all presets stay visible (no off-screen scroll) */}
           <div className="flex flex-wrap items-center gap-2">
             <span className="w-full sm:w-auto text-[11px] uppercase tracking-widest text-cream/45 sm:mr-1">
-              Quick picks
+              {copy.filterQuickPicks}
             </span>
             {presets.map((pre) => (
               <button
-                key={pre.label}
+                key={pre.id}
                 onClick={() => applyPreset(pre.p)}
                 className="pill whitespace-nowrap bg-ember-500/12 text-ember-400 hover:bg-ember-500/22 transition"
               >
@@ -273,7 +304,7 @@ export function BatchesBrowser({ rows, styles, studios, whatsappNumber, instagra
             className="lg:hidden mt-3 flex w-full items-center justify-between rounded-xl border border-cream/10 bg-cream/5 px-4 py-2.5 text-sm text-cream/85 hover:bg-cream/10 transition"
           >
             <span className="flex items-center gap-2">
-              {showFilters ? 'Hide filters' : 'All filters'}
+              {showFilters ? copy.filterHide : copy.filterShowAll}
               {activeChips.length ? (
                 <span className="rounded-full bg-ember-500 px-2 py-0.5 text-xs font-semibold text-cream">
                   {activeChips.length}
@@ -333,7 +364,9 @@ export function BatchesBrowser({ rows, styles, studios, whatsappNumber, instagra
         {/* Result bar */}
         <div className="mt-6 flex flex-wrap items-center gap-3">
           <p className="text-cream/80 text-sm">
-            <span className="font-semibold text-cream">{filtered.length}</span> of {enriched.length} batches
+            {resultBefore}
+            <span className="font-semibold text-cream">{filtered.length}</span>
+            {resultAfter.replace('{total}', String(enriched.length))}
           </p>
           {anyActive ? (
             <div className="flex flex-wrap items-center gap-1.5">
@@ -342,27 +375,26 @@ export function BatchesBrowser({ rows, styles, studios, whatsappNumber, instagra
                   key={ch.k + ch.v}
                   onClick={() => toggle(ch.k, ch.v)}
                   className="pill bg-cream/10 text-cream/80 hover:bg-cream/15"
-                  title="Remove filter"
+                  title={copy.filterRemoveTitle}
                 >
                   {ch.label} <span aria-hidden>✕</span>
                 </button>
               ))}
               <button onClick={clearAll} className="text-xs text-ember-400 hover:text-ember-300 ml-1">
-                Clear all
+                {copy.filterClearAll}
               </button>
             </div>
           ) : null}
           <label className="ml-auto text-sm text-cream/60 flex items-center gap-2">
-            Sort
+            {copy.filterSortLabel}
             <select
               value={sort}
               onChange={(e) => setSort(e.target.value as typeof sort)}
               className="rounded-full bg-cream/5 border border-cream/15 px-3 py-1.5 text-cream/85 text-sm outline-none focus:border-ember-500"
             >
-              <option value="soon">Soonest first</option>
-              <option value="late">Latest first</option>
-              <option value="priceLow">Price: low → high</option>
-              <option value="priceHigh">Price: high → low</option>
+              <option value="level">{copy.filterSortLevel}</option>
+              <option value="soon">{copy.filterSortSoon}</option>
+              <option value="late">{copy.filterSortLate}</option>
             </select>
           </label>
         </div>
@@ -372,11 +404,11 @@ export function BatchesBrowser({ rows, styles, studios, whatsappNumber, instagra
         {filtered.length === 0 ? (
           <div className="rounded-2xl border border-cream/10 bg-ink-900/40 p-8">
             <p className="text-cream/80">
-              No batches match these filters yet. Chat with us — we&apos;ll tell you when one opens.
+              {label(labels, 'emptyNoBatches')}
             </p>
             <div className="mt-4 flex gap-3">
-              <EnquiryCTA whatsappNumber={whatsappNumber} instagramHandle={instagramHandle} ctx={{ source: 'primary' }} variant="primary" label="Chat on WhatsApp" />
-              <button onClick={clearAll} className="btn-secondary">Clear filters</button>
+              <EnquiryCTA whatsappNumber={whatsappNumber} instagramHandle={instagramHandle} ctx={{ source: 'primary' }} variant="primary" labels={labels} templates={templates} />
+              <button onClick={clearAll} className="btn-secondary">{copy.filterClearAction}</button>
             </div>
           </div>
         ) : (
@@ -390,32 +422,62 @@ export function BatchesBrowser({ rows, styles, studios, whatsappNumber, instagra
                 >
                   <div className="lg:col-span-3">
                     <p className="display text-xl font-bold">{row.styleName}</p>
-                    <p className="text-cream/60 text-sm">{b.level}</p>
+                    <p className="text-cream/60 text-sm">
+                      {b.level}
+                      {b.level === 'Foundation' ? (
+                        <span className="pill ml-2 bg-ember-500/15 text-ember-400">
+                          {label(labels, 'badgeFirstTimersWelcome')}
+                        </span>
+                      ) : null}
+                    </p>
                   </div>
-                  <div className="lg:col-span-3">
+                  <div className="lg:col-span-2">
                     <p className="text-cream">{row.branchName}</p>
                     <p className="text-cream/60 text-sm">{row.neighborhood}</p>
                   </div>
                   <div className="lg:col-span-3">
                     <p className="text-cream">{b.daysOfWeek.join('–')} · {b.time}</p>
-                    <p className="text-cream/60 text-sm">starts {formatBatchDate(b.startDate)}</p>
+                    <p className="text-cream/60 text-sm">
+                      {b.startDate < today
+                        ? copy.startedLine.replace('{date}', formatBatchDate(b.startDate))
+                        : `${copy.startsPrefix} ${formatBatchDate(b.startDate)}`}
+                    </p>
                   </div>
-                  <div className="lg:col-span-1">
-                    <p className="text-cream font-semibold">{formatInr(b.priceInr)}</p>
+                  <div className="lg:col-span-2">
+                    {offersTrial(b) ? (
+                      <>
+                        <p className="text-cream font-semibold">
+                          {copy.trialPriceLine.replace('{price}', formatInr(b.trialInr as number))}
+                        </p>
+                        <p className="text-cream/60 text-xs">
+                          {copy.fullProgramLine.replace('{price}', formatInr(b.priceInr))}
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-cream font-semibold">
+                        {copy.fullProgramOnlyLine.replace('{price}', formatInr(b.priceInr))}
+                      </p>
+                    )}
                     {typeof b.seatsLeft === 'number' ? (
-                      <p className="text-cream/60 text-xs">{b.seatsLeft} seats</p>
+                      <p className="text-cream/60 text-xs">
+                        {copy.seatsTemplate.replace('{n}', String(b.seatsLeft))}
+                      </p>
                     ) : null}
                   </div>
                   <div className="lg:col-span-2 flex flex-wrap gap-2 justify-start lg:justify-end items-center">
                     {b.status === 'Filling Fast' ? (
-                      <span className="pill bg-gold-500/15 text-gold-400">Filling fast</span>
+                      <span className="pill bg-gold-500/15 text-gold-400">
+                        {statusLabel(b.status, labels)}
+                      </span>
                     ) : null}
                     <BatchActions
                       batch={b}
                       style={{ slug: row.styleSlugs[0], name: row.styleName }}
                       branch={{ slug: row.branchSlug, name: row.branchName }}
                       whatsappNumber={whatsappNumber}
-                      primaryLabelWhenNoLink="Enquire"
+                      labels={labels}
+                      templates={templates}
+                      primaryLabelWhenNoLink={label(labels, 'ctaEnquire')}
                     />
                   </div>
                 </div>
@@ -428,16 +490,39 @@ export function BatchesBrowser({ rows, styles, studios, whatsappNumber, instagra
   );
 }
 
+// Display labels for derived facet VALUES. The values are URL state and never
+// move; these three functions are the only place the two are mapped, so the
+// filter pill, the active chip and the option list can never disagree.
+function todLabel(v: string, copy: BatchesPage['browser']): string {
+  if (v === 'Morning') return copy.todMorning;
+  if (v === 'Afternoon') return copy.todAfternoon;
+  return copy.todEvening;
+}
+
+function dayKindLabel(v: string, copy: BatchesPage['browser']): string {
+  return v === 'Weekend' ? copy.filterWeekends : copy.filterWeekdays;
+}
+
+function startingLabel(v: string, copy: BatchesPage['browser']): string {
+  if (v === 'This month') return copy.startingThisMonth;
+  if (v === 'Next 30 days') return copy.startingNext30;
+  return copy.startingLater;
+}
+
 function labelFor(
   k: FacetKey,
   v: string,
   styles: { slug: string; name: string }[],
   studios: { slug: string; name: string }[],
+  labels: Labels,
+  copy: BatchesPage['browser'],
 ): string {
   if (k === 'style') return styles.find((s) => s.slug === v)?.name ?? v;
   if (k === 'branch') return studios.find((s) => s.slug === v)?.name ?? v;
   if (k === 'price') return formatInr(Number(v));
-  if (k === 'days') return v === 'Weekend' ? 'Weekends' : 'Weekdays';
-  if (k === 'status') return v === 'Filling Fast' ? 'Filling fast' : v;
+  if (k === 'days') return dayKindLabel(v, copy);
+  if (k === 'tod') return todLabel(v, copy);
+  if (k === 'starting') return startingLabel(v, copy);
+  if (k === 'status') return statusLabel(v, labels);
   return v;
 }

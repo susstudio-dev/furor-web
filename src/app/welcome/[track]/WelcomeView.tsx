@@ -1,12 +1,17 @@
 'use client';
 
-import { Fragment, useEffect, useState } from 'react';
+import { Fragment, useEffect } from 'react';
 import Link from 'next/link';
 import { Reveal } from '@/components/Reveal';
 import type { Welcome } from '@/lib/content-schema';
+import { label, type Labels } from '@/lib/labels';
+import type { WelcomeState } from '@/lib/welcome-confirm';
+import type { ContactRow } from '@/lib/welcome-contact';
 
-// Everything the page shows for one batch, precomputed server-side. The client
-// picks the right one from the ?d=/?b= redirect param.
+// Everything the page shows for one batch, resolved server-side from the
+// ?d=/?b= redirect params. There is deliberately no client-side option list:
+// choosing the batch in the browser meant the initial HTML — and every no-JS
+// visitor — saw a different batch than the one that was paid for.
 export interface BatchBundle {
   id: string;
   startDate: string; // '' when there is no live batch
@@ -18,17 +23,39 @@ export interface BatchBundle {
   mapUrl: string | null;
   gcalUrl: string | null;
   icsHref: string | null;
+  /** Contact rows derived from THIS batch's studio plus site settings, so the
+   *  block switches with the batch rather than describing a different venue.
+   *  Empty of venue/phone rows when no batch resolved — see welcome-contact.ts. */
+  contact: ContactRow[];
+  /** This intake's own post-payment message. '' means the studio hasn't
+   *  written one, and the track's standard copy is shown instead. */
+  welcomeNote: string;
 }
 
 interface Props {
   track: string;
   trackLabel: string;
   copy: Welcome; // admin-editable text templates from content.welcome
+  /** The shared labels bag. The Where/map/parking/Reach-us strings live here
+   *  rather than in `copy` because they are the same words this site already
+   *  uses elsewhere — one string, one home. */
+  labels: Labels;
   waNumber: string;
   waDisplay: string;
   vcardHref: string;
-  defaultBundle: BatchBundle;
-  options: BatchBundle[];
+  /** The resolved batch's details. Empty of date/venue/calendar links when no
+   *  batch could be identified — see `pinMissed`. */
+  bundle: BatchBundle;
+  /** The redirect named a batch (?b=/?d=) that no longer resolves. The page
+   *  shows its neutral no-date/no-venue copy rather than another batch's
+   *  details, and says so in the analytics event. */
+  pinMissed: boolean;
+  /** Decided server-side from the redirect params (welcome-confirm.ts), so a
+   *  failed payment never flashes the confirmation hero. */
+  paymentState: WelcomeState;
+  /** The weekly social's live facts, or null when unconfigured — the invite
+   *  block renders only with real day/venue words to fill its template. */
+  tonight: { headline: string; when: string; venueName: string } | null;
 }
 
 // Renders an admin-editable copy template, replacing {placeholders} with live
@@ -60,62 +87,66 @@ function Filled({
   );
 }
 
-interface Payment {
-  status: string | null;
-  paymentId: string | null;
-}
-
 export function WelcomeView({
   track,
   trackLabel,
   copy,
+  labels,
   waNumber,
   waDisplay,
   vcardHref,
-  defaultBundle,
-  options,
+  bundle,
+  pinMissed,
+  paymentState,
+  tonight,
 }: Props) {
-  // Razorpay appends its result to the redirect URL
-  // (razorpay_payment_link_status, razorpay_payment_id, …), and the redirect
-  // may also pin a specific batch with ?d=<startDate> or ?b=<batchId>. We read
-  // both on the client so this works on the server deployment and the static
-  // (GitHub Pages) export alike.
-  const [payment, setPayment] = useState<Payment | null>(null);
-  const [bundle, setBundle] = useState<BatchBundle>(defaultBundle);
-
+  // Both decisions — which batch, and whether the payment is confirmed —
+  // arrived from the server. This effect only reports them. It used to also
+  // re-pin the batch from ?b=/?d=, which is why the server HTML and the
+  // hydrated page could disagree about the date and the address.
   useEffect(() => {
-    const q = new URLSearchParams(window.location.search);
-
-    // Pin the exact batch the customer paid for, if the redirect named one.
-    const b = q.get('b');
-    const d = q.get('d');
-    const picked =
-      (b && options.find((o) => o.id === b)) || (d && options.find((o) => o.startDate === d));
-    if (picked) setBundle(picked);
-
-    const status = q.get('razorpay_payment_link_status');
-    const paymentId = q.get('razorpay_payment_id');
-    setPayment({ status, paymentId });
-
-    const ok = !status || status.toLowerCase() === 'paid';
     const w = window as unknown as { gtag?: (...args: unknown[]) => void };
-    if (w.gtag) {
-      w.gtag('event', ok ? 'registration_confirmed' : 'registration_unconfirmed', {
+    if (!w.gtag) return;
+    const q = new URLSearchParams(window.location.search);
+    w.gtag(
+      'event',
+      paymentState.confirmed ? 'registration_confirmed' : 'registration_unconfirmed',
+      {
         track,
-        status: status ?? 'none',
-        payment_id: paymentId ?? null,
-      });
-    }
+        status: q.get('razorpay_payment_link_status') ?? 'none',
+        payment_id: paymentState.paymentId ?? null,
+        batch_id: bundle.id || null,
+        // Surfaces a redirect pointing at a batch that no longer resolves —
+        // otherwise the studio only finds out when a customer turns up on the
+        // wrong day.
+        pin_missed: pinMissed,
+      },
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [track]);
 
-  // Optimistic: unknown (no params / before the effect runs) is treated as
-  // confirmed, so the common success case renders immediately and SSR matches
-  // the first client render. A genuinely failed payment flips after mount.
-  const confirmed = !payment || !payment.status || payment.status.toLowerCase() === 'paid';
-  const paymentId = payment?.paymentId ?? null;
+  const confirmed = paymentState.confirmed;
+  const paymentId = paymentState.paymentId;
 
-  const { intakeDate, whenDays, whenTime, arriveBy, venue, mapUrl, gcalUrl, icsHref } = bundle;
+  const {
+    intakeDate,
+    whenDays,
+    whenTime,
+    arriveBy,
+    venue,
+    mapUrl,
+    gcalUrl,
+    icsHref,
+    contact,
+    welcomeNote,
+  } = bundle;
+
+  // The venue row carries the studio's parking note; the reachable channels
+  // are everything that isn't already rendered by the Where/When cells above.
+  const parkingNote = contact.find((r) => r.kind === 'venue')?.note;
+  const reachRows = contact.filter(
+    (r) => r.kind === 'phone' || r.kind === 'whatsapp' || r.kind === 'instagram',
+  );
 
   const waText = (msg: string) => `https://wa.me/${waNumber}?text=${encodeURIComponent(msg)}`;
   const confirmMsg =
@@ -143,14 +174,14 @@ export function WelcomeView({
           </p>
           <div className="mt-7 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
             <a href={waText(helpMsg)} target="_blank" rel="noopener noreferrer" className="btn-primary">
-              Message us on WhatsApp
+              {copy.unconfirmedCta}
             </a>
             <Link href="/batches" className="btn-secondary">
-              Try again
+              {copy.tryAgainLabel}
             </Link>
           </div>
           {paymentId ? (
-            <p className="mt-6 text-xs text-cream/40">Reference: {paymentId}</p>
+            <p className="mt-6 text-xs text-cream/40">{copy.referenceLabel.replace('{id}', paymentId)}</p>
           ) : null}
         </Reveal>
       </section>
@@ -180,10 +211,19 @@ export function WelcomeView({
               <Filled template={copy.reminderNoDate} vars={{ trackLabel }} />
             )}
           </p>
-          <p className="mt-4 mx-auto max-w-2xl text-cream/70">{copy.thankYouBody}</p>
+          {/* This intake's own words when the studio wrote them, the track's
+              standard copy otherwise. Prose only — every fact beside it
+              (venue, date, time, contact) is derived from the batch record. */}
+          <p className="mt-4 mx-auto max-w-2xl whitespace-pre-line text-cream/70">
+            {welcomeNote.trim() || copy.thankYouBody}
+          </p>
           {paymentId ? (
-            <p className="mt-5 inline-block rounded-full border border-cream/10 bg-ink-900/50 px-4 py-1.5 text-xs text-cream/55">
-              Payment reference: <span className="text-cream/80">{paymentId}</span>
+            <p className="mt-5 inline-block rounded-full border border-cream/10 bg-ink-900/50 px-4 py-1.5 text-xs text-cream/70">
+              <Filled
+                template={copy.paymentReferenceLabel}
+                vars={{ id: paymentId }}
+                classNames={{ id: 'text-cream/80' }}
+              />
             </p>
           ) : null}
         </Reveal>
@@ -194,7 +234,7 @@ export function WelcomeView({
         <Reveal stagger className="grid gap-5 md:grid-cols-2">
           {/* Step 1 — save number */}
           <div className="rounded-3xl border border-cream/10 bg-ink-900/40 p-7">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-ember-500 display text-lg font-bold text-ink-950">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-ember-600 display text-lg font-bold text-on-ember">
               1
             </div>
             <p className="mt-4 display text-xl font-bold">{copy.step1Title}</p>
@@ -218,7 +258,7 @@ export function WelcomeView({
 
           {/* Step 2 — add to calendar / show up */}
           <div className="rounded-3xl border border-cream/10 bg-ink-900/40 p-7">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-ember-500 display text-lg font-bold text-ink-950">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-ember-600 display text-lg font-bold text-on-ember">
               2
             </div>
             <p className="mt-4 display text-xl font-bold">{copy.step2Title}</p>
@@ -234,19 +274,17 @@ export function WelcomeView({
                     rel="noopener noreferrer"
                     className="btn-primary inline-flex"
                   >
-                    Google Calendar
+                    {copy.gcalLabel}
                   </a>
                 ) : null}
                 {icsHref ? (
                   <a href={icsHref} download="furor-class.ics" className="btn-secondary inline-flex">
-                    Apple / Outlook (.ics)
+                    {copy.icsLabel}
                   </a>
                 ) : null}
               </div>
             ) : (
-              <p className="mt-5 text-sm text-cream/55">
-                We’ll confirm the exact date on WhatsApp and send you a reminder.
-              </p>
+              <p className="mt-5 text-sm text-cream/70">{copy.noDateNote}</p>
             )}
           </div>
         </Reveal>
@@ -258,9 +296,11 @@ export function WelcomeView({
           <p className="display text-sm uppercase tracking-widest text-ember-400">{copy.intakeHeading}</p>
           <div className="mt-6 grid gap-8 md:grid-cols-3">
             <div>
-              <p className="text-xs uppercase tracking-widest text-cream/50">Where</p>
+              <p className="text-xs uppercase tracking-widest text-cream/70">
+                {label(labels, 'welcomeWhereHeading')}
+              </p>
               <p className="mt-2 leading-relaxed text-cream/85">
-                {venue || 'We’ll share the exact address on WhatsApp.'}
+                {venue || copy.noVenueNote}
               </p>
               {mapUrl ? (
                 <a
@@ -269,23 +309,33 @@ export function WelcomeView({
                   rel="noopener noreferrer"
                   className="btn-secondary mt-4 inline-flex"
                 >
-                  Open map →
+                  {label(labels, 'welcomeOpenMap')}
                 </a>
+              ) : null}
+              {parkingNote ? (
+                <p className="mt-3 text-sm text-cream/60">
+                  {label(labels, 'welcomeParking').replace('{notes}', parkingNote)}
+                </p>
               ) : null}
             </div>
             <div>
-              <p className="text-xs uppercase tracking-widest text-cream/50">When</p>
+              <p className="text-xs uppercase tracking-widest text-cream/70">{copy.whenHeading}</p>
               <p className="mt-2 leading-relaxed text-cream/85">
-                Every <span className="font-semibold text-cream">{whenDays}</span>
+                <Filled template={copy.whenEvery} vars={{ days: whenDays }} />
                 <br />
                 {whenTime}
               </p>
-              <p className="mt-2 text-sm text-cream/60">
-                Please arrive by {arriveBy} for registration.
-              </p>
+              {/* Empty when the batch's time string could not be read — the
+                  line is dropped rather than filled from the track's manual
+                  string, which would describe a different class. */}
+              {arriveBy ? (
+                <p className="mt-2 text-sm text-cream/60">
+                  {copy.arriveByNote.replace('{time}', arriveBy)}
+                </p>
+              ) : null}
             </div>
             <div>
-              <p className="text-xs uppercase tracking-widest text-cream/50">{copy.whatToBringHeading}</p>
+              <p className="text-xs uppercase tracking-widest text-cream/70">{copy.whatToBringHeading}</p>
               <ul className="mt-2 space-y-1.5 leading-relaxed text-cream/85">
                 {copy.whatToBring.map((item, i) => (
                   <li key={i}>• {item}</li>
@@ -293,16 +343,63 @@ export function WelcomeView({
               </ul>
             </div>
           </div>
+
+          {/* Reach us — phone, WhatsApp and Instagram, every value derived from
+              the studio record and site settings rather than typed into copy.
+              The phone and Instagram rows did not exist on this page before:
+              WelcomeView was never passed a studio or an instagram handle. */}
+          <div className="mt-8 border-t border-cream/10 pt-6">
+            <p className="text-xs uppercase tracking-widest text-cream/70">
+              {label(labels, 'welcomeReachUs')}
+            </p>
+            <div className="mt-3 flex flex-wrap gap-x-8 gap-y-3">
+              {reachRows.map((row) => (
+                <a
+                  key={row.kind}
+                  href={row.href}
+                  {...(row.kind === 'phone'
+                    ? {}
+                    : { target: '_blank', rel: 'noopener noreferrer' })}
+                  className="group inline-flex flex-col leading-tight"
+                >
+                  <span className="text-xs uppercase tracking-widest text-cream/60">
+                    {row.label}
+                  </span>
+                  <span className="text-cream/85 underline-offset-4 group-hover:underline">
+                    {row.value}
+                  </span>
+                </a>
+              ))}
+            </div>
+          </div>
         </Reveal>
       </section>
 
+      {/* Your first La Rumba — the social at the peak-end */}
+      {tonight ? (
+        <section className="container-x pb-10">
+          <Reveal className="rounded-3xl border border-ember-500/30 bg-ember-500/5 p-8 sm:p-10">
+            <p className="display text-sm uppercase tracking-widest text-ember-400">
+              {tonight.headline}
+            </p>
+            <p className="mt-2 display text-2xl font-bold">{copy.rumbaHeading}</p>
+            <p className="mt-3 max-w-2xl text-cream/80">
+              <Filled
+                template={copy.rumbaBody}
+                vars={{ when: tonight.when, venue: tonight.venueName }}
+              />
+            </p>
+          </Reveal>
+        </section>
+      ) : null}
+
       {/* Sign-off */}
       <section className="container-x pb-24">
-        <Reveal className="rounded-3xl bg-gradient-to-br from-ember-700 via-ember-600 to-ember-500 p-10 text-ink-950 sm:p-14">
+        <Reveal className="on-accent accent-panel rounded-3xl p-10 sm:p-14">
           <p className="display text-3xl font-extrabold tracking-tight sm:text-4xl">
             {copy.signoffHeadline}
           </p>
-          <p className="mt-4 max-w-xl text-ink-950/80">{copy.signoffBody}</p>
+          <p className="mt-4 max-w-xl text-on-ember">{copy.signoffBody}</p>
           <div className="mt-6">
             <a
               href={waText(confirmMsg)}
@@ -313,8 +410,8 @@ export function WelcomeView({
               Chat on WhatsApp
             </a>
           </div>
-          <p className="mt-8 font-semibold text-ink-950/90">{copy.signoffName}</p>
-          <p className="text-sm text-ink-950/70">{copy.signoffTagline}</p>
+          <p className="mt-8 font-semibold text-on-ember">{copy.signoffName}</p>
+          <p className="text-sm text-on-ember">{copy.signoffTagline}</p>
         </Reveal>
       </section>
     </>

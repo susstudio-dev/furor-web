@@ -1,8 +1,10 @@
 import Link from 'next/link';
 import { getContent } from '@/lib/content';
 import { SimpleIntroEditor } from '@/components/admin/SimpleIntroEditor';
+import { requireWriteAccess } from '@/lib/guard';
 
 export default async function Page() {
+  await requireWriteAccess('pages');
   const c = await getContent();
   return (
     <div className="p-6 sm:p-10 max-w-3xl">

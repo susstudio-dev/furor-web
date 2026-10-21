@@ -24,7 +24,7 @@ npm run dev
 
 Open http://localhost:3000
 
-The first time anything reads content, the seed at `src/data/site-content.seed.json` is copied to `data/site-content.json`. The first time anyone hits `/admin/login`, the seed owner from `.env.local` is created in `data/users.json`.
+The first time anything reads content, the seed at `src/data/site-content.seed.json` is copied to `data/site-content.json`. The owner account comes straight from `.env.local` (`ADMIN_OWNER_EMAIL` + `ADMIN_OWNER_INITIAL_PASSWORD`) — no file is created for it. Additional accounts are invited from `/admin/users` and live in the `users.json` store (local `data/`, R2 in production).
 
 ## Editing content (the workflow)
 
@@ -47,17 +47,6 @@ Other useful flags:
 
 Pulling teammate content changes is automatic: `git pull`, then on next request the seed values fill anything missing from your local `data/site-content.json` via the deep-merge in `getContent()`. If you want a hard reset to match the seed exactly, delete `data/site-content.json` and let the dev server reseed.
 
-## Admin
-
-- Login: http://localhost:3000/admin/login
-- Default credentials come from `ADMIN_OWNER_EMAIL` / `ADMIN_OWNER_INITIAL_PASSWORD` in `.env.local`. The owner record is seeded into `data/users.json` on first successful sign-in. To change the password later, delete `data/users.json` and update the env var, then sign in again.
-- Editor sections in the sidebar:
-  - **Site & socials** — title, tagline, WhatsApp/Instagram, footer, socials, notice banner, "Tonight" tile, Why Furor
-  - **Hero** — headline, sub, poster image, video URLs
-  - **Page copy** — per-page editors for Home, About, FAQs, Contact, Instructors, and the Dance Styles / Batches / Stories index headlines
-  - **Content** — Dance styles (with FAQs + level outcomes), Studios, Batches, Instructors, Testimonials, Stories
-  - **System** — Raw JSON editor, Versions (30 most recent saves with one-click restore), Users, Audit log
-- Every save snapshots a version, audit-logs the actor, and calls `revalidatePath('/', 'layout')` so changes appear on the public site immediately.
 
 ## Content model
 
@@ -92,15 +81,16 @@ Every "talk to us" CTA is **WhatsApp** (primary) or **Instagram DM** (secondary)
 
 ## Production deployment
 
-- Push to GitHub, import into Vercel.
-- Set env vars in Vercel: `JWT_SECRET` (32+ random bytes), `ADMIN_OWNER_EMAIL`, `ADMIN_OWNER_INITIAL_PASSWORD` (or `ADMIN_OWNER_PASSWORD_HASH` for a pre-hashed bcrypt), `NEXT_PUBLIC_GA4_ID`.
-- Link a Vercel Blob store to the project — once `BLOB_READ_WRITE_TOKEN` is present in the runtime env, [src/lib/storage.ts](src/lib/storage.ts) automatically routes JSON, version snapshots and uploaded images to Blob instead of the (read-only) Vercel filesystem.
-- On first deploy with an empty Blob store, the bundled seed loads automatically.
-- Point `www.dancehyderabad.com` at Vercel after smoke-testing.
+The site runs on **Cloudflare Workers (free plan)** via `@opennextjs/cloudflare`, with content/versions/uploads in a private **R2 bucket** (`furor-content`, bound as `CONTENT_BUCKET` in [wrangler.jsonc](wrangler.jsonc)). Full runbook: [DEPLOY.md](DEPLOY.md).
+
+- Secrets via `wrangler secret put`: `JWT_SECRET`, `ADMIN_OWNER_EMAIL`, `ADMIN_OWNER_PASSWORD_HASH` (generate with `npm run hash-password -- '<pw>'` — the PBKDF2 format fits the free plan's 10ms CPU cap; bcrypt does not).
+- `npm run deploy` locally (Linux/WSL recommended) or push to `main` with `CLOUDFLARE_API_TOKEN`/`CLOUDFLARE_ACCOUNT_ID` repo secrets set — [.github/workflows/deploy-cloudflare.yml](.github/workflows/deploy-cloudflare.yml) deploys from CI.
+- On first deploy with an empty bucket, the bundled seed loads automatically; the first admin save writes the live document to R2.
+- Public pages render per-request on Workers, so admin edits appear within ~30 s (no ISR machinery needed).
 
 Two ways to change content in prod:
-1. **Recommended:** sign in to the deployed `/admin` URL and edit there — writes go to Blob, no redeploy needed.
-2. **Or:** edit locally via admin, run `npm run sync-seed`, commit + push — but the deployed site will keep showing the Blob version until you also re-seed the Blob (e.g. by deleting `site-content.json` from the Blob store, which triggers a reseed).
+1. **Recommended:** sign in to the deployed `/admin` URL and edit there — writes go to R2, no redeploy needed.
+2. **Or:** edit locally via admin, run `npm run sync-seed`, commit + push — but the deployed site keeps showing the R2 version until you also save via the deployed admin (the store wins over the seed).
 
 ## Performance budget
 
@@ -113,10 +103,12 @@ Two ways to change content in prod:
 
 ```bash
 npm run dev                      # http://localhost:3000
-npm run build                    # production build
+npm run build                    # production build (next build)
 npm run start                    # serve the production build
+npm run preview                  # OpenNext build + local Workers preview (wrangler)
+npm run deploy                   # OpenNext build + deploy to Cloudflare Workers
+npm run hash-password -- '<pw>'  # PBKDF2 hash for ADMIN_OWNER_PASSWORD_HASH
 npm run typecheck                # tsc --noEmit
-npm run lint                     # next lint
 npm run sync-seed                # copy data/site-content.json → src/data/site-content.seed.json
 npm run sync-seed -- --check     # exit non-zero if seed and local content diverge
 ```

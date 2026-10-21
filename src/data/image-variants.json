@@ -1,0 +1,156 @@
+{
+  "/photos/DSC09698.jpg": {
+    "card": [
+      {
+        "width": 750,
+        "height": 938,
+        "avif": "/img/dsc09698-card-750-664f5156.avif",
+        "webp": "/img/dsc09698-card-750-664f5156.webp",
+        "jpg": "/img/dsc09698-card-750-664f5156.jpg"
+      }
+    ]
+  },
+  "/photos/DSC09730.jpg": {
+    "card": [
+      {
+        "width": 750,
+        "height": 938,
+        "avif": "/img/dsc09730-card-750-e6bff0cd.avif",
+        "webp": "/img/dsc09730-card-750-e6bff0cd.webp",
+        "jpg": "/img/dsc09730-card-750-e6bff0cd.jpg"
+      }
+    ]
+  },
+  "/photos/DSC09776.jpg": {
+    "studio": [
+      {
+        "width": 750,
+        "height": 562,
+        "avif": "/img/dsc09776-studio-750-f2fbc3d8.avif",
+        "webp": "/img/dsc09776-studio-750-f2fbc3d8.webp",
+        "jpg": "/img/dsc09776-studio-750-f2fbc3d8.jpg"
+      }
+    ],
+    "thumb": [
+      {
+        "width": 384,
+        "height": 288,
+        "avif": "/img/dsc09776-thumb-384-f2fbc3d8.avif",
+        "webp": "/img/dsc09776-thumb-384-f2fbc3d8.webp",
+        "jpg": "/img/dsc09776-thumb-384-f2fbc3d8.jpg"
+      }
+    ]
+  },
+  "/photos/DSC_0095.jpg": {
+    "studio": [
+      {
+        "width": 750,
+        "height": 562,
+        "avif": "/img/dsc-0095-studio-750-7dbe25bb.avif",
+        "webp": "/img/dsc-0095-studio-750-7dbe25bb.webp",
+        "jpg": "/img/dsc-0095-studio-750-7dbe25bb.jpg"
+      }
+    ],
+    "thumb": [
+      {
+        "width": 384,
+        "height": 288,
+        "avif": "/img/dsc-0095-thumb-384-7dbe25bb.avif",
+        "webp": "/img/dsc-0095-thumb-384-7dbe25bb.webp",
+        "jpg": "/img/dsc-0095-thumb-384-7dbe25bb.jpg"
+      }
+    ]
+  },
+  "/photos/DSC_0166.jpg": {
+    "heroPortrait": [
+      {
+        "width": 750,
+        "height": 1380,
+        "avif": "/img/dsc-0166-hero-portrait-750-fa34ce37.avif",
+        "webp": "/img/dsc-0166-hero-portrait-750-fa34ce37.webp",
+        "jpg": "/img/dsc-0166-hero-portrait-750-fa34ce37.jpg"
+      },
+      {
+        "width": 1125,
+        "height": 2070,
+        "avif": "/img/dsc-0166-hero-portrait-1125-fa34ce37.avif",
+        "webp": "/img/dsc-0166-hero-portrait-1125-fa34ce37.webp",
+        "jpg": "/img/dsc-0166-hero-portrait-1125-fa34ce37.jpg"
+      }
+    ],
+    "heroLandscape": [
+      {
+        "width": 1080,
+        "height": 721,
+        "avif": "/img/dsc-0166-hero-landscape-1080-fa34ce37.avif",
+        "webp": "/img/dsc-0166-hero-landscape-1080-fa34ce37.webp",
+        "jpg": "/img/dsc-0166-hero-landscape-1080-fa34ce37.jpg"
+      }
+    ],
+    "studio": [
+      {
+        "width": 750,
+        "height": 562,
+        "avif": "/img/dsc-0166-studio-750-fa34ce37.avif",
+        "webp": "/img/dsc-0166-studio-750-fa34ce37.webp",
+        "jpg": "/img/dsc-0166-studio-750-fa34ce37.jpg"
+      }
+    ],
+    "thumb": [
+      {
+        "width": 384,
+        "height": 288,
+        "avif": "/img/dsc-0166-thumb-384-fa34ce37.avif",
+        "webp": "/img/dsc-0166-thumb-384-fa34ce37.webp",
+        "jpg": "/img/dsc-0166-thumb-384-fa34ce37.jpg"
+      }
+    ]
+  },
+  "/photos/DSC_9973.jpg": {
+    "card": [
+      {
+        "width": 750,
+        "height": 938,
+        "avif": "/img/dsc-9973-card-750-25ee8044.avif",
+        "webp": "/img/dsc-9973-card-750-25ee8044.webp",
+        "jpg": "/img/dsc-9973-card-750-25ee8044.jpg"
+      }
+    ]
+  },
+  "/photos/aditya.jpg": {
+    "avatar": [
+      {
+        "width": 256,
+        "height": 256,
+        "avif": "/img/aditya-avatar-256-1f6ed3eb.avif",
+        "webp": "/img/aditya-avatar-256-1f6ed3eb.webp",
+        "jpg": "/img/aditya-avatar-256-1f6ed3eb.jpg"
+      },
+      {
+        "width": 512,
+        "height": 512,
+        "avif": "/img/aditya-avatar-512-1f6ed3eb.avif",
+        "webp": "/img/aditya-avatar-512-1f6ed3eb.webp",
+        "jpg": "/img/aditya-avatar-512-1f6ed3eb.jpg"
+      }
+    ]
+  },
+  "/photos/rishikesh.png": {
+    "avatar": [
+      {
+        "width": 256,
+        "height": 256,
+        "avif": "/img/rishikesh-avatar-256-b239063f.avif",
+        "webp": "/img/rishikesh-avatar-256-b239063f.webp",
+        "jpg": "/img/rishikesh-avatar-256-b239063f.jpg"
+      },
+      {
+        "width": 512,
+        "height": 512,
+        "avif": "/img/rishikesh-avatar-512-b239063f.avif",
+        "webp": "/img/rishikesh-avatar-512-b239063f.webp",
+        "jpg": "/img/rishikesh-avatar-512-b239063f.jpg"
+      }
+    ]
+  }
+}

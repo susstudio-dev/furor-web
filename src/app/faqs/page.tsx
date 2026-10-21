@@ -1,14 +1,28 @@
-import { getContent } from '@/lib/content';
+import { getPublicContent } from '@/lib/content';
 import { EnquiryCTA } from '@/components/EnquiryCTA';
 import { JsonLd } from '@/components/JsonLd';
+import { resolvePageMeta } from '@/lib/page-meta';
 
-export const metadata = { title: 'FAQs' };
+export async function generateMetadata() {
+  const c = await getPublicContent();
+  const meta = resolvePageMeta('faqs', {
+    seoTitle: c.pages.faqs.seoTitle,
+    seoDescription: c.pages.faqs.seoDescription,
+    brand: c.site.title,
+    derivedDescription: c.pages.faqs.intro.lead,
+  });
+  return {
+    title: meta.title,
+    description: meta.description,
+    alternates: { canonical: '/faqs' },
+  };
+}
 
 // Render per request so admin edits show immediately (export build strips this).
 export const dynamic = 'force-dynamic';
 
 export default async function FaqsPage() {
-  const content = await getContent();
+  const content = await getPublicContent();
   const f = content.pages.faqs;
   const all = f.sections.flatMap((s) => s.items);
   const ld = {
@@ -41,7 +55,7 @@ export default async function FaqsPage() {
       <section className="container-x pb-16 space-y-12">
         {f.sections.map((section, si) => (
           <div key={si}>
-            <p className="display text-sm uppercase tracking-widest text-ember-400/90">{section.section}</p>
+            <h2 className="display text-sm uppercase tracking-widest text-ember-400/90">{section.section}</h2>
             <div className="mt-4 grid gap-3">
               {section.items.map((item, i) => (
                 <details
@@ -72,7 +86,8 @@ export default async function FaqsPage() {
                 whatsappNumber={content.site.whatsappNumber}
                 ctx={{ source: 'primary' }}
                 variant="primary"
-                label="Chat on WhatsApp"
+                labels={content.labels}
+                templates={content.site.whatsappTemplates}
               />
               <EnquiryCTA
                 whatsappNumber={content.site.whatsappNumber}
@@ -80,7 +95,8 @@ export default async function FaqsPage() {
                 ctx={{ source: 'primary' }}
                 channel="instagram"
                 variant="secondary"
-                label="DM on Instagram"
+                labels={content.labels}
+                templates={content.site.whatsappTemplates}
               />
             </div>
           </div>

@@ -1,11 +1,9 @@
 import { redirect } from 'next/navigation';
-import { getSession } from '@/lib/auth';
+import { requireCapability } from '@/lib/guard';
 import { readAudit } from '@/lib/audit';
 
 export default async function Page() {
-  const session = await getSession();
-  if (!session) redirect('/admin/login');
-  if (session.role !== 'owner') redirect('/admin');
+  await requireCapability('users.manage');
   const entries = await readAudit(200);
   return (
     <div className="p-6 sm:p-10 max-w-3xl">

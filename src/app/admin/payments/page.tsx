@@ -1,8 +1,8 @@
 import { redirect } from 'next/navigation';
 import { getSession } from '@/lib/auth';
 import { readJSON } from '@/lib/storage';
-import { PAYMENT_EVENTS_CAP, PAYMENT_EVENTS_KEY, type PaymentEvent } from '@/lib/payment-events';
-import { analyze, type Analytics, type Bucket } from '@/lib/payment-analytics';
+import { requireCapability } from '@/lib/guard';
+import { paymentLogStaleness } from '@/lib/payment-log';
 
 // Razorpay webhook ([/api/razorpay/webhook](src/app/api/razorpay/webhook/route.ts))
 // persists every payment event. This page turns that log into a dashboard:
@@ -33,219 +33,18 @@ function statusTone(status: string): string {
   return 'text-cream/70 bg-cream/10 border-cream/20';
 }
 
-function delta(cur: number | null, prev: number | null | undefined): { text: string; up: boolean } | null {
-  if (cur == null || prev == null || prev === 0) return null;
-  const d = ((cur - prev) / prev) * 100;
-  if (Math.abs(d) < 1) return { text: 'flat vs prev.', up: true };
-  return { text: `${d > 0 ? '▲' : '▼'} ${Math.abs(Math.round(d))}% vs prev.`, up: d > 0 };
-}
-
-function Kpi({
-  label,
-  value,
-  sub,
-  change,
-  tone,
-}: {
-  label: string;
-  value: string;
-  sub?: string;
-  change?: { text: string; up: boolean } | null;
-  tone?: 'good' | 'bad';
-}) {
-  return (
-    <div className="rounded-2xl border border-cream/10 bg-ink-900/40 p-4">
-      <p className="text-[11px] uppercase tracking-widest text-cream/40">{label}</p>
-      <p
-        className={`mt-1 display text-2xl sm:text-3xl font-extrabold ${
-          tone === 'bad' ? 'text-red-400' : tone === 'good' ? 'text-emerald-400' : ''
-        }`}
-      >
-        {value}
-      </p>
-      <p className="mt-1 text-xs text-cream/50">
-        {change ? (
-          <span className={change.up ? 'text-emerald-400' : 'text-red-400'}>{change.text}</span>
-        ) : null}
-        {change && sub ? ' · ' : ''}
-        {sub}
-      </p>
-    </div>
-  );
-}
-
-function Card({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
-  return (
-    <section className="rounded-2xl border border-cream/10 bg-ink-900/40 p-5">
-      <h2 className="display text-sm font-bold uppercase tracking-widest text-cream/80">{title}</h2>
-      {hint ? <p className="mt-1 text-xs text-cream/45">{hint}</p> : null}
-      <div className="mt-4">{children}</div>
-    </section>
-  );
-}
-
-function HBars({
-  rows,
-  valueOf,
-  fmt,
-  barClass = 'bg-ember-500/70',
-  empty,
-}: {
-  rows: Bucket[];
-  valueOf: (b: Bucket) => number;
-  fmt: (b: Bucket) => string;
-  barClass?: string;
-  empty: string;
-}) {
-  if (!rows.length) return <p className="text-sm text-cream/40">{empty}</p>;
-  const max = Math.max(...rows.map(valueOf), 1);
-  return (
-    <ul className="grid gap-3">
-      {rows.slice(0, 6).map((r) => (
-        <li key={r.label}>
-          <div className="flex items-baseline justify-between gap-3 text-sm">
-            <span className="text-cream/80 truncate" title={r.label}>
-              {r.label}
-            </span>
-            <span className="text-cream/60 whitespace-nowrap text-xs">{fmt(r)}</span>
-          </div>
-          <div className="mt-1 h-2 rounded-full bg-cream/5">
-            <div className={`h-2 rounded-full ${barClass}`} style={{ width: `${Math.max(3, (valueOf(r) / max) * 100)}%` }} />
-          </div>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-function RevenueChart({ a }: { a: Analytics }) {
-  const days = a.days;
-  const max = Math.max(...days.map((d) => d.revenue), 1);
-  // Thin out x labels so a 90-day chart stays readable.
-  const step = Math.max(1, Math.ceil(days.length / 8));
-  return (
-    <div>
-      <div className="flex h-44 items-end gap-[2px]">
-        {days.map((d) => (
-          <div
-            key={d.key}
-            className="group relative flex-1 h-full flex flex-col justify-end"
-            title={`${d.label}: ${inr(d.revenue)} · ${d.paid} paid · ${d.failed} failed`}
-          >
-            <div
-              className="w-full rounded-t-sm bg-ember-500/80 group-hover:bg-ember-400 transition-colors"
-              style={{ height: `${d.revenue > 0 ? Math.max(2, (d.revenue / max) * 100) : 0}%` }}
-            />
-            {d.failed > 0 ? (
-              <div className="absolute -top-1 left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-red-400" />
-            ) : null}
-            <div className={`mt-0.5 h-px w-full ${d.revenue > 0 ? 'bg-transparent' : 'bg-cream/10'}`} />
-          </div>
-        ))}
-      </div>
-      <div className="mt-2 flex gap-[2px] text-[10px] text-cream/40">
-        {days.map((d, i) => (
-          <span key={d.key} className="flex-1 overflow-visible whitespace-nowrap">
-            {i % step === 0 ? d.label : ''}
-          </span>
-        ))}
-      </div>
-      <p className="mt-3 text-xs text-cream/45">
-        Peak {inr(max === 1 && !a.bestDay ? 0 : max)}
-        {a.bestDay ? ` on ${a.bestDay.label}` : ''} · <span className="text-red-400">●</span> marks days with a failed payment
-      </p>
-    </div>
-  );
-}
-
-function HourStrip({ a }: { a: Analytics }) {
-  const max = Math.max(...a.hours.map((h) => h.paid + h.failed), 1);
-  const label = (h: number) => `${h % 12 === 0 ? 12 : h % 12}${h < 12 ? 'a' : 'p'}`;
-  return (
-    <div>
-      <div className="flex h-20 items-end gap-[3px]">
-        {a.hours.map((h) => {
-          const total = h.paid + h.failed;
-          return (
-            <div
-              key={h.hour}
-              className="flex-1 h-full flex flex-col justify-end"
-              title={`${label(h.hour)} IST: ${h.paid} paid, ${h.failed} failed`}
-            >
-              <div className="w-full rounded-t-sm overflow-hidden flex flex-col justify-end" style={{ height: `${(total / max) * 100}%` }}>
-                <div className="bg-red-400/70" style={{ flex: h.failed }} />
-                <div className="bg-emerald-400/70" style={{ flex: h.paid }} />
-              </div>
-            </div>
-          );
-        })}
-      </div>
-      <div className="mt-1 flex justify-between text-[10px] text-cream/40">
-        <span>12a</span>
-        <span>6a</span>
-        <span>12p</span>
-        <span>6p</span>
-        <span>11p</span>
-      </div>
-    </div>
-  );
-}
-
-function insightsFor(a: Analytics): string[] {
-  const out: string[] = [];
-  const totalFailed = a.failed;
-
-  if (a.successRate != null && a.paid + a.failed >= 5) {
-    out.push(
-      a.successRate >= 0.85
-        ? `Checkout is healthy: ${pct(a.successRate)} of payment attempts succeed.`
-        : `Only ${pct(a.successRate)} of payment attempts succeed — ${a.failed} failed out of ${a.paid + a.failed}. Worth investigating.`,
-    );
-  }
-  if (a.reasons.length && totalFailed >= 2) {
-    const r = a.reasons[0];
-    out.push(`Top failure cause: “${r.label}” — ${r.count} of ${totalFailed} failures (${Math.round((r.count / totalFailed) * 100)}%).`);
-  }
-  const worst = a.methods
-    .map((m) => ({ ...m, total: m.count + (m.extra ?? 0), fail: (m.extra ?? 0) / Math.max(1, m.count + (m.extra ?? 0)) }))
-    .filter((m) => m.total >= 4 && m.label !== 'Unknown')
-    .sort((x, y) => y.fail - x.fail)[0];
-  if (worst && worst.fail >= 0.25) {
-    out.push(`${worst.label} fails ${pct(worst.fail)} of the time (${worst.extra} of ${worst.total}) — the weakest payment method.`);
-  }
-  if (a.lost.count > 0) {
-    out.push(`${a.lost.count} ${a.lost.count === 1 ? 'person' : 'people'} tried to pay, failed and never came back — ${inr(a.lost.value)} of lost bookings you can chase (see follow-up list).`);
-  }
-  if (a.recovered.count > 0) {
-    out.push(`${a.recovered.count} failed ${a.recovered.count === 1 ? 'payer' : 'payers'} retried and paid — ${inr(a.recovered.value)} recovered.`);
-  }
-  if (a.authorizedStuck > 0) {
-    out.push(`${a.authorizedStuck} payment${a.authorizedStuck === 1 ? ' was' : 's were'} authorized but never captured — Razorpay will auto-refund them. Check the capture setting.`);
-  }
-  const peak = [...a.hours].sort((x, y) => y.paid - x.paid)[0];
-  if (peak && peak.paid >= 3) {
-    out.push(`Most payments land around ${peak.hour % 12 === 0 ? 12 : peak.hour % 12}${peak.hour < 12 ? ' AM' : ' PM'} IST — a good time to post offers or reminders.`);
-  }
-  if (a.repeatCustomers > 0) {
-    out.push(`${a.repeatCustomers} repeat customer${a.repeatCustomers === 1 ? '' : 's'} paid more than once.`);
-  }
-  return out;
-}
-
-export default async function Page({
-  searchParams,
-}: {
-  searchParams: Promise<{ filter?: string; range?: string }>;
-}) {
+export default async function Page({ searchParams }: { searchParams: Promise<{ filter?: string }> }) {
+  await requireCapability('versions.restore');
   const session = await getSession();
   if (!session) redirect('/admin/login');
 
-  const { filter, range } = await searchParams;
-  const activeRange = RANGES.find((r) => r.k === range) ?? RANGES[1];
-  const events = (await readJSON<PaymentEvent[]>(PAYMENT_EVENTS_KEY)) ?? [];
-  const a = analyze(events, activeRange.days);
-  const insights = insightsFor(a);
-  const all = events.slice().reverse();
+  const { filter } = await searchParams;
+  const all = ((await readJSON<PaymentEvent[]>(EVENTS_KEY)) ?? []).slice().reverse();
+  // The webhook can stop delivering without any error on OUR side — Razorpay
+  // deactivates a webhook after 24h of failed deliveries and never re-enables
+  // it by itself (it happened during the Vercel → Workers cutover). A stale
+  // log must say so, or weeks of payments stay invisible in silence.
+  const stale = paymentLogStaleness(all, new Date());
 
   const isPaid = (e: PaymentEvent) => /captur|paid|success/i.test(e.status);
   const isFailed = (e: PaymentEvent) => /fail|error/i.test(e.status) || /fail|error/i.test(e.event);
@@ -285,17 +84,45 @@ export default async function Page({
         </div>
       </div>
       <p className="mt-2 text-cream/60 text-sm">
-        Built from Razorpay&apos;s server-to-server events, so failed and abandoned payments are included. Each
-        payment is counted once, however many events Razorpay sent for it.
+        Server-to-server log of every payment outcome — including failed/abandoned ones the redirect-based
+        confirmation can&apos;t see. Most recent {CAP} kept.
       </p>
+
+      {stale ? (
+        <div className="mt-6 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-5">
+          <p className="font-semibold text-amber-300">
+            {stale.days != null
+              ? `No events for ${stale.days} days.`
+              : 'The event log has no readable timestamps.'}
+          </p>
+          <p className="mt-2 text-sm text-cream/70">
+            If you&apos;ve taken payments since, Razorpay has stopped delivering to this site. Razorpay
+            deactivates a webhook after 24 hours of failed deliveries and{' '}
+            <strong className="text-cream/90">never re-enables it by itself</strong>. Check{' '}
+            <span className="text-cream/90">Razorpay Dashboard → Settings → Webhooks</span>: re-enable
+            (or recreate) the webhook for{' '}
+            <code className="text-ember-400">https://www.dancehyderabad.com/api/razorpay/webhook</code>, then
+            set the same secret on the Worker with{' '}
+            <code className="text-ember-400">wrangler secret put RAZORPAY_WEBHOOK_SECRET</code>.
+          </p>
+        </div>
+      ) : null}
+
+      <div className="mt-6 flex flex-wrap gap-2">
+        <Tab k="all" label="All" n={counts.all} />
+        <Tab k="paid" label="Paid" n={counts.paid} />
+        <Tab k="failed" label="Failed" n={counts.failed} />
+      </div>
 
       {!a.hasData ? (
         <div className="mt-8 rounded-2xl border border-cream/10 bg-ink-900/40 p-6">
           <p className="text-cream/70">No events yet.</p>
           <p className="mt-2 text-cream/50 text-sm">
-            If you expect events here, check that <code className="text-ember-400">RAZORPAY_WEBHOOK_SECRET</code> is set
-            on Vercel and the webhook URL in the Razorpay dashboard points to{' '}
-            <code className="text-ember-400">/api/razorpay/webhook</code>.
+            If you expect events here: the webhook in the Razorpay dashboard must point to{' '}
+            <code className="text-ember-400">https://www.dancehyderabad.com/api/razorpay/webhook</code> and be{' '}
+            <strong className="text-cream/80">active</strong> (Razorpay deactivates it after 24h of failed
+            deliveries), and its secret must match the Worker&apos;s — set with{' '}
+            <code className="text-ember-400">wrangler secret put RAZORPAY_WEBHOOK_SECRET</code>.
           </p>
         </div>
       ) : (

@@ -20,7 +20,7 @@ export function LegalDoc({
         </h1>
       ) : null}
       {lastUpdated ? (
-        <p className="mt-3 text-sm text-cream/50">Last updated: {lastUpdated}</p>
+        <p className="mt-3 text-sm text-cream/70">Last updated: {lastUpdated}</p>
       ) : null}
       {intro.lead ? (
         <p className="mt-6 text-lg text-cream/80 leading-relaxed">{intro.lead}</p>

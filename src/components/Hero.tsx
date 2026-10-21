@@ -1,14 +1,25 @@
 'use client';
 
-import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import type { SiteContent } from '@/lib/content-schema';
+import { visibleBatches } from '@/lib/content-helpers';
+import { formatInr } from '@/lib/format';
 import { EnquiryCTA } from './EnquiryCTA';
 import { Img } from './Img';
 import { CinematicHeadline } from './CinematicHeadline';
+import { trialFromInr } from '@/lib/book-label';
+import { label } from '@/lib/labels';
+import { HERO_POSTER_ALT_DEFAULT } from '@/lib/hero-defaults';
+import type { HeroPoster } from '@/lib/image-variants';
+import { TonightFloat } from './TonightFloat';
 
-export function Hero({ content }: { content: SiteContent }) {
+export function Hero({ content, poster }: { content: SiteContent; poster: HeroPoster | null }) {
   const [allowVideo, setAllowVideo] = useState(false);
+  // The trial price comes from live batch data, never a hardcoded string —
+  // if the studio changes the token in the admin, every button follows. Only
+  // batches that actually run a trial count: this used to minimise over
+  // `reservationInr`, which every batch carried whether or not it ran one.
+  const trialFrom = trialFromInr(visibleBatches(content));
   const videoRef = useRef<HTMLVideoElement>(null);
   const spotRef = useRef<HTMLDivElement>(null);
 
@@ -25,18 +36,68 @@ export function Hero({ content }: { content: SiteContent }) {
     <section className="relative isolate overflow-hidden">
       <div className="absolute inset-0 -z-10">
         <div className="relative h-full w-full">
-          <Img
-            src={content.hero.posterImage}
-            alt=""
-            seed="hero"
-            label=""
-            fill
-            priority
-            sizes="100vw"
-            // On portrait phones the subject sits hard right so it's not
-            // permanently buried under the text block.
-            className="object-cover object-[78%_38%] sm:object-[center_30%] animate-kenburns"
-          />
+          {poster ? (
+            <>
+              {/* The LCP preload <link>s live in page.tsx, not here. This
+                  component is 'use client', and a hand-written <link> only
+                  hoists into <head> when it carries a real string `href`
+                  (react-dom's SSR renderer checks `typeof props.href ===
+                  'string'` before treating it as a Resource) — the earlier
+                  imageSrcSet-only version of this tag rendered here had no
+                  `href` and sat inert in <body>, after the element it was
+                  meant to preload. page.tsx already computes `poster` to
+                  pass down as a prop, so the two preload tags render there
+                  instead, each with `href` set to the JPEG fallback URL. */}
+              {/* Order is load-bearing: a browser takes the FIRST <source>
+                  whose media and type it supports, and the <img> is the last
+                  resort — so every <source> must precede it, media-constrained
+                  ones first. The portrait crop exists because the render box is
+                  375x690 CSS px (aspect 0.543) against a 1.498 source:
+                  object-cover throws away 63.7% of the width, and a
+                  purpose-built crop stops paying for pixels never on screen. */}
+              <picture>
+                <source media="(min-width: 640px)" type="image/avif" srcSet={poster.landscape.avif} sizes="100vw" />
+                <source media="(min-width: 640px)" type="image/webp" srcSet={poster.landscape.webp} sizes="100vw" />
+                <source media="(min-width: 640px)" srcSet={poster.landscape.jpg} sizes="100vw" />
+                <source type="image/avif" srcSet={poster.portrait.avif} sizes="100vw" />
+                <source type="image/webp" srcSet={poster.portrait.webp} sizes="100vw" />
+                <img
+                  src={poster.portrait.jpgSrc}
+                  srcSet={poster.portrait.jpg}
+                  sizes="100vw"
+                  // Not decorative: this is the one photo that shows a visitor
+                  // what a Furor night actually looks like, so it gets a real
+                  // description rather than the alt="" that an audit flagged
+                  // as missing text. Editable at /admin/hero; a blank field
+                  // falls back to the shipped default rather than rendering
+                  // alt="" — clearing the field must not silently turn this
+                  // back into a decorative image. Reads the editable field,
+                  // never a local constant only.
+                  alt={content.hero.posterAlt.trim() !== '' ? content.hero.posterAlt : HERO_POSTER_ALT_DEFAULT}
+                  fetchPriority="high"
+                  decoding="async"
+                  // No width/height: the parent is absolute inset-0 and CSS
+                  // sizes both axes, so the intrinsic ratio never reaches
+                  // layout and a landscape source cannot shift anything.
+                  // On portrait phones the subject sits hard right so it is not
+                  // permanently buried under the text block.
+                  className="photo absolute inset-0 h-full w-full object-cover object-[78%_38%] sm:object-[center_30%] animate-kenburns"
+                />
+              </picture>
+            </>
+          ) : (
+            // The poster was replaced in the admin and `npm run build:images`
+            // has not been re-run. Serve the raw upload rather than nothing.
+            <Img
+              src={content.hero.posterImage}
+              alt={content.hero.posterAlt.trim() !== '' ? content.hero.posterAlt : HERO_POSTER_ALT_DEFAULT}
+              seed="hero"
+              label=""
+              fill
+              priority
+              className="object-cover object-[78%_38%] sm:object-[center_30%] animate-kenburns"
+            />
+          )}
           {allowVideo ? (
             <video
               ref={videoRef}
@@ -62,57 +123,92 @@ export function Hero({ content }: { content: SiteContent }) {
           like a moving stage light. Fine pointers only; never hides the
           cursor. The .lit class + position are set by HeroSpotlight. */}
       <div ref={spotRef} className="spotlight" aria-hidden />
-      <div className="container-x pt-14 pb-16 sm:py-16 lg:py-20 relative z-10 max-w-[44rem] sm:max-w-none">
+      {/* NB: no max-w override here. Whatever width container-x defines IS the
+          site grid — the header, the QuickEnroll card and every section below
+          sit on it, so the headline has to as well or the hero reads as a
+          different page.
+          Bottom padding must exceed QuickEnroll's negative top margin (-mt-20 /
+          sm:-mt-28) so the card overlaps empty space, not the scroll cue. */}
+      {/* Top padding is deliberately shallow: every pixel here pushes the
+          booking card further under the fold. The card's peek is the hero's
+          real call to action, so the content block sits high and the reserved
+          bottom padding (which the card overlaps) stays generous. */}
+      {/* Bottom padding minus QuickEnroll's pull-up (-mt-24/-mt-32/-mt-36).
+          Deliberately NOT constant across breakpoints any more: at sm+ it
+          still leaves 48px of clear air between the hero CTAs and the card
+          edge, but on a phone the base pad drops to pb-28 so the clear air is
+          16px and the board's top edge climbs 32px up a 667px viewport. The
+          board is the conversion surface and it starts below the fold — 32px
+          of card peeking beats 32px of empty space. */}
+      <div className="container-x relative z-10 pt-5 pb-28 sm:pt-10 sm:pb-44 lg:pt-12 lg:pb-48">
         {/* The count-in every dancer knows — 5, 6, 7, 8 — then the words move
             on 1. Pure CSS, on tempo; collapses to nothing on reduced motion. */}
+        {/* On phones the count-in floats top-right of the content column so it
+            plays without permanently reserving ~32px of fold height; sm+ keeps
+            it in flow above the badge. */}
         <p
           aria-hidden
-          className="count-in display text-sm font-bold uppercase tracking-[0.4em] text-ember-400 mb-5"
+          className="count-in absolute right-5 top-5 sm:static display text-sm font-bold uppercase tracking-[0.4em] text-ember-400 mb-0 sm:mb-3"
         >
           <span>5</span>
           <span>6</span>
           <span>7</span>
           <span>8</span>
         </p>
-        <p className="pill bg-ember-500/15 text-ember-400 hero-fade" style={{ animationDelay: '60ms' }}>
-          India&apos;s largest Latin dance school
-        </p>
+        {content.hero.badge ? (
+          <p className="pill hero-badge bg-ember-500/15 hero-fade">
+            {content.hero.badge}
+          </p>
+        ) : null}
         <h1 className="mt-5 display text-[2.4rem] font-extrabold leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl max-w-[18ch] sm:max-w-4xl">
           <CinematicHeadline text={content.hero.headline} />
         </h1>
         <p
-          className="mt-6 max-w-2xl text-lg text-cream/80 sm:text-xl hero-fade"
-          style={{ animationDelay: '0.95s' }}
+          className="mt-4 max-w-2xl text-lg text-cream/80 sm:text-xl hero-fade"
+          style={{ animationDelay: '0.3s' }}
         >
           {content.hero.subHeadline}
         </p>
-        <div
-          className="mt-10 flex flex-wrap items-center gap-3 hero-fade"
-          style={{ animationDelay: '1.15s' }}
-        >
-          <EnquiryCTA
-            whatsappNumber={content.site.whatsappNumber}
-            instagramHandle={content.site.instagramHandle}
-            ctx={{ source: 'primary' }}
-            variant="primary"
-            label="Chat on WhatsApp"
-            className="magnetic"
-          />
-          <Link href="/batches" className="btn-secondary magnetic">
-            See batches
-          </Link>
+        {/* One filled action per viewport (attention ratio): the paid trial is
+            the primary, WhatsApp demotes to link weight beside it, and the old
+            "See batches" button is gone — the booking board this button anchors
+            to already links there. The .downbeat class fires the button's
+            one-shot accent at the exact moment the count-in above resolves. */}
+        <div className="mt-6 hero-fade" style={{ animationDelay: '0.45s' }}>
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
+            <a href="#start-this-week" className="btn-primary magnetic downbeat">
+              {/* Site-wide CTA, not a per-batch one: it anchors to the board
+                  rather than to any batch's checkout, so it always speaks the
+                  beginner's language and prices off the cheapest real trial. */}
+              {label(content.labels, 'ctaBookFoundation')}
+              {trialFrom != null ? ` · ${formatInr(trialFrom)}` : ''}
+            </a>
+            <EnquiryCTA
+              whatsappNumber={content.site.whatsappNumber}
+              ctx={{ source: 'primary' }}
+              variant="link"
+              labels={content.labels}
+              templates={content.site.whatsappTemplates}
+              label={label(content.labels, 'ctaChatFirstWhatsapp')}
+            />
+          </div>
+          {/* No refund promise here: the trial fee is non-refundable
+              (owner, 2026-08-08). The reassurance is the small commitment
+              itself — one class, not a package — not money back. */}
+          {content.hero.reassurance ? (
+            <p className="mt-2.5 text-sm text-cream/65">{content.hero.reassurance}</p>
+          ) : null}
         </div>
-        {/* Pulls the eye down to the live batches peeking just below. */}
-        <a
-          href="#start-this-week"
-          className="hero-fade group mt-10 inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.25em] text-cream/55 transition hover:text-ember-400"
-          style={{ animationDelay: '1.35s' }}
-        >
-          <span className="beat-dot inline-block h-2 w-2 rounded-full bg-ember-500" />
-          The floor&apos;s open below
-          <span className="scroll-cue inline-block">↓</span>
-        </a>
+        {/* No scroll cue here: the QuickEnroll card overlaps this space and its
+            lit top edge + "Booking open" pulse already pull the eye down. A
+            text link pointing at the card that covers it was two cues fighting
+            for the same job — and the card won by sitting on top of it. */}
       </div>
+      {/* The weekly social, floating top-right over the hero art. Dismissible
+          per visit; its schema.org Event node is emitted in page.tsx, so this
+          chip is presentation only. Top-right because the content column owns
+          the left and the QuickEnroll card overlaps the entire bottom band. */}
+      <TonightFloat content={content} />
       {/* Magnetic CTA: enabled by ScriptOnFinePointer mounted in app layout via children */}
       <MagneticInit />
       <HeroSpotlight target={spotRef} />
@@ -127,6 +223,7 @@ function HeroSpotlight({ target }: { target: React.RefObject<HTMLDivElement | nu
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (!window.matchMedia('(pointer: fine)').matches) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const el = target.current;
     if (!el) return;
     const section = el.closest('section');
@@ -166,6 +263,7 @@ function MagneticInit() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (!window.matchMedia('(pointer: fine)').matches) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const targets = Array.from(document.querySelectorAll<HTMLElement>('.magnetic'));
     const onMove = (e: MouseEvent) => {
       for (const el of targets) {

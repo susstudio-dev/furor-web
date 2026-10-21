@@ -44,6 +44,9 @@ export function StoriesEditor({ initial }: { initial: SiteContent }) {
       slug: `new-story${suffix}`,
       title: 'New story',
       publishedAt: today,
+      // Ownership is stamped server-side once real users exist; until then an
+      // empty authorId simply matches no Author grant.
+      authorId: '',
       heroImage: '',
       excerpt: '',
       body: 'Story body — replace this with the post content. Blank lines create paragraph breaks.',

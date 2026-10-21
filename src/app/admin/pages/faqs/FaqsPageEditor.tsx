@@ -6,6 +6,7 @@ import { SaveBar } from '@/components/admin/SaveBar';
 import { Field, EditorStyles } from '@/components/admin/fields';
 import { PageIntroFields } from '@/components/admin/PageIntroFields';
 import { saveSiteContent } from '@/lib/admin-save';
+import { SeoFields } from '@/components/admin/SeoFields';
 
 type FaqsPage = Pages['faqs'];
 
@@ -58,6 +59,11 @@ export function FaqsPageEditor({ initial }: { initial: SiteContent }) {
   return (
     <>
       <div className="mt-8 grid gap-5">
+        <SeoFields
+          pageKey="faqs"
+          value={{ seoTitle: f.seoTitle, seoDescription: f.seoDescription }}
+          onChange={(next) => patch(next)}
+        />
         <div className="rounded-2xl border border-cream/10 bg-ink-900/40 p-5 grid gap-3">
           <p className="display text-sm uppercase tracking-widest text-ember-400">Header</p>
           <PageIntroFields value={f.intro} onChange={(v) => patch({ intro: v })} />

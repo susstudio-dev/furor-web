@@ -4,13 +4,19 @@ import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { EnquiryCTA } from './EnquiryCTA';
 import type { EnquiryContext } from '@/lib/enquiry';
+import { label, type Labels } from '@/lib/labels';
+import type { WhatsappTemplates } from '@/lib/content-schema';
 
 export function FloatingTalkToUs({
   whatsappNumber,
   instagramHandle,
+  labels,
+  templates,
 }: {
   whatsappNumber: string;
   instagramHandle: string;
+  labels: Labels;
+  templates: WhatsappTemplates;
 }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname() || '/';
@@ -35,25 +41,33 @@ export function FloatingTalkToUs({
     <>
       {open ? (
         <button
-          aria-label="Close"
+          aria-label={label(labels, 'ariaClose')}
           className="fixed inset-0 z-40 bg-ink-950/40"
           onClick={() => setOpen(false)}
         />
       ) : null}
-      <div className="fixed bottom-5 right-5 z-50 flex flex-col items-end gap-3 sm:bottom-6 sm:right-6">
+      {/* On the home route the mobile StickyTrialBar owns the bottom edge —
+          two floating elements stacking on a phone reads as broken. Hidden
+          below sm there; everywhere else (and on desktop) unchanged. */}
+      <div
+        className={`fixed bottom-5 right-5 z-50 flex-col items-end gap-3 sm:bottom-6 sm:right-6 ${
+          pathname === '/' ? 'hidden sm:flex' : 'flex'
+        }`}
+      >
         {open ? (
           <div className="w-[min(20rem,calc(100vw-2.5rem))] rounded-3xl border border-cream/10 bg-ink-900/95 p-4 shadow-2xl backdrop-blur animate-fade-up">
-            <p className="display text-sm uppercase tracking-widest text-cream/60">Talk to us</p>
-            <p className="mt-1 text-cream/90 text-sm">
-              We answer in minutes during studio hours.
+            <p className="display text-sm uppercase tracking-widest text-cream/60">
+              {label(labels, 'ctaTalkToUs')}
             </p>
+            <p className="mt-1 text-cream/90 text-sm">{label(labels, 'ctaTalkToUsHint')}</p>
             <div className="mt-4 grid gap-2">
               <EnquiryCTA
                 whatsappNumber={whatsappNumber}
                 ctx={ctx}
                 channel="whatsapp"
                 variant="primary"
-                label="Chat on WhatsApp"
+                labels={labels}
+                templates={templates}
                 className="w-full"
               />
               <EnquiryCTA
@@ -62,7 +76,8 @@ export function FloatingTalkToUs({
                 ctx={ctx}
                 channel="instagram"
                 variant="secondary"
-                label="DM on Instagram"
+                labels={labels}
+                templates={templates}
                 className="w-full"
               />
             </div>
@@ -71,15 +86,14 @@ export function FloatingTalkToUs({
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
-          className="group relative flex h-10 min-w-[2.5rem] items-center justify-center gap-1.5 rounded-full bg-ember-500 px-3.5 text-cream text-sm font-semibold shadow-lg shadow-ember-500/20 transition hover:bg-ember-600 active:scale-95"
+          className="group relative flex h-11 min-w-[2.75rem] items-center justify-center gap-1.5 rounded-full bg-ember-600 px-4 text-on-ember text-sm font-semibold shadow-lg shadow-ember-700/25 transition hover:bg-ember-700 active:scale-95"
           aria-expanded={open}
-          aria-label={open ? 'Close talk to us' : 'Open talk to us'}
+          aria-label={open ? label(labels, 'ariaCloseTalkToUs') : label(labels, 'ariaOpenTalkToUs')}
         >
-          <span className="relative flex h-2 w-2">
-            <span className="absolute inset-0 animate-ping rounded-full bg-cream/40" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-cream" />
-          </span>
-          <span className="hidden sm:inline">Talk to us</span>
+          {/* Static dot — the board's "Booking open" badge keeps the only
+              pulse in the arrival viewport (one live idiom per screen). */}
+          <span className="relative inline-flex h-2 w-2 rounded-full bg-on-ember" />
+          <span className="hidden sm:inline">{label(labels, 'ctaTalkToUs')}</span>
         </button>
       </div>
     </>

@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import type { SiteContent } from '@/lib/content-schema';
+import { firstForbiddenToken, type SiteContent } from '@/lib/content-schema';
 import { SaveBar } from '@/components/admin/SaveBar';
 import { saveSiteContent } from '@/lib/admin-save';
+import { SOCIAL_URL_HINT, socialUrlIssue, type SocialKey } from '@/lib/social-url';
 
 export function SiteEditor({ initial }: { initial: SiteContent }) {
   const [c, setC] = useState<SiteContent>(initial);
@@ -19,6 +20,13 @@ export function SiteEditor({ initial }: { initial: SiteContent }) {
   }
   function patchTonight(patch: Partial<SiteContent['tonight']>) {
     setC((p) => ({ ...p, tonight: { ...p.tonight, ...patch } }));
+    setDirty(true);
+  }
+  function patchTemplates(patch: Partial<SiteContent['site']['whatsappTemplates']>) {
+    setC((p) => ({
+      ...p,
+      site: { ...p.site, whatsappTemplates: { ...p.site.whatsappTemplates, ...patch } },
+    }));
     setDirty(true);
   }
   function patchWhy(patch: Partial<SiteContent['whyFuror']>) {
@@ -80,15 +88,39 @@ export function SiteEditor({ initial }: { initial: SiteContent }) {
         <Field label="Email (footer only)">
           <input value={c.site.email || ''} onChange={(e) => patchSite({ email: e.target.value })} className="input" />
         </Field>
+        {/* Format hints + a live shape warning (spec §6.1). The warning is
+            advisory; the authority is integrityIssues() on the save path, so a
+            malformed URL cannot be stored even by pasting into /admin/json. */}
         <div className="grid sm:grid-cols-3 gap-3">
-          <Field label="Instagram URL">
-            <input value={c.site.socials.instagram || ''} onChange={(e) => patchSite({ socials: { ...c.site.socials, instagram: e.target.value } })} className="input" />
+          <Field label="Instagram URL" hint={`Format: ${SOCIAL_URL_HINT.instagram}`}>
+            <input
+              value={c.site.socials.instagram || ''}
+              onChange={(e) => patchSite({ socials: { ...c.site.socials, instagram: e.target.value } })}
+              placeholder={SOCIAL_URL_HINT.instagram}
+              className="input"
+            />
+            <SocialUrlNote k="instagram" value={c.site.socials.instagram || ''} />
           </Field>
-          <Field label="Facebook URL">
-            <input value={c.site.socials.facebook || ''} onChange={(e) => patchSite({ socials: { ...c.site.socials, facebook: e.target.value } })} className="input" />
+          <Field label="Facebook URL" hint={`Format: ${SOCIAL_URL_HINT.facebook}`}>
+            <input
+              value={c.site.socials.facebook || ''}
+              onChange={(e) => patchSite({ socials: { ...c.site.socials, facebook: e.target.value } })}
+              placeholder={SOCIAL_URL_HINT.facebook}
+              className="input"
+            />
+            <SocialUrlNote k="facebook" value={c.site.socials.facebook || ''} />
           </Field>
-          <Field label="YouTube URL">
-            <input value={c.site.socials.youtube || ''} onChange={(e) => patchSite({ socials: { ...c.site.socials, youtube: e.target.value } })} className="input" />
+          <Field
+            label="YouTube URL"
+            hint={`Format: ${SOCIAL_URL_HINT.youtube} — a bare /name is not a channel and will 404. Leave blank to hide the icon.`}
+          >
+            <input
+              value={c.site.socials.youtube || ''}
+              onChange={(e) => patchSite({ socials: { ...c.site.socials, youtube: e.target.value } })}
+              placeholder={SOCIAL_URL_HINT.youtube}
+              className="input"
+            />
+            <SocialUrlNote k="youtube" value={c.site.socials.youtube || ''} />
           </Field>
         </div>
         <Field label="Footer copy">
@@ -158,12 +190,12 @@ export function SiteEditor({ initial }: { initial: SiteContent }) {
               </Field>
               <Field
                 label="Primary CTA link"
-                hint="Internal path like /batches?days=Weekend. Leave blank to make WhatsApp the primary action."
+                hint="Internal path like /batches or /dance-styles/salsa. Avoid ?query= links — search engines treat them as separate, duplicate URLs. Leave blank to make WhatsApp the primary action."
               >
                 <input
                   value={c.trial.ctaHref}
                   onChange={(e) => patchTrial({ ctaHref: e.target.value })}
-                  placeholder="/batches?days=Weekend"
+                  placeholder="/batches"
                   className="input"
                 />
               </Field>
@@ -207,12 +239,56 @@ export function SiteEditor({ initial }: { initial: SiteContent }) {
               <input value={c.tonight.when} onChange={(e) => patchTonight({ when: e.target.value })} className="input" />
             </Field>
             <div className="grid sm:grid-cols-2 gap-3">
-              <Field label="CTA label" hint="Default: WhatsApp to RSVP">
+              <Field label="CTA label" hint="Default: Say you’re coming">
                 <input value={c.tonight.ctaLabel} onChange={(e) => patchTonight({ ctaLabel: e.target.value })} className="input" />
               </Field>
               <Field label="WhatsApp message context" hint="Inserted into 'Hi Furor, I'd like to come to ___.'">
                 <input value={c.tonight.ctaContext} onChange={(e) => patchTonight({ ctaContext: e.target.value })} className="input" />
               </Field>
+            </div>
+
+            {/* Structured facts for Google. "When" above stays the sentence
+                visitors read; these are what search engines need. All four of
+                venue, day and start time must be filled or no Event markup is
+                emitted at all — a node without a location and a date cannot
+                earn a rich result, so a partial one is worth nothing. */}
+            <div className="mt-4 border-t border-cream/10 pt-4">
+              <p className="text-xs uppercase tracking-widest text-cream/60">
+                Event details for Google
+              </p>
+              <p className="text-xs text-cream/40 mt-0.5">
+                Fill venue, day and start time to make this social eligible for Google&apos;s event
+                results. Leave any of them blank and no event markup is published.
+              </p>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <Field label="Venue name" hint="e.g. Over the Moon Brew Co">
+                  <input value={c.tonight.venueName} onChange={(e) => patchTonight({ venueName: e.target.value })} className="input" />
+                </Field>
+                <Field label="Area / city" hint="e.g. Gachibowli, Hyderabad">
+                  <input value={c.tonight.venueLocality} onChange={(e) => patchTonight({ venueLocality: e.target.value })} className="input" />
+                </Field>
+                <Field label="Street address (optional)" hint="Sharpens the map pin for search engines.">
+                  <input value={c.tonight.venueStreet} onChange={(e) => patchTonight({ venueStreet: e.target.value })} className="input" />
+                </Field>
+                <Field label="Day of the week">
+                  <select
+                    value={c.tonight.weekday}
+                    onChange={(e) => patchTonight({ weekday: e.target.value as SiteContent['tonight']['weekday'] })}
+                    className="input"
+                  >
+                    <option value="">— not set —</option>
+                    {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((d) => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
+                </Field>
+                <Field label="Start time" hint="24-hour, e.g. 19:00">
+                  <input type="time" value={c.tonight.startTime} onChange={(e) => patchTonight({ startTime: e.target.value })} className="input" />
+                </Field>
+                <Field label="End time (optional)" hint="24-hour, e.g. 23:00">
+                  <input type="time" value={c.tonight.endTime} onChange={(e) => patchTonight({ endTime: e.target.value })} className="input" />
+                </Field>
+              </div>
             </div>
           </div>
         </div>
@@ -266,6 +342,94 @@ export function SiteEditor({ initial }: { initial: SiteContent }) {
             </div>
           </div>
         </div>
+
+        <div className="mt-4 rounded-2xl border border-cream/10 bg-ink-900/40 p-5">
+          <p className="display text-sm uppercase tracking-widest text-ember-400">
+            WhatsApp messages
+          </p>
+          <p className="mt-1 text-xs text-cream/50">
+            What we type into WhatsApp for a visitor when they tap a chat button. Words in{' '}
+            <code>{'{braces}'}</code> are filled in from the real batch, style or studio — leave
+            them in. Angle brackets, double braces and the word “undefined” are not allowed: the
+            save is refused with an error rather than breaking a link on someone’s phone.
+          </p>
+          <div className="mt-4 grid gap-3">
+            <Field
+              label="A specific batch"
+              hint="Placeholders: {style} {level} {branch} {days} {time} {date}"
+            >
+              <textarea
+                rows={3}
+                value={c.site.whatsappTemplates.batch}
+                onChange={(e) => patchTemplates({ batch: e.target.value })}
+                className="input"
+              />
+              <TemplateIssueNote value={c.site.whatsappTemplates.batch} />
+            </Field>
+            <Field label="Style finder result" hint="Placeholders: {style} {level} {where}">
+              <textarea
+                rows={3}
+                value={c.site.whatsappTemplates.styleFinder}
+                onChange={(e) => patchTemplates({ styleFinder: e.target.value })}
+                className="input"
+              />
+              <TemplateIssueNote value={c.site.whatsappTemplates.styleFinder} />
+            </Field>
+            <Field
+              label="…and the studio bit inside {where}"
+              hint="Placeholder: {branch}. Dropped entirely when no studio is known, so keep the leading space."
+            >
+              <input
+                value={c.site.whatsappTemplates.styleFinderWhere}
+                onChange={(e) => patchTemplates({ styleFinderWhere: e.target.value })}
+                className="input"
+              />
+              <TemplateIssueNote value={c.site.whatsappTemplates.styleFinderWhere} />
+            </Field>
+            <Field label="A dance style page" hint="Placeholder: {style}">
+              <textarea
+                rows={2}
+                value={c.site.whatsappTemplates.style}
+                onChange={(e) => patchTemplates({ style: e.target.value })}
+                className="input"
+              />
+              <TemplateIssueNote value={c.site.whatsappTemplates.style} />
+            </Field>
+            <Field label="A studio page" hint="Placeholder: {branch}">
+              <textarea
+                rows={2}
+                value={c.site.whatsappTemplates.branch}
+                onChange={(e) => patchTemplates({ branch: e.target.value })}
+                className="input"
+              />
+              <TemplateIssueNote value={c.site.whatsappTemplates.branch} />
+            </Field>
+            <Field
+              label="An event or offer"
+              hint="Placeholder: {note} — filled from the tile or ribbon’s message context above."
+            >
+              <textarea
+                rows={2}
+                value={c.site.whatsappTemplates.custom}
+                onChange={(e) => patchTemplates({ custom: e.target.value })}
+                className="input"
+              />
+              <TemplateIssueNote value={c.site.whatsappTemplates.custom} />
+            </Field>
+            <Field
+              label="Everything else"
+              hint="The floating button and the general “chat with us” buttons. No placeholders."
+            >
+              <textarea
+                rows={2}
+                value={c.site.whatsappTemplates.generic}
+                onChange={(e) => patchTemplates({ generic: e.target.value })}
+                className="input"
+              />
+              <TemplateIssueNote value={c.site.whatsappTemplates.generic} />
+            </Field>
+          </div>
+        </div>
       </div>
       <SaveBar dirty={dirty} onSave={save} />
       <style jsx global>{`
@@ -284,6 +448,29 @@ export function SiteEditor({ initial }: { initial: SiteContent }) {
         }
       `}</style>
     </>
+  );
+}
+
+// Advisory only — the save path is the authority. Rendering the same message
+// the server would return means the admin sees it while typing rather than
+// after losing a save.
+function SocialUrlNote({ k, value }: { k: SocialKey; value: string }) {
+  const issue = socialUrlIssue(k, value.trim());
+  if (!issue) return null;
+  return <p className="mt-1 text-xs text-ember-400">{issue}</p>;
+}
+
+// Advisory only — the save path (integrity.ts messageTemplates) is the
+// authority. Uses the same firstForbiddenToken() helper as that write-path
+// check, so the admin hint and the save-time refusal can never disagree
+// about which tokens are forbidden.
+function TemplateIssueNote({ value }: { value: string }) {
+  const bad = firstForbiddenToken(value);
+  if (!bad) return null;
+  return (
+    <p className="mt-1 text-xs text-ember-400">
+      {`Message cannot contain "${bad}" — it would break the WhatsApp link.`}
+    </p>
   );
 }
 

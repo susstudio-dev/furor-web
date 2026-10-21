@@ -1,13 +1,27 @@
 import Link from 'next/link';
-import { getContent } from '@/lib/content';
+import { getPublicContent } from '@/lib/content';
+import { resolvePageMeta } from '@/lib/page-meta';
 
-export const metadata = { title: 'Blog' };
+export async function generateMetadata() {
+  const c = await getPublicContent();
+  const meta = resolvePageMeta('stories', {
+    seoTitle: c.pages.stories.seoTitle,
+    seoDescription: c.pages.stories.seoDescription,
+    brand: c.site.title,
+    derivedDescription: c.pages.stories.intro.lead,
+  });
+  return {
+    title: meta.title,
+    description: meta.description,
+    alternates: { canonical: '/stories' },
+  };
+}
 
 // Render per request so admin edits show immediately (export build strips this).
 export const dynamic = 'force-dynamic';
 
 export default async function StoriesIndex() {
-  const content = await getContent();
+  const content = await getPublicContent();
   const intro = content.pages.stories.intro;
   const stories = content.stories.slice().sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
   return (
@@ -26,17 +40,23 @@ export default async function StoriesIndex() {
       ) : (
         <ul className="mt-10 grid gap-4 md:grid-cols-2">
           {stories.map((s) => (
-            <li key={s.id}>
+            // The <li> stretches to the row height; the card is a flex column
+            // inside it so every card in a row ends on the same line and the
+            // "Read" links sit on one baseline, whatever the excerpt length.
+            <li key={s.id} className="flex">
               <Link
                 href={`/stories/${s.slug}`}
-                className="group block rounded-2xl border border-cream/10 bg-ink-900/40 p-6 transition-colors hover:border-ember-400/40"
+                className="group flex w-full flex-col rounded-2xl border border-cream/10 bg-ink-900/40 p-6 transition-colors hover:border-ember-400/40"
               >
-                <p className="text-cream/50 text-xs uppercase tracking-widest">
+                <p className="text-cream/70 text-xs uppercase tracking-widest">
                   {new Date(s.publishedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
                 </p>
-                <p className="mt-2 display text-xl font-bold group-hover:text-ember-400 transition">{s.title}</p>
+                {/* An h2, not a p: the story title is this card's heading, and
+                    rendering it as body text left the whole listing with no h2
+                    at all. Classes are unchanged, so nothing moves visually. */}
+                <h2 className="mt-2 display text-xl font-bold group-hover:text-ember-400 transition">{s.title}</h2>
                 {s.excerpt ? <p className="mt-2 text-cream/70 text-sm leading-relaxed">{s.excerpt}</p> : null}
-                <p className="mt-4 text-ember-400 text-sm">Read →</p>
+                <p className="mt-auto pt-4 text-ember-400 text-sm">Read →</p>
               </Link>
             </li>
           ))}

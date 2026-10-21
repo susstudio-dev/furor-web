@@ -2,33 +2,58 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
 
-const SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'dev-only-secret-change-me-in-production-32b',
-);
 const COOKIE_NAME = 'furor_admin';
+
+// Fail closed: in production a missing JWT_SECRET must reject every session
+// (null secret → verification always fails) instead of silently accepting
+// tokens signed with the well-known dev fallback.
+function getSecret(): Uint8Array | null {
+  const s = process.env.JWT_SECRET;
+  if (s && s.length >= 32) return new TextEncoder().encode(s);
+  if (process.env.NODE_ENV === 'production') return null;
+  return new TextEncoder().encode('dev-only-secret-change-me-in-production-32b');
+}
 
 export const config = {
   matcher: ['/admin/:path*'],
 };
 
+// Server components cannot read the pathname directly, and the admin layout
+// wraps the login page too — so it needs to know which route it is rendering
+// in order to exempt the pages an unauthenticated visitor must still reach.
+function withPath(req: NextRequest) {
+  const headers = new Headers(req.headers);
+  headers.set('x-admin-path', req.nextUrl.pathname);
+  return NextResponse.next({ request: { headers } });
+}
+
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  if (pathname === '/admin/login') return NextResponse.next();
+  if (pathname === '/admin/login') return withPath(req);
+
+  const toLogin = () => {
+    const url = req.nextUrl.clone();
+    url.pathname = '/admin/login';
+    url.searchParams.set('next', pathname);
+    return NextResponse.redirect(url);
+  };
 
   const token = req.cookies.get(COOKIE_NAME)?.value;
-  if (!token) {
-    const url = req.nextUrl.clone();
-    url.pathname = '/admin/login';
-    url.searchParams.set('next', pathname);
-    return NextResponse.redirect(url);
-  }
+  const secret = getSecret();
+  if (!token || !secret) return toLogin();
   try {
-    await jwtVerify(token, SECRET);
-    return NextResponse.next();
+    // Signature, issuer and audience only. Middleware deliberately makes no
+    // authorization decision: it runs on every /admin navigation, a store read
+    // here would cost CPU and a subrequest each time, and the claims it could
+    // read are a 14-day-old snapshot anyway. Enforcement lives in the layout
+    // and in each page's guard, where the subject is resolved for real.
+    await jwtVerify(token, secret, {
+      algorithms: ['HS256'],
+      issuer: 'furor-web',
+      audience: 'furor-admin',
+    });
+    return withPath(req);
   } catch {
-    const url = req.nextUrl.clone();
-    url.pathname = '/admin/login';
-    url.searchParams.set('next', pathname);
-    return NextResponse.redirect(url);
+    return toLogin();
   }
 }

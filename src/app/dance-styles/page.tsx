@@ -1,16 +1,33 @@
 import Link from 'next/link';
-import { getContent } from '@/lib/content';
+import { getPublicContent } from '@/lib/content';
 import { StyleFinder } from '@/components/StyleFinder';
 import { Img } from '@/components/Img';
 import { RhythmSignature } from '@/components/RhythmSignature';
+import { resolvePageMeta } from '@/lib/page-meta';
 
-export const metadata = { title: 'Dance Styles' };
+export async function generateMetadata() {
+  const c = await getPublicContent();
+  const meta = resolvePageMeta('danceStyles', {
+    seoTitle: c.pages.danceStyles.seoTitle,
+    seoDescription: c.pages.danceStyles.seoDescription,
+    brand: c.site.title,
+    // The admin lead here is a 45-character line — true, but on its own it left
+    // two thirds of the snippet empty. fitDescription keeps it and adds the
+    // support sentence behind it instead of choosing between them.
+    derivedDescription: c.pages.danceStyles.intro.lead || c.pages.danceStyles.intro.headline,
+  });
+  return {
+    title: meta.title,
+    description: meta.description,
+    alternates: { canonical: '/dance-styles' },
+  };
+}
 
 // Render per request so admin edits show immediately (export build strips this).
 export const dynamic = 'force-dynamic';
 
 export default async function StylesIndex() {
-  const content = await getContent();
+  const content = await getPublicContent();
   const intro = content.pages.danceStyles.intro;
   const styles = content.danceStyles.slice().sort((a, b) => a.displayOrder - b.displayOrder);
   return (
@@ -43,7 +60,6 @@ export default async function StylesIndex() {
                   seed={`style-${s.slug}`}
                   label={s.name}
                   fill
-                  sizes="(max-width: 768px) 100vw, 33vw"
                   className="object-cover object-[center_30%] transition duration-700 group-hover:scale-[1.04]"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-ink-950 via-ink-950/30 to-transparent" />

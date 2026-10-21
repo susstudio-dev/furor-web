@@ -1,36 +1,48 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { getContent, batchesForStyle, formatBatchDate, formatInr, styleBySlug, batchStyleLabel } from '@/lib/content';
+import { getPublicContent, batchesForStyle, formatBatchDate, formatInr, styleBySlug, batchStyleLabel, todayIso } from '@/lib/content';
 import { EnquiryCTA } from '@/components/EnquiryCTA';
 import { BatchActions } from '@/components/BatchActions';
+import { statusLabel } from '@/lib/book-label';
 import { JsonLd } from '@/components/JsonLd';
 import { Img } from '@/components/Img';
-
-// force-dynamic (below) makes this render fresh per request on Vercel.
-// generateStaticParams is still used by the GitHub Pages static export to
-// enumerate every slug (the deploy workflow strips the force-dynamic line so
-// `output: export` can emit them all as static files).
-export const dynamic = 'force-dynamic';
-
-export async function generateStaticParams() {
-  const c = await getContent();
-  return c.danceStyles.map((s) => ({ slug: s.slug }));
-}
+import { breadcrumbLd, courseLd, fitDescription, fitTitle } from '@/lib/seo';
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const c = await getContent();
+  const c = await getPublicContent();
   const s = styleBySlug(c, slug);
   if (!s) return {};
-  return { title: s.name, description: s.tagline };
+  return {
+    title: fitTitle(`${s.name} Classes in Hyderabad`, c.site.title),
+    description: fitDescription(
+      `${s.tagline} ${s.description}`,
+      `${s.name} classes in Jubilee Hills, Hyderabad.`,
+    ),
+    alternates: { canonical: `/dance-styles/${s.slug}` },
+    openGraph: {
+      title: `${s.name} Classes in Hyderabad`,
+      description: s.tagline,
+      // A page-level openGraph replaces the layout's wholesale — keep the
+      // brand card as fallback or styles without a hero lose og:image.
+      images: [s.heroImage || '/og.png'],
+    },
+  };
 }
 
 export default async function StylePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const content = await getContent();
+  const content = await getPublicContent();
   const style = styleBySlug(content, slug);
   if (!style) notFound();
   const batches = batchesForStyle(content, style.slug);
+  // batchesForStyle draws from visibleBatches(), which now includes started
+  // batches still inside their join-grace window (content-helpers.ts) — so a
+  // bare "starts {date}" here can print a past date beside a live booking
+  // button. Reuse the /batches row copy (pages.batches.browser) rather than
+  // invent a second hardcoded string for the same started-vs-starts fact.
+  const today = todayIso();
+  const batchesCopy = content.pages.batches.browser;
 
   const faqLd = {
     '@context': 'https://schema.org',
@@ -45,16 +57,23 @@ export default async function StylePage({ params }: { params: Promise<{ slug: st
   return (
     <>
       <JsonLd data={faqLd} />
+      <JsonLd data={courseLd(content, style)} />
+      <JsonLd
+        data={breadcrumbLd([
+          { name: 'Home', path: '/' },
+          { name: 'Dance Styles', path: '/dance-styles' },
+          { name: style.name, path: `/dance-styles/${style.slug}` },
+        ])}
+      />
       <section className="relative isolate overflow-hidden">
         <div className="absolute inset-0 -z-10">
           <Img
             src={style.heroImage}
-            alt=""
+            alt={`${style.name} dancers on the floor at Furor in Hyderabad`}
             seed={`style-${style.slug}`}
             label={style.name}
             fill
             priority
-            sizes="100vw"
             // Anchor the subject hard right on portrait mobile so the dancer
             // isn't cropped to the centre of the frame.
             className="object-cover object-[78%_38%] sm:object-[center_30%] animate-kenburns"
@@ -63,8 +82,11 @@ export default async function StylePage({ params }: { params: Promise<{ slug: st
           <div className="absolute inset-0 bg-gradient-to-t from-ink-950 via-ink-950/45 to-transparent" />
         </div>
         <div className="container-x pt-16 pb-14 sm:py-24 lg:py-32 max-w-[44rem] sm:max-w-none">
-          <p className="pill bg-ember-500/15 text-ember-400">{style.name}</p>
-          <h1 className="mt-4 display text-[2.4rem] sm:text-6xl lg:text-7xl font-extrabold leading-[1.05] tracking-tight max-w-[18ch] sm:max-w-4xl">{style.tagline}</h1>
+          <h1 className="pill bg-ember-500/15 text-ember-400">
+            {style.name}
+            <span className="sr-only"> classes in Hyderabad</span>
+          </h1>
+          <p className="mt-4 display text-[2.4rem] sm:text-6xl lg:text-7xl font-extrabold leading-[1.05] tracking-tight max-w-[18ch] sm:max-w-4xl">{style.tagline}</p>
           <p className="mt-6 max-w-2xl text-base sm:text-lg text-cream/80">{style.description}</p>
           <div className="mt-8 flex flex-wrap gap-3">
             <EnquiryCTA
@@ -72,7 +94,8 @@ export default async function StylePage({ params }: { params: Promise<{ slug: st
               instagramHandle={content.site.instagramHandle}
               ctx={{ source: 'primary', style: { slug: style.slug, name: style.name } }}
               variant="primary"
-              label="Chat on WhatsApp"
+              labels={content.labels}
+              templates={content.site.whatsappTemplates}
             />
             <EnquiryCTA
               whatsappNumber={content.site.whatsappNumber}
@@ -80,19 +103,23 @@ export default async function StylePage({ params }: { params: Promise<{ slug: st
               ctx={{ source: 'primary', style: { slug: style.slug, name: style.name } }}
               channel="instagram"
               variant="secondary"
-              label="DM on Instagram"
+              labels={content.labels}
+              templates={content.site.whatsappTemplates}
             />
           </div>
         </div>
       </section>
 
       <section className="container-x py-20">
-        <p className="display text-sm uppercase tracking-widest text-ember-400">Who it&apos;s for</p>
+        {/* Every h2 on this template names the style. All three style pages
+            shared an identical set of four headings otherwise, which reads to a
+            crawler as three pages about the same thing. */}
+        <h2 className="display text-sm uppercase tracking-widest text-ember-400">Who {style.name} is for</h2>
         <p className="mt-3 display text-2xl sm:text-3xl max-w-3xl text-cream/90">{style.whoItsFor}</p>
       </section>
 
       <section className="container-x py-12">
-        <p className="display text-sm uppercase tracking-widest text-ember-400">Level path</p>
+        <h2 className="display text-sm uppercase tracking-widest text-ember-400">Your {style.name} level path</h2>
         <div className="mt-6 grid gap-4 md:grid-cols-3">
           {(['foundation', 'intermediate', 'advanced'] as const).map((k) => (
             <div key={k} className="rounded-2xl border border-cream/10 bg-ink-900/40 p-6">
@@ -104,7 +131,7 @@ export default async function StylePage({ params }: { params: Promise<{ slug: st
       </section>
 
       <section className="container-x py-12">
-        <p className="display text-sm uppercase tracking-widest text-ember-400">Upcoming batches</p>
+        <h2 className="display text-sm uppercase tracking-widest text-ember-400">Upcoming {style.name} batches</h2>
         {batches.length === 0 ? (
           <div className="mt-6 rounded-2xl border border-cream/10 bg-ink-900/40 p-8">
             <p className="text-cream/80">
@@ -115,6 +142,8 @@ export default async function StylePage({ params }: { params: Promise<{ slug: st
                 whatsappNumber={content.site.whatsappNumber}
                 ctx={{ source: 'primary', style: { slug: style.slug, name: style.name } }}
                 variant="primary"
+                labels={content.labels}
+                templates={content.site.whatsappTemplates}
                 label={`Notify me about ${style.name}`}
               />
             </div>
@@ -134,9 +163,12 @@ export default async function StylePage({ params }: { params: Promise<{ slug: st
                       {combined ? `${batchStyleLabel(content, b.styleSlugs)} · ` : ''}{b.level} · {branch.name}
                     </p>
                     <p className="text-cream/70 text-sm">
-                      {b.daysOfWeek.join('–')} · {b.time} · starts {formatBatchDate(b.startDate)}
+                      {b.daysOfWeek.join('–')} · {b.time} ·{' '}
+                      {b.startDate < today
+                        ? batchesCopy.startedLine.replace('{date}', formatBatchDate(b.startDate))
+                        : `${batchesCopy.startsPrefix} ${formatBatchDate(b.startDate)}`}
                     </p>
-                    <p className="text-cream/70 text-sm">{formatInr(b.priceInr)} {b.status === 'Filling Fast' ? <span className="pill ml-2 bg-gold-500/15 text-gold-400">Filling fast</span> : null}</p>
+                    <p className="text-cream/70 text-sm">{formatInr(b.priceInr)} {b.status === 'Filling Fast' ? <span className="pill ml-2 bg-gold-500/15 text-gold-400">{statusLabel(b.status, content.labels)}</span> : null}</p>
                   </div>
                   <div className="flex gap-2 flex-wrap items-center">
                     <BatchActions
@@ -145,6 +177,8 @@ export default async function StylePage({ params }: { params: Promise<{ slug: st
                       branch={{ slug: branch.slug, name: branch.name }}
                       whatsappNumber={content.site.whatsappNumber}
                       primaryLabelWhenNoLink="Enquire"
+                      labels={content.labels}
+                      templates={content.site.whatsappTemplates}
                     />
                   </div>
                 </div>
@@ -156,7 +190,7 @@ export default async function StylePage({ params }: { params: Promise<{ slug: st
 
       {style.faqs.length > 0 ? (
         <section className="container-x py-20">
-          <p className="display text-sm uppercase tracking-widest text-ember-400">Questions, asked</p>
+          <h2 className="display text-sm uppercase tracking-widest text-ember-400">{style.name} questions, asked</h2>
           <div className="mt-6 grid gap-3">
             {style.faqs.map((f, i) => (
               <details key={i} className="group rounded-2xl border border-cream/10 bg-ink-900/40 p-5">

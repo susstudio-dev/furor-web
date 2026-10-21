@@ -1,15 +1,29 @@
-import { getContent } from '@/lib/content';
+import { getPublicContent } from '@/lib/content';
 import { EnquiryCTA } from '@/components/EnquiryCTA';
 import { JsonLd } from '@/components/JsonLd';
 import { Img } from '@/components/Img';
+import { resolvePageMeta } from '@/lib/page-meta';
 
-export const metadata = { title: 'Instructors' };
+export async function generateMetadata() {
+  const c = await getPublicContent();
+  const meta = resolvePageMeta('instructorsPage', {
+    seoTitle: c.pages.instructorsPage.seoTitle,
+    seoDescription: c.pages.instructorsPage.seoDescription,
+    brand: c.site.title,
+    derivedDescription: c.pages.instructorsPage.intro.lead,
+  });
+  return {
+    title: meta.title,
+    description: meta.description,
+    alternates: { canonical: '/instructors' },
+  };
+}
 
 // Render per request so admin edits show immediately (export build strips this).
 export const dynamic = 'force-dynamic';
 
 export default async function InstructorsPage() {
-  const content = await getContent();
+  const content = await getPublicContent();
   const p = content.pages.instructorsPage;
   const personLd = content.instructors.map((i) => ({
     '@context': 'https://schema.org',
@@ -59,22 +73,17 @@ export default async function InstructorsPage() {
                     label={i.name}
                     variant={(idx % 4) as 0 | 1 | 2 | 3}
                     fill
-                    sizes="120px"
                     // Faces sit slightly above centre — anchor up so heads don't get cropped.
                     className="object-cover object-[center_25%]"
                   />
                 </div>
-                <div className="min-w-0 flex-1">
+                {/* basis-36 rather than flex-1's 0% basis: with an 80px avatar
+                    and a 20px gap either side, a zero-basis column collapses to
+                    ~70px on a 375px screen and the name wraps a word per line.
+                    A real basis makes the header wrap instead of squeezing. */}
+                <div className="min-w-0 flex-[1_1_9rem]">
                   <p className="display text-2xl font-bold sm:text-3xl">{i.name}</p>
                   <p className="mt-1 text-xs uppercase tracking-widest text-ember-400/90">{i.role}</p>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {styleNames.map((n) => (
-                      <span key={n} className="pill bg-cream/5 text-cream/80 text-xs">{n}</span>
-                    ))}
-                    {branchNames.map((n) => (
-                      <span key={n} className="pill bg-ember-500/10 text-ember-400 text-xs">{n}</span>
-                    ))}
-                  </div>
                 </div>
                 {i.social.instagram ? (
                   <a
@@ -87,6 +96,19 @@ export default async function InstructorsPage() {
                   </a>
                 ) : null}
               </header>
+              {/* Styles and branches sit below the header, at the card's full
+                  width. Inside the header they shared a column with the avatar
+                  and were truncated to ~70px — "West Coast Swing" rendered as
+                  "West C…" and a branch name as "PUP U…". A pill that has to
+                  be guessed at is worse than no pill. */}
+              <div className="mt-4 flex flex-wrap gap-2">
+                {styleNames.map((n) => (
+                  <span key={n} className="pill bg-cream/5 text-cream/80 text-xs">{n}</span>
+                ))}
+                {branchNames.map((n) => (
+                  <span key={n} className="pill bg-ember-500/10 text-ember-400 text-xs">{n}</span>
+                ))}
+              </div>
               <div className="mt-6 border-t border-cream/10 pt-6 max-w-3xl">
                 <p className="text-cream/80 leading-relaxed">{paragraphs[0]}</p>
                 {paragraphs.length > 1 ? (
@@ -211,7 +233,8 @@ export default async function InstructorsPage() {
               whatsappNumber={content.site.whatsappNumber}
               ctx={{ source: 'primary' }}
               variant="primary"
-              label="Chat on WhatsApp"
+              labels={content.labels}
+              templates={content.site.whatsappTemplates}
             />
             <EnquiryCTA
               whatsappNumber={content.site.whatsappNumber}
@@ -219,7 +242,8 @@ export default async function InstructorsPage() {
               ctx={{ source: 'primary' }}
               channel="instagram"
               variant="secondary"
-              label="DM on Instagram"
+              labels={content.labels}
+              templates={content.site.whatsappTemplates}
             />
           </div>
         </div>

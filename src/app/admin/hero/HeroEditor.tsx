@@ -42,6 +42,23 @@ export function HeroEditor({ initial }: { initial: SiteContent }) {
             className="input"
           />
         </Field>
+        <Field label="Trust badge" hint="The small pill above the headline. Leave blank to hide it.">
+          <input
+            value={c.hero.badge}
+            onChange={(e) => patch({ badge: e.target.value })}
+            className="input"
+          />
+        </Field>
+        <Field
+          label="Reassurance line"
+          hint="The quiet line under the booking buttons. Leave blank to hide it."
+        >
+          <input
+            value={c.hero.reassurance}
+            onChange={(e) => patch({ reassurance: e.target.value })}
+            className="input"
+          />
+        </Field>
         <ImageUploader
           label="Poster image"
           value={c.hero.posterImage}
@@ -49,6 +66,16 @@ export function HeroEditor({ initial }: { initial: SiteContent }) {
           aspect="wide"
           hint="Used as the fallback image behind the hero video, and on mobile when the video doesn't autoplay."
         />
+        <Field
+          label="Poster image description"
+          hint="Read aloud by screen readers and shown if the photo fails to load. Describe what is happening in it."
+        >
+          <input
+            value={c.hero.posterAlt}
+            onChange={(e) => patch({ posterAlt: e.target.value })}
+            className="input"
+          />
+        </Field>
         <div className="grid sm:grid-cols-2 gap-3">
           <Field label="Hero video — MP4 URL" hint="Optional. Paste a hosted .mp4 URL.">
             <input
