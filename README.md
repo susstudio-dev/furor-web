@@ -22,31 +22,6 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Open http://localhost:3000
-
-The first time anything reads content, the seed at `src/data/site-content.seed.json` is copied to `data/site-content.json`. The owner account comes straight from `.env.local` (`ADMIN_OWNER_EMAIL` + `ADMIN_OWNER_INITIAL_PASSWORD`) — no file is created for it. Additional accounts are invited from `/admin/users` and live in the `users.json` store (local `data/`, R2 in production).
-
-## Editing content (the workflow)
-
-`data/site-content.json` is **gitignored** — your admin edits stay on your machine until you opt into sharing them. The seed at `src/data/site-content.seed.json` is the version that ships in git and gets used by fresh dev / prod environments on first run.
-
-To share your local content edits with the team and deploy them to prod:
-
-```bash
-# 1. edit content via the admin panel (http://localhost:3000/admin)
-# 2. when you're happy with it:
-npm run sync-seed
-# 3. then commit just the seed file:
-git add src/data/site-content.seed.json
-git commit -m "content: ..."
-git push
-```
-
-Other useful flags:
-- `npm run sync-seed -- --check` — exits non-zero if your local content has diverged from the seed (good for a pre-push check or CI guard).
-
-Pulling teammate content changes is automatic: `git pull`, then on next request the seed values fill anything missing from your local `data/site-content.json` via the deep-merge in `getContent()`. If you want a hard reset to match the seed exactly, delete `data/site-content.json` and let the dev server reseed.
-
 
 ## Content model
 
@@ -79,27 +54,8 @@ Every "talk to us" CTA is **WhatsApp** (primary) or **Instagram DM** (secondary)
 - Floating "Talk to us" pill on every public page expands to both options.
 - Every click fires GA4 `enquiry_click` with `{page_path, channel, source, dance_style, branch, batch_id}` (when GA4 is configured).
 
-## Production deployment
 
-The site runs on **Cloudflare Workers (free plan)** via `@opennextjs/cloudflare`, with content/versions/uploads in a private **R2 bucket** (`furor-content`, bound as `CONTENT_BUCKET` in [wrangler.jsonc](wrangler.jsonc)). Full runbook: [DEPLOY.md](DEPLOY.md).
-
-- Secrets via `wrangler secret put`: `JWT_SECRET`, `ADMIN_OWNER_EMAIL`, `ADMIN_OWNER_PASSWORD_HASH` (generate with `npm run hash-password -- '<pw>'` — the PBKDF2 format fits the free plan's 10ms CPU cap; bcrypt does not).
-- `npm run deploy` locally (Linux/WSL recommended) or push to `main` with `CLOUDFLARE_API_TOKEN`/`CLOUDFLARE_ACCOUNT_ID` repo secrets set — [.github/workflows/deploy-cloudflare.yml](.github/workflows/deploy-cloudflare.yml) deploys from CI.
-- On first deploy with an empty bucket, the bundled seed loads automatically; the first admin save writes the live document to R2.
-- Public pages render per-request on Workers, so admin edits appear within ~30 s (no ISR machinery needed).
-
-Two ways to change content in prod:
-1. **Recommended:** sign in to the deployed `/admin` URL and edit there — writes go to R2, no redeploy needed.
-2. **Or:** edit locally via admin, run `npm run sync-seed`, commit + push — but the deployed site keeps showing the R2 version until you also save via the deployed admin (the store wins over the seed).
-
-## Performance budget
-
-- LCP < 2.5s, CLS < 0.1, INP < 200ms on Lighthouse mobile preset.
-- First-load JS < 100 KB gzipped per route.
-- Hero image < 120 KB AVIF; hero video (if used) < 2 MB.
-- Add a Lighthouse-CI step to GitHub Actions before going live.
-
-## Scripts
+- 
 
 ```bash
 npm run dev                      # http://localhost:3000
